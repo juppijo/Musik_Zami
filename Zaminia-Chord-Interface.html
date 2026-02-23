@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Zaminia MIDI Creator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/midi-writer-js@2.1.4/browser/index.min.js"></script>
+    
+    <style>
+        body { background: #0f172a; color: #38bdf8; font-family: 'Courier New', monospace; text-align: center; padding: 40px; }
+        .chord-btn { 
+            background: #1e293b; border: 1px solid #38bdf8; color: #f8fafc;
+            padding: 15px 25px; margin: 8px; cursor: pointer; border-radius: 4px;
+            font-size: 1rem; transition: all 0.2s;
+        }
+        .chord-btn:hover { background: #38bdf8; color: #0f172a; box-shadow: 0 0 15px #38bdf8; }
+        .export-btn { background: #10b981; border: none; padding: 20px; color: white; margin-top: 30px; cursor: pointer; font-weight: bold; }
+        #status { margin-top: 20px; font-style: italic; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+    <h1>ZAMINIA MIDI ENGINE</h1>
+    <p>Komponiere eine Sequenz durch Drücken der Akkorde.</p>
+
+    <div id="controls">
+        <button class="chord-btn" onclick="addChord(['C4', 'E4', 'G4', 'B4'], 'C Maj7')">C Maj7</button>
+        <button class="chord-btn" onclick="addChord(['A3', 'C4', 'E4', 'G4'], 'A min7')">A min7</button>
+        <button class="chord-btn" onclick="addChord(['F3', 'A3', 'C4', 'E4'], 'F Maj7')">F Maj7</button>
+        <button class="chord-btn" onclick="addChord(['G3', 'B3', 'D4', 'F4'], 'G7')">G7 Dominant</button>
+    </div>
+
+    <button class="export-btn" onclick="downloadMIDI()">⬇ MIDI DATEI HERUNTERLADEN</button>
+    
+    <div id="status">Bisher 0 Akkorde in der Sequenz.</div>
+
+    <script>
+        // Audio Setup
+        const synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        
+        // MIDI Daten-Speicher
+        let track = new MidiWriter.Track();
+        let chordCount = 0;
+
+        async function addChord(notes, name) {
+            await Tone.start();
+            
+            // 1. Ton abspielen
+            synth.triggerAttackRelease(notes, "2n");
+
+            // 2. Zum MIDI-Track hinzufügen (Dauer: '2' entspricht einer halben Note)
+            track.addEvent(new MidiWriter.NoteEvent({pitch: notes, duration: '2'}));
+            
+            chordCount++;
+            document.getElementById('status').innerText = `Akkord ${name} hinzugefügt. Sequenz-Länge: ${chordCount}`;
+        }
+
+        function downloadMIDI() {
+            if (chordCount === 0) {
+                alert("Spiel erst ein paar Akkorde!");
+                return;
+            }
+            
+            const write = new MidiWriter.Writer(track);
+            const link = document.createElement('a');
+            link.href = write.dataUri();
+            link.download = 'zaminia_composition.mid';
+            link.click();
+            
+            // Track zurücksetzen für neue Komposition
+            track = new MidiWriter.Track();
+            chordCount = 0;
+            document.getElementById('status').innerText = "Datei heruntergeladen. Starte eine neue Sequenz!";
+        }
+    </script>
+</body>
+</html>

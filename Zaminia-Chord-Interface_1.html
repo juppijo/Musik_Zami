@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Zaminia Chord Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { background: #1a1a2e; color: #e94560; font-family: 'Segoe UI', sans-serif; text-align: center; padding-top: 50px; }
+        .chord-btn { 
+            background: #16213e; border: 2px solid #e94560; color: white;
+            padding: 20px 40px; margin: 10px; cursor: pointer; border-radius: 10px;
+            font-size: 1.2rem; transition: 0.3s;
+        }
+        .chord-btn:hover { background: #e94560; color: #1a1a2e; transform: scale(1.1); }
+        h1 { font-weight: 300; letter-spacing: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>ZAMINIA SOUND ENGINE</h1>
+    <p>Klicke einen Button, um die Harmonie der Wellenraumzeit zu hören.</p>
+
+    <div id="controls">
+        <button class="chord-btn" onclick="playChord(['C4', 'E4', 'G4', 'B4'])">C Maj7 (Frieden)</button>
+        <button class="chord-btn" onclick="playChord(['A3', 'C4', 'E4', 'G4'])">A min7 (Reflexion)</button>
+        <button class="chord-btn" onclick="playChord(['F4', 'A4', 'C5', 'E5'])">F Maj7 (Expansion)</button>
+        <button class="chord-btn" onclick="playChord(['G3', 'B3', 'D4', 'F4'])">G7 (Spannung)</button>
+    </div>
+
+    <script>
+        // Ein sanfter Synthesizer mit etwas Hall (Reverb)
+        const reverb = new Tone.Reverb(3).toDestination();
+        const synth = new Tone.PolySynth(Tone.Synth).connect(reverb);
+        
+        // Einstellungen für einen weichen, "philosophischen" Klang
+        synth.set({
+            oscillator: { type: "sine" },
+            envelope: { attack: 0.5, decay: 0.2, sustain: 0.5, release: 1 }
+        });
+
+        async function playChord(notes) {
+            // Wichtig: Audio im Browser muss durch Nutzerinteraktion gestartet werden
+            await Tone.start();
+            
+            // Spiele den Akkord für die Dauer von 2 Sekunden
+            synth.triggerAttackRelease(notes, "2n");
+        }
+    </script>
+</body>
+</html>

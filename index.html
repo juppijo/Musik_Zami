@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chord MIDI Pad</title>
+  <link rel="icon" type="image/x-icon" href="note.jpg">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="app" id="app">
+
+  <header>
+    <img src="ZamiKlavier.jpeg" alt="Zami Klavier" class="header-image">
+    <h1>🎹 Chord MIDI Pad 🎶 🎵 </h1>
+    <div class="header-right">
+      <select id="midi-in-select" class="midi-select">
+      <option value="">Kein Eingang</option>
+      </select>
+      <span id="midi-status" class="status disconnected">⚠ MIDI nicht verbunden</span>
+      <button id="fullscreen-btn" title="Fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <div class="controls">
+      <label>Kanal: <select id="midi-channel">
+        <option value="0">1</option><option value="1">2</option><option value="2">3</option>
+        <option value="3">4</option><option value="4">5</option><option value="5">6</option>
+        <option value="6">7</option><option value="7">8</option><option value="8">9</option>
+        <option value="9">10</option><option value="10">11</option><option value="11">12</option>
+        <option value="12">13</option><option value="13">14</option><option value="14">15</option>
+        <option value="15">16</option>
+      </select></label>
+      <label>Oktave: <select id="octave">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select></label>
+      <label>Velocity:
+        <input type="range" id="velocity" min="1" max="127" value="100"/>
+        <span id="vel-display">100</span>
+      </label>
+      <label>Globale Notenlänge: <select id="note-dur">
+        <option value="150">1/16</option>
+        <option value="300">1/8</option>
+        <option value="600" selected>1/4</option>
+        <option value="1200">1/2</option>
+        <option value="2400">1/1</option>
+        <option value="3600">3/2</option>
+        <option value="4800">2/1</option>
+        <option value="6000">5/2</option>
+        <option value="7200">3/1</option>
+        <option value="9600">4/1</option>
+      </select></label>
+    </div>
+    <!-- Arpeggio Schnellzugriff -->
+    <div class="arp-bar">
+      <span class="arp-section-label">Arp Delay:</span>
+      <div class="arp-btn-group" id="arp-delay-group">
+        <button class="arp-btn active" data-arp="0">Chord</button>
+        <button class="arp-btn" data-arp="30">30ms</button>
+        <button class="arp-btn" data-arp="50">50ms</button>
+        <button class="arp-btn" data-arp="100">100ms</button>
+        <button class="arp-btn" data-arp="150">150ms</button>
+        <button class="arp-btn" data-arp="200">200ms</button>
+        <button class="arp-btn" data-arp="300">300ms</button>
+        <button class="arp-btn" data-arp="400">400ms</button>
+        <button class="arp-btn" data-arp="500">500ms</button>
+        <button class="arp-btn" data-arp="600">600ms</button>
+        <button class="arp-btn" data-arp="700">700ms</button>
+        <button class="arp-btn" data-arp="800">800ms</button>
+        <button class="arp-btn" data-arp="900">900ms</button>
+        <button class="arp-btn" data-arp="1000">1000ms</button>
+      </div>
+    </div>  
+    <div class="arp-bar">  
+      <span class="arp-section-label" style="margin-left:12px">Richtung:</span>
+      <div class="arp-btn-group" id="arp-dir-group">
+        <button class="arp-btn dir-btn active" data-dir="up">↑ Auf</button>
+        <button class="arp-btn dir-btn" data-dir="down">↓ Ab</button>
+        <button class="arp-btn dir-btn" data-dir="updown">↑↓ Auf+Ab</button>
+        <button class="arp-btn dir-btn" data-dir="random">🎲 Zufall</button>
+      </div>
+      <!-- hidden inputs als Wertträger -->
+      <input type="hidden" id="global-arp" value="0"/>
+      <input type="hidden" id="arp-dir" value="up"/>
+    </div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- ── KEYBOARD ── -->
+    <section class="keyboard-section">
+      <h2>Keyboard (49 Tasten · C2 – C6)</h2>
+      <div class="keyboard-wrap">
+        <div class="keyboard" id="keyboard"></div>
+      </div>
+    </section>
+
+    <!-- ── STANDARD PADS ── -->
+    <section>
+      <h2>Major (Dur)</h2>
+      <div class="pad-grid" id="major-pads"></div>
+    </section>
+    <section>
+      <h2>Minor (Moll)</h2>
+      <div class="pad-grid" id="minor-pads"></div>
+    </section>
+    <section>
+      <h2>7th Akkorde</h2>
+      <div class="pad-grid" id="seventh-pads"></div>
+    </section>
+
+    <!-- ── SEQUENCER ── -->
+    <section class="seq-section">
+      <h2>🎞 Sequenz Recorder</h2>
+      <div class="seq-controls">
+        <button id="rec-btn"      class="seq-btn rec">⏺ Aufnahme</button>
+        <button id="play-btn"     class="seq-btn play"     disabled>▶ Abspielen</button>
+        <button id="stop-btn"     class="seq-btn stop"     disabled>⏹ Stop</button>
+        <button id="clear-seq"    class="seq-btn clear">🗑 Löschen</button>
+        <button id="download-btn" class="seq-btn download" disabled>⬇ MIDI Download</button>
+        <button id="add-pause-btn" class="seq-btn pause-btn">⏸ Pause einfügen</button>
+      </div>
+      <div class="seq-info">
+        <span id="seq-status">Bereit</span>
+        <span id="seq-count">0 Events</span>
+        <span id="seq-duration"></span>
+      </div>
+      <div class="seq-timeline" id="seq-timeline">
+        <span class="tl-empty">Noch keine Events aufgenommen.</span>
+      </div>
+    </section>
+
+    <!-- ── CUSTOM AKKORD BUILDER ── -->
+    <section class="builder-section">
+      <h2>🎼 Akkord Builder – eigene Akkorde</h2>
+      <div class="builder-grid">
+        <div class="builder-col">
+          <div class="builder-row">
+            <label>Name:<input type="text" id="b-name" placeholder="z.B. Cmaj9" maxlength="16"/></label>
+            <label>Grundton:<select id="b-root">
+              <option>C</option><option>C#</option><option>D</option><option>D#</option>
+              <option>E</option><option>F</option><option>F#</option><option>G</option>
+              <option>G#</option><option>A</option><option>A#</option><option>B</option>
+            </select></label>
+          </div>
+          <div class="builder-row">
+            <label class="wide">Intervalle (Halbtöne, kommagetrennt):
+              <input type="text" id="b-intervals" placeholder="0,4,7,11,14" />
+            </label>
+          </div>
+
+          <!-- NEU: Dauer & Pause pro Akkord -->
+          <div class="builder-row">
+            <label>Akkord-Dauer (ms):
+              <input type="number" id="b-dur" value="600" min="50" max="8000" step="50"/>
+            </label>
+            <label>Pause zwischen Tönen (ms):
+              <input type="number" id="b-pause" value="0" min="0" max="2000" step="10"/>
+            </label>
+            <div class="dur-presets">
+              <span class="preset-label">Arpeggio:</span>
+              <button class="preset-btn" data-dur="600" data-pause="0">Kein</button>
+              <button class="preset-btn" data-dur="600" data-pause="50">50ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="100">100ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="200">200ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="400">400ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="600">600ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="800">800ms</button>
+              <button class="preset-btn" data-dur="600" data-pause="1000">1000ms</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+     <div class="builder-preview-row">
+      <div class="builder-preview" id="b-preview">Intervalle eingeben…</div>
+      
+      <div class="builder-actions">
+        <button id="b-add" class="seq-btn play">+ Hinzufügen</button>
+        <button id="b-clear-custom" class="seq-btn clear">Löschen</button>
+      </div>
+    </div>
+
+      <div class="pad-grid" id="custom-pads"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div id="active-chord">–</div>
+    <div id="active-notes"></div>
+  </footer>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Event bearbeiten</h3>
+    <label>Label:<input type="text" id="e-label"/></label>
+    <label>MIDI-Noten (kommagetrennt):<input type="text" id="e-notes"/></label>
+    <label>Zeitpunkt (ms):<input type="number" id="e-time" min="0"/></label>
+    <label>Akkord-Dauer (ms):<input type="number" id="e-dur" min="50"/></label>
+    <label>Pause danach (ms):<input type="number" id="e-pause" min="0"/></label>
+    <div class="modal-btns">
+      <button id="e-save"   class="seq-btn play">💾 Speichern</button>
+      <button id="e-delete" class="seq-btn rec">🗑 Löschen</button>
+      <button id="e-cancel" class="seq-btn clear">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAUSE MODAL -->
+<div id="pause-modal" class="modal hidden">
+  <div class="modal-box">
+    <h3>⏸ Pause einfügen</h3>
+    <label>Pausendauer (ms):<input type="number" id="p-dur" value="500" min="50" step="50"/></label>
+    <div class="dur-presets" style="margin-top:8px">
+      <button class="preset-btn" data-pause-only="250">250ms</button>
+      <button class="preset-btn" data-pause-only="500">500ms</button>
+      <button class="preset-btn" data-pause-only="1000">1s</button>
+      <button class="preset-btn" data-pause-only="2000">2s</button>
+    </div>
+    <div class="modal-btns">
+      <button id="p-add"    class="seq-btn play">+ Einfügen</button>
+      <button id="p-cancel" class="seq-btn clear">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

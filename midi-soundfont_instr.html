@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>MIDI SoundFont Player</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a2e; color: #eee;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 30px 20px;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 6px; color: #a8d8a8; }
+  .subtitle { color: #888; font-size: 0.9rem; margin-bottom: 30px; }
+  .card {
+    background: #16213e; border-radius: 14px; padding: 24px;
+    width: 100%; max-width: 560px; margin-bottom: 20px;
+    border: 1px solid #0f3460;
+  }
+  .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #555; flex-shrink: 0; transition: background 0.2s;
+  }
+  .dot.green { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+  .dot.yellow { background: #facc15; box-shadow: 0 0 8px #facc15; }
+  .dot.red { background: #f87171; }
+  label { font-size: 0.85rem; color: #aaa; display: block; margin-top: 12px; margin-bottom: 4px; }
+  select {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid #0f3460; background: #0f3460; color: #eee;
+    font-size: 0.95rem; cursor: pointer;
+  }
+  .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+  button {
+    flex: 1; padding: 10px 14px; border-radius: 8px;
+    border: none; color: #eee; font-size: 0.95rem;
+    cursor: pointer; font-weight: bold; transition: background 0.2s;
+  }
+  #startBtn { background: #4a9d5e; }
+  #startBtn:hover { background: #3d8a50; }
+  #startBtn:disabled { background: #333; cursor: not-allowed; }
+  #loadInstBtn { background: #0f3460; border: 1px solid #3a6db0; }
+  #loadInstBtn:hover { background: #1a4a80; }
+  #loadInstBtn:disabled { background: #222; cursor: not-allowed; color: #555; }
+  #log {
+    background: #0a0a1a; border-radius: 8px; padding: 12px;
+    height: 130px; overflow-y: auto;
+    font-family: monospace; font-size: 0.8rem; color: #7ec8a0; margin-top: 10px;
+  }
+  .note-display {
+    font-size: 3rem; text-align: center; padding: 16px;
+    color: #a8d8a8; letter-spacing: 4px; min-height: 76px;
+  }
+  .piano { position: relative; display: flex; height: 80px; margin-top: 10px; overflow-x: auto; }
+  .white-key {
+    position: relative; width: 22px; height: 80px; background: #f0f0f0;
+    border: 1px solid #999; border-radius: 0 0 4px 4px; flex-shrink: 0;
+    transition: background 0.05s; z-index: 1;
+  }
+  .white-key.active { background: #4ade80; }
+  .black-key {
+    position: absolute; width: 14px; height: 50px; background: #222;
+    border-radius: 0 0 3px 3px; z-index: 2; top: 0;
+    transition: background 0.05s;
+  }
+  .black-key.active { background: #4ade80; }
+  .vol-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+  input[type=range] { flex: 1; accent-color: #4a9d5e; }
+  .inst-icon { font-size: 1.1rem; margin-right: 4px; }
+  optgroup { color: #aaa; font-style: normal; }
+</style>
+</head>
+<body>
+<h1>🎵 MIDI → SoundFont Player</h1>
+<p class="subtitle">Web MIDI API · FluidR3 GM SoundFont</p>
+
+<div class="card">
+  <div class="status-row">
+    <div class="dot" id="midiDot"></div>
+    <span id="midiStatus">MIDI: Warte auf Erlaubnis...</span>
+  </div>
+  <div class="status-row">
+    <div class="dot" id="sfDot"></div>
+    <span id="sfStatus">SoundFont: Nicht geladen</span>
+  </div>
+
+  <label>🎹 MIDI-Eingang:</label>
+  <select id="midiSelect"><option>-- Kein Gerät --</option></select>
+
+  <label>🔊 Audio-Ausgang:</label>
+  <select id="audioOutSelect"><option value="">-- Standard --</option></select>
+
+  <label>🎸 Instrument:</label>
+  <select id="instSelect">
+    <optgroup label="🎹 Klavier">
+      <option value="acoustic_grand_piano">Acoustic Grand Piano</option>
+      <option value="bright_acoustic_piano">Bright Acoustic Piano</option>
+      <option value="electric_grand_piano">Electric Grand Piano</option>
+      <option value="honkytonk_piano">Honky-Tonk Piano</option>
+      <option value="electric_piano_1">Electric Piano 1</option>
+      <option value="harpsichord">Harpsichord</option>
+    </optgroup>
+    <optgroup label="🎸 Gitarre">
+      <option value="acoustic_guitar_nylon" selected>Acoustic Guitar (Nylon)</option>
+      <option value="acoustic_guitar_steel">Acoustic Guitar (Steel)</option>
+      <option value="electric_guitar_clean">Electric Guitar (Clean)</option>
+      <option value="electric_guitar_jazz">Electric Guitar (Jazz)</option>
+      <option value="distortion_guitar">Distortion Guitar</option>
+      <option value="electric_bass_finger">Electric Bass (Finger)</option>
+    </optgroup>
+    <optgroup label="🎻 Streicher">
+      <option value="violin">Violin</option>
+      <option value="viola">Viola</option>
+      <option value="cello">Cello</option>
+      <option value="contrabass">Contrabass</option>
+      <option value="string_ensemble_1">String Ensemble 1</option>
+      <option value="string_ensemble_2">String Ensemble 2</option>
+    </optgroup>
+    <optgroup label="🎺 Bläser">
+      <option value="trumpet">Trumpet</option>
+      <option value="trombone">Trombone</option>
+      <option value="tuba">Tuba</option>
+      <option value="french_horn">French Horn</option>
+      <option value="alto_sax">Alto Sax</option>
+      <option value="tenor_sax">Tenor Sax</option>
+      <option value="flute">Flute</option>
+      <option value="clarinet">Clarinet</option>
+      <option value="oboe">Oboe</option>
+    </optgroup>
+    <optgroup label="🎹 Orgel / Chor">
+      <option value="church_organ">Church Organ</option>
+      <option value="reed_organ">Reed Organ</option>
+      <option value="accordion">Accordion</option>
+      <option value="choir_aahs">Choir Aahs</option>
+      <option value="voice_oohs">Voice Oohs</option>
+    </optgroup>
+    <optgroup label="🥁 Percussion / Sonstiges">
+      <option value="xylophone">Xylophone</option>
+      <option value="marimba">Marimba</option>
+      <option value="vibraphone">Vibraphone</option>
+      <option value="steel_drums">Steel Drums</option>
+      <option value="tubular_bells">Tubular Bells</option>
+    </optgroup>
+    <optgroup label="🔔 Glocken">
+      <option value="bells">Bells</option>
+      <option value="church_bell">Church Bell</option>
+      <option value="agogo">Agogo</option>
+      <option value="wind_chimes">Wind Chimes</option>
+      <option value="tinkle_bell">Tinkle Bell</option>
+      <option value="glockenspiel">Glockenspiel</option>
+    </optgroup>
+  </select>
+
+  <div class="vol-row">
+    <span style="font-size:0.85rem;color:#aaa">🔊</span>
+    <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8">
+    <span id="volVal" style="font-size:0.85rem;color:#aaa;width:36px">80%</span>
+  </div>
+
+  <div class="btn-row">
+    <button id="startBtn">▶ Starten</button>
+    <button id="loadInstBtn" disabled>🔄 Instrument laden</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="note-display" id="noteDisplay">—</div>
+  <div class="piano" id="pianoGrid"></div>
+</div>
+
+<div class="card">
+  <label>Ereignis-Log:</label>
+  <div id="log">Bereit. Klicke auf "Starten"...\n</div>
+</div>
+
+<script>
+const SF_BASE = "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/";
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+let audioCtx, midiAccess, currentInput = null;
+let buffers = {}, activeNotes = new Set(), activeSources = {};
+let volume = 0.8;
+let currentInstrument = "acoustic_guitar_nylon";
+let started = false;
+
+async function populateAudioOutputs() {
+  const sel = $("audioOutSelect");
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const outputs = devices.filter(d => d.kind === "audiooutput");
+    sel.innerHTML = '<option value="">-- Standard --</option>';
+    outputs.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.deviceId;
+      opt.textContent = d.label || "Ausgang " + d.deviceId.slice(0,8);
+      sel.appendChild(opt);
+    });
+    log("🔊 " + outputs.length + " Audio-Ausgänge gefunden");
+  } catch(e) {
+    log("⚠️ Audio-Ausgänge nicht abrufbar: " + e.message);
+  }
+}
+
+async function setAudioOutput(deviceId) {
+  if (!audioCtx) return;
+  if (deviceId && audioCtx.setSinkId) {
+    try {
+      await audioCtx.setSinkId(deviceId);
+      log("🔊 Audio-Ausgang gewechselt: " + $("audioOutSelect").options[$("audioOutSelect").selectedIndex].textContent);
+    } catch(e) {
+      log("⚠️ Ausgang konnte nicht gesetzt werden: " + e.message);
+    }
+  }
+}
+
+const $ = id => document.getElementById(id);
+const log = msg => { const el=$("log"); el.textContent+=msg+"\n"; el.scrollTop=el.scrollHeight; };
+
+// Piano keyboard C2–C6
+const IS_BLACK = [0,1,0,1,0,0,1,0,1,0,1,0]; // 0=white,1=black per semitone
+const piano = $("pianoGrid");
+const whiteKeys = [];
+let whiteIndex = 0;
+
+for (let m = 36; m <= 84; m++) {
+  const semi = m % 12;
+  if (!IS_BLACK[semi]) {
+    const w = document.createElement("div");
+    w.className = "white-key"; w.id = "k"+m;
+    piano.appendChild(w);
+    whiteKeys.push({ midi: m, el: w, idx: whiteIndex });
+    whiteIndex++;
+  }
+}
+// now add black keys absolutely positioned
+for (let m = 36; m <= 84; m++) {
+  const semi = m % 12;
+  if (IS_BLACK[semi]) {
+    // find the white key to the left
+    const leftWhite = whiteKeys.filter(w => w.midi < m).slice(-1)[0];
+    if (!leftWhite) continue;
+    const b = document.createElement("div");
+    b.className = "black-key"; b.id = "k"+m;
+    b.style.left = (leftWhite.idx * 22 + 15) + "px";
+    piano.appendChild(b);
+  }
+}
+
+function midiToName(n) { return NOTE_NAMES[n%12] + (Math.floor(n/12)-1); }
+
+// SoundFont uses flat names (Ab, Bb etc.) not sharp (As, Bs)
+const FLAT_NAMES = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+
+function midiToFileName(midi) {
+  const octave = Math.floor(midi / 12) - 1;
+  return FLAT_NAMES[midi % 12] + octave;
+}
+
+async function loadNote(midi, instrument) {
+  const key = instrument+":"+midi;
+  if (buffers[key]) return;
+  const name = midiToFileName(midi);
+  const url = SF_BASE+instrument+"-mp3/"+name+".mp3";
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const arr = await res.arrayBuffer();
+    buffers[key] = await audioCtx.decodeAudioData(arr);
+  } catch(e) {}
+}
+
+async function preload(instrument) {
+  $("sfDot").className = "dot yellow";
+  $("sfStatus").textContent = "SoundFont: Lade "+instrument+"...";
+  log("⏳ Lade: "+instrument);
+  const p = [];
+  for (let m = 36; m <= 84; m++) p.push(loadNote(m, instrument));
+  await Promise.all(p);
+  $("sfDot").className = "dot green";
+  $("sfStatus").textContent = "SoundFont: "+instrument+" geladen";
+  log("✅ Geladen: "+instrument);
+}
+
+function playNote(midi, vel) {
+  const key = currentInstrument+":"+midi;
+  if (!audioCtx || !buffers[key]) return;
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffers[key];
+  const gain = audioCtx.createGain();
+  gain.gain.value = (vel/127)*volume;
+  src.connect(gain); gain.connect(audioCtx.destination);
+  src.start();
+  activeSources[midi] = { src, gain };
+  activeNotes.add(midi);
+  const k = $("k"+midi); if (k) k.classList.add("active");
+  $("noteDisplay").textContent = midiToName(midi);
+}
+
+function stopNote(midi) {
+  activeNotes.delete(midi);
+  const k = $("k"+midi); if (k) k.classList.remove("active");
+  if (activeNotes.size === 0) $("noteDisplay").textContent = "—";
+}
+
+function onMidiMessage(e) {
+  const [status, note, vel] = e.data;
+  const cmd = status & 0xf0;
+  if (cmd === 0x90 && vel > 0) {
+    log("🎵 Note ON  "+midiToName(note)+" vel="+vel);
+    playNote(note, vel);
+    if (!buffers[currentInstrument+":"+note]) loadNote(note, currentInstrument);
+  } else if (cmd === 0x80 || (cmd === 0x90 && vel === 0)) {
+    log("  Note OFF "+midiToName(note));
+    stopNote(note);
+  }
+}
+
+function populateInputs() {
+  const sel = $("midiSelect"); sel.innerHTML = "";
+  midiAccess.inputs.forEach(input => {
+    const opt = document.createElement("option");
+    opt.value = input.id; opt.textContent = input.name;
+    if (input.name.toLowerCase().includes("through")) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  log("🎹 "+sel.options.length+" MIDI-Eingang/Eingänge gefunden");
+}
+
+function connectInput(id) {
+  if (currentInput) currentInput.onmidimessage = null;
+  midiAccess.inputs.forEach(input => {
+    if (input.id === id) {
+      currentInput = input;
+      currentInput.onmidimessage = onMidiMessage;
+      log("🔗 Verbunden: "+input.name);
+    }
+  });
+}
+
+$("audioOutSelect").addEventListener("change", e => setAudioOutput(e.target.value));
+$("midiSelect").addEventListener("change", e => { if (started) connectInput(e.target.value); });
+$("vol").addEventListener("input", e => {
+  volume = parseFloat(e.target.value);
+  $("volVal").textContent = Math.round(volume*100)+"%";
+});
+
+$("loadInstBtn").addEventListener("click", async () => {
+  const inst = $("instSelect").value;
+  $("loadInstBtn").disabled = true;
+  $("loadInstBtn").textContent = "⏳ Lädt...";
+  await preload(inst);
+  currentInstrument = inst;  // erst NACH dem Laden setzen
+  log("🎸 Aktives Instrument: " + inst);
+  $("loadInstBtn").disabled = false;
+  $("loadInstBtn").textContent = "🔄 Instrument laden";
+});
+
+$("startBtn").addEventListener("click", async () => {
+  $("startBtn").disabled = true;
+  $("startBtn").textContent = "⏳ Initialisiere...";
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  await audioCtx.resume();
+  await populateAudioOutputs();
+  if (!navigator.requestMIDIAccess) {
+    log("❌ Web MIDI API nicht unterstützt (nur Chrome/Edge)");
+    $("midiDot").className = "dot red";
+    $("midiStatus").textContent = "MIDI: Nicht unterstützt";
+    $("startBtn").disabled = false; $("startBtn").textContent = "▶ Starten";
+    return;
+  }
+  try {
+    midiAccess = await navigator.requestMIDIAccess();
+    $("midiDot").className = "dot green";
+    $("midiStatus").textContent = "MIDI: Verbunden";
+    log("✅ MIDI-Zugriff erhalten");
+    populateInputs();
+    const sel = $("midiSelect");
+    if (sel.options.length > 0) connectInput(sel.value);
+  } catch(e) {
+    $("midiDot").className = "dot red";
+    $("midiStatus").textContent = "MIDI: Zugriff verweigert";
+    log("❌ "+e.message);
+    $("startBtn").disabled = false; $("startBtn").textContent = "▶ Starten";
+    return;
+  }
+  currentInstrument = $("instSelect").value;
+  await preload(currentInstrument);
+  started = true;
+  $("startBtn").textContent = "✅ Aktiv";
+  $("loadInstBtn").disabled = false;
+});
+</script>
+</body>
+</html>

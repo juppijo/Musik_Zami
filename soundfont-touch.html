@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>SoundFont Touch Player</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#1a1a2e;color:#eee;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:16px;overflow-x:hidden;}
+h1{font-size:1.4rem;color:#a8d8a8;margin-bottom:4px;}
+.subtitle{color:#777;font-size:0.8rem;margin-bottom:14px;}
+.card{background:#16213e;border-radius:14px;padding:16px;width:100%;max-width:700px;margin-bottom:14px;border:1px solid #0f3460;}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+label{font-size:0.8rem;color:#aaa;white-space:nowrap;}
+select{flex:1;min-width:120px;padding:8px 10px;border-radius:8px;border:1px solid #0f3460;background:#0f3460;color:#eee;font-size:0.85rem;}
+input[type=range]{flex:1;accent-color:#4a9d5e;min-width:80px;}
+.val{font-size:0.8rem;color:#aaa;width:38px;text-align:right;}
+button{padding:9px 16px;border-radius:8px;border:none;color:#eee;font-size:0.85rem;cursor:pointer;font-weight:bold;transition:background 0.2s;white-space:nowrap;}
+#loadBtn{background:#4a9d5e;}#loadBtn:hover{background:#3d8a50;}
+#loadBtn:disabled{background:#333;cursor:not-allowed;}
+.dot{width:10px;height:10px;border-radius:50%;background:#555;flex-shrink:0;}
+.dot.green{background:#4ade80;box-shadow:0 0 6px #4ade80;}
+.dot.yellow{background:#facc15;}
+.note-display{font-size:2rem;text-align:center;color:#a8d8a8;letter-spacing:3px;min-height:52px;padding:8px;}
+
+/* TABS */
+.tabs{display:flex;gap:8px;margin-bottom:12px;}
+.tab{flex:1;padding:10px;border-radius:8px;border:2px solid #0f3460;background:#0f3460;color:#aaa;cursor:pointer;text-align:center;font-weight:bold;font-size:0.9rem;transition:all 0.2s;}
+.tab.active{border-color:#4a9d5e;color:#4ade80;background:#0a2010;}
+
+/* PIANO */
+.piano-wrap{overflow-x:auto;padding-bottom:6px;}
+.piano{position:relative;display:flex;height:110px;width:max-content;margin:0 auto;}
+.wk{position:relative;width:36px;height:110px;background:#f0f0f0;border:1px solid #999;border-radius:0 0 5px 5px;flex-shrink:0;cursor:pointer;user-select:none;transition:background 0.05s;z-index:1;}
+.wk:active,.wk.active{background:#4ade80;}
+.bk{position:absolute;width:22px;height:68px;background:#222;border-radius:0 0 4px 4px;cursor:pointer;user-select:none;z-index:2;top:0;transition:background 0.05s;}
+.bk:active,.bk.active{background:#4ade80;}
+
+/* GUITAR */
+.guitar{display:flex;flex-direction:column;gap:6px;padding:8px 0;}
+.string-row{display:flex;align-items:center;gap:8px;}
+.string-label{width:34px;font-size:0.75rem;color:#aaa;text-align:right;flex-shrink:0;}
+.string-area{flex:1;height:44px;background:#0f3460;border-radius:8px;border:1px solid #1a4a80;position:relative;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.string-line{position:absolute;left:0;right:0;height:2px;background:#c0a060;pointer-events:none;border-radius:2px;}
+.string-area.active .string-line{background:#4ade80;box-shadow:0 0 8px #4ade80;}
+.fret-label{font-size:0.7rem;color:#555;pointer-events:none;}
+</style>
+</head>
+<body>
+<h1>🎵 SoundFont Touch Player</h1>
+<p class="subtitle">Klavier & Gitarre · Touch & Maus · Alle Geräte</p>
+
+<div class="card">
+  <div class="row">
+    <div class="dot" id="sfDot"></div>
+    <span id="sfStatus" style="font-size:0.85rem;flex:1">SoundFont: Nicht geladen</span>
+  </div>
+  <div class="row">
+    <label>🎸 Instrument:</label>
+    <select id="instSelect">
+      <optgroup label="🎹 Klavier">
+        <option value="acoustic_grand_piano">Acoustic Grand Piano</option>
+        <option value="bright_acoustic_piano">Bright Acoustic Piano</option>
+        <option value="electric_piano_1">Electric Piano 1</option>
+        <option value="harpsichord">Harpsichord</option>
+      </optgroup>
+      <optgroup label="🎸 Gitarre">
+        <option value="acoustic_guitar_nylon" selected>Acoustic Guitar (Nylon)</option>
+        <option value="acoustic_guitar_steel">Acoustic Guitar (Steel)</option>
+        <option value="electric_guitar_clean">Electric Guitar (Clean)</option>
+        <option value="electric_guitar_jazz">Electric Guitar (Jazz)</option>
+        <option value="distortion_guitar">Distortion Guitar</option>
+        <option value="electric_bass_finger">Electric Bass (Finger)</option>
+      </optgroup>
+      <optgroup label="🎻 Streicher">
+        <option value="violin">Violin</option>
+        <option value="cello">Cello</option>
+        <option value="string_ensemble_1">String Ensemble 1</option>
+      </optgroup>
+      <optgroup label="🎺 Bläser">
+        <option value="trumpet">Trumpet</option>
+        <option value="alto_sax">Alto Sax</option>
+        <option value="flute">Flute</option>
+        <option value="clarinet">Clarinet</option>
+      </optgroup>
+      <optgroup label="🎹 Orgel / Chor">
+        <option value="church_organ">Church Organ</option>
+        <option value="accordion">Accordion</option>
+        <option value="choir_aahs">Choir Aahs</option>
+      </optgroup>
+      <optgroup label="🥁 Percussion">
+        <option value="xylophone">Xylophone</option>
+        <option value="marimba">Marimba</option>
+        <option value="vibraphone">Vibraphone</option>
+        <option value="steel_drums">Steel Drums</option>
+        <option value="tubular_bells">Tubular Bells</option>
+        <option value="glockenspiel">Glockenspiel</option>
+        <option value="tinkle_bell">Tinkle Bell</option>
+      </optgroup>
+    </select>
+    <button id="loadBtn">▶ Laden</button>
+  </div>
+  <div class="row">
+    <label>🔊 Lautstärke</label>
+    <input type="range" id="vol" min="0" max="1" step="0.05" value="0.8">
+    <span class="val" id="volVal">80%</span>
+  </div>
+  <div class="row">
+    <label>🌊 Hall</label>
+    <input type="range" id="reverb" min="0" max="0.9" step="0.05" value="0.2">
+    <span class="val" id="reverbVal">20%</span>
+  </div>
+  <div class="row">
+    <label>🎼 Transpose</label>
+    <input type="range" id="transpose" min="-12" max="12" step="1" value="0">
+    <span class="val" id="transposeVal">0</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="note-display" id="noteDisplay">—</div>
+  <div class="tabs">
+    <div class="tab active" id="tabPiano" onclick="showTab('piano')">🎹 Klavier</div>
+    <div class="tab" id="tabGuitar" onclick="showTab('guitar')">🎸 Gitarre</div>
+  </div>
+  <div id="panePiano">
+    <div class="piano-wrap"><div class="piano" id="pianoGrid"></div></div>
+  </div>
+  <div id="paneGuitar" style="display:none">
+    <div class="guitar" id="guitarGrid"></div>
+  </div>
+</div>
+
+<script>
+const SF_BASE = "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/";
+const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const FLAT_NAMES = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const IS_BLACK   = [0,1,0,1,0,0,1,0,1,0,1,0];
+
+// Guitar standard tuning MIDI notes per string (open), frets 0-11
+const GUITAR_STRINGS = [
+  {name:"E2", open:40},
+  {name:"A2", open:45},
+  {name:"D3", open:50},
+  {name:"G3", open:55},
+  {name:"B3", open:59},
+  {name:"E4", open:64},
+];
+const GUITAR_FRETS = 13;
+
+let audioCtx, convolver, reverbGain, dryGain;
+let buffers = {}, activeNotes = new Set();
+let volume = 0.8, reverbAmt = 0.2, transpose = 0;
+let currentInstrument = "acoustic_guitar_nylon";
+let loaded = false;
+
+const $ = id => document.getElementById(id);
+
+// --- Audio setup ---
+async function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  await audioCtx.resume();
+  // Reverb via convolver
+  convolver = audioCtx.createConvolver();
+  reverbGain = audioCtx.createGain();
+  dryGain = audioCtx.createGain();
+  reverbGain.gain.value = reverbAmt;
+  dryGain.gain.value = 1 - reverbAmt;
+  convolver.connect(reverbGain);
+  reverbGain.connect(audioCtx.destination);
+  dryGain.connect(audioCtx.destination);
+  await buildImpulse();
+}
+
+async function buildImpulse() {
+  const rate = audioCtx.sampleRate, len = rate * 2;
+  const buf = audioCtx.createBuffer(2, len, rate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, 2.5);
+  }
+  convolver.buffer = buf;
+}
+
+function updateReverb() {
+  if (!reverbGain) return;
+  reverbGain.gain.value = reverbAmt;
+  dryGain.gain.value = 1 - reverbAmt * 0.8;
+}
+
+// --- SoundFont loading ---
+function midiToFileName(midi) {
+  return FLAT_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
+}
+function midiToName(midi) {
+  return NOTE_NAMES[midi % 12] + (Math.floor(midi / 12) - 1);
+}
+
+async function loadNote(midi, inst) {
+  const key = inst+":"+midi;
+  if (buffers[key]) return;
+  const url = SF_BASE + inst + "-mp3/" + midiToFileName(midi) + ".mp3";
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    buffers[key] = await audioCtx.decodeAudioData(await res.arrayBuffer());
+  } catch(e) {}
+}
+
+async function preload(inst) {
+  $("sfDot").className = "dot yellow";
+  $("sfStatus").textContent = "Lade: " + inst + "...";
+  $("loadBtn").disabled = true;
+  const p = [];
+  for (let m = 36; m <= 84; m++) p.push(loadNote(m, inst));
+  await Promise.all(p);
+  $("sfDot").className = "dot green";
+  $("sfStatus").textContent = "✅ " + inst;
+  $("loadBtn").disabled = false;
+  loaded = true;
+}
+
+// --- Play ---
+function playMidi(midi) {
+  const m = midi + transpose;
+  const key = currentInstrument + ":" + m;
+  if (!audioCtx || !buffers[key]) {
+    loadNote(m, currentInstrument);
+    return;
+  }
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffers[key];
+  const gain = audioCtx.createGain();
+  gain.gain.value = volume;
+  src.connect(gain);
+  gain.connect(convolver);
+  gain.connect(dryGain);
+  src.start();
+  $("noteDisplay").textContent = midiToName(m);
+  activeNotes.add(m);
+  const k = $("k"+midi); if(k) k.classList.add("active");
+  setTimeout(() => {
+    activeNotes.delete(m);
+    const k2 = $("k"+midi); if(k2) k2.classList.remove("active");
+    if (activeNotes.size === 0) $("noteDisplay").textContent = "—";
+  }, 700);
+}
+
+// --- Piano ---
+const piano = $("pianoGrid");
+const whiteKeys = [];
+let wi = 0;
+for (let m = 36; m <= 84; m++) {
+  if (!IS_BLACK[m%12]) {
+    const w = document.createElement("div");
+    w.className = "wk"; w.id = "k"+m;
+    addPlayEvents(w, m);
+    piano.appendChild(w);
+    whiteKeys.push({midi:m, idx:wi}); wi++;
+  }
+}
+for (let m = 36; m <= 84; m++) {
+  if (IS_BLACK[m%12]) {
+    const lw = whiteKeys.filter(w=>w.midi<m).slice(-1)[0];
+    if (!lw) continue;
+    const b = document.createElement("div");
+    b.className = "bk"; b.id = "k"+m;
+    b.style.left = (lw.idx*36+24)+"px";
+    addPlayEvents(b, m);
+    piano.appendChild(b);
+  }
+}
+
+function addPlayEvents(el, midi) {
+  el.addEventListener("mousedown", e => { e.preventDefault(); triggerPlay(midi); });
+  el.addEventListener("touchstart", e => { e.preventDefault(); triggerPlay(midi); }, {passive:false});
+}
+
+function triggerPlay(midi) {
+  if (!loaded) return;
+  playMidi(midi);
+}
+
+// --- Guitar ---
+const gGrid = $("guitarGrid");
+[...GUITAR_STRINGS].reverse().forEach(({name, open}, si) => {
+  const row = document.createElement("div");
+  row.className = "string-row";
+  const lbl = document.createElement("div");
+  lbl.className = "string-label";
+  lbl.textContent = name;
+  row.appendChild(lbl);
+
+  const area = document.createElement("div");
+  area.className = "string-area";
+  const line = document.createElement("div");
+  line.className = "string-line";
+  area.appendChild(line);
+
+  // fret labels
+  for (let f = 0; f < GUITAR_FRETS; f++) {
+    const fl = document.createElement("div");
+    fl.style.cssText = `position:absolute;left:${(f/GUITAR_FRETS*100).toFixed(1)}%;width:${(100/GUITAR_FRETS).toFixed(1)}%;text-align:center;font-size:0.6rem;color:#334;pointer-events:none;top:2px;`;
+    fl.textContent = f === 0 ? "0" : f;
+    area.appendChild(fl);
+  }
+
+  function getFret(x, w) { return Math.min(GUITAR_FRETS-1, Math.floor(x/w*GUITAR_FRETS)); }
+
+  function playFret(e) {
+    if (!loaded) return;
+    e.preventDefault();
+    const rect = area.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const fret = getFret(cx, rect.width);
+    area.classList.add("active");
+    playMidi(open + fret);
+    setTimeout(() => area.classList.remove("active"), 300);
+  }
+
+  area.addEventListener("mousedown", playFret);
+  area.addEventListener("touchstart", playFret, {passive:false});
+  // swipe
+  area.addEventListener("touchmove", e => {
+    e.preventDefault();
+    const rect = area.getBoundingClientRect();
+    const cx = e.touches[0].clientX - rect.left;
+    if (cx < 0 || cx > rect.width) return;
+    const fret = getFret(cx, rect.width);
+    area.classList.add("active");
+    playMidi(open + fret);
+    setTimeout(() => area.classList.remove("active"), 300);
+  }, {passive:false});
+
+  row.appendChild(area);
+  gGrid.appendChild(row);
+});
+
+// --- Controls ---
+$("vol").addEventListener("input", e => {
+  volume = parseFloat(e.target.value);
+  $("volVal").textContent = Math.round(volume*100)+"%";
+});
+$("reverb").addEventListener("input", e => {
+  reverbAmt = parseFloat(e.target.value);
+  $("reverbVal").textContent = Math.round(reverbAmt*100)+"%";
+  updateReverb();
+});
+$("transpose").addEventListener("input", e => {
+  transpose = parseInt(e.target.value);
+  $("transposeVal").textContent = (transpose > 0 ? "+" : "") + transpose;
+});
+
+$("loadBtn").addEventListener("click", async () => {
+  await initAudio();
+  currentInstrument = $("instSelect").value;
+  await preload(currentInstrument);
+});
+
+function showTab(tab) {
+  $("panePiano").style.display = tab==="piano" ? "" : "none";
+  $("paneGuitar").style.display = tab==="guitar" ? "" : "none";
+  $("tabPiano").classList.toggle("active", tab==="piano");
+  $("tabGuitar").classList.toggle("active", tab==="guitar");
+}
+</script>
+</body>
+</html>

@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>SoundFont Touch Player</title>
+<link rel="icon" 
+        href="data:image/svg+xml,
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+        <text y='0.9em' font-size='90'>🎹</text>
+        </svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{background:#1a1a2e;color:#eee;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:12px;overflow-x:hidden;}
@@ -340,6 +345,38 @@ async function preload(inst){
   await Promise.all(Array.from({length:73},(_,i)=>loadNote(i+24,inst)));
   $("sfDot").className="dot green";$("sfStatus").textContent="✅ "+inst;$("loadBtn").disabled=false;loaded=true;
 }
+const activeSources={};
+
+function playMidiHold(midi){
+  const m=midi+transpose,key=currentInstrument+":"+m;
+  if(!audioCtx||!buffers[key]){loadNote(m,currentInstrument);return;}
+  if(activeSources[midi])stopMidiHold(midi);
+  const src=audioCtx.createBufferSource();src.buffer=buffers[key];
+  const g=audioCtx.createGain();g.gain.value=volume;
+  src.connect(g);g.connect(convolver);g.connect(dryGain);src.start();
+  activeSources[midi]={src,gain:g};
+  midiNoteOn(m,100,0);
+  addNoteToStaff(m);
+  if(recording)recEvent({type:"note",midi:m,inst:currentInstrument,vel:100,t:Date.now()-recStartTime});
+  $("noteDisplay").textContent=midiToName(m);
+  const k=$("k"+midi);if(k)k.classList.add("active");
+}
+
+function stopMidiHold(midi){
+  const m=midi+transpose;
+  if(activeSources[midi]){
+    try{
+      const{src,gain}=activeSources[midi];
+      gain.gain.setTargetAtTime(0,audioCtx.currentTime,0.05);
+      src.stop(audioCtx.currentTime+0.2);
+    }catch(e){}
+    delete activeSources[midi];
+  }
+  midiNoteOff(m,0);
+  const k=$("k"+midi);if(k)k.classList.remove("active");
+  if(Object.keys(activeSources).length===0)$("noteDisplay").textContent="—";
+}
+
 function playMidi(midi,flash=true){
   const m=midi+transpose,key=currentInstrument+":"+m;
   if(!audioCtx||!buffers[key]){loadNote(m,currentInstrument);return;}
@@ -415,13 +452,19 @@ function tickSeq(){
   seqTimer=setTimeout(tickSeq,60000/parseInt($("seqBpm").value)/4);
 }
 
+// Stop all on mouse/touch up anywhere
+document.addEventListener("mouseup",()=>Object.keys(activeSources).forEach(m=>stopMidiHold(parseInt(m))));
+document.addEventListener("touchend",()=>Object.keys(activeSources).forEach(m=>stopMidiHold(parseInt(m))));
+
 // ── Piano ──
 const piano=$("pianoGrid");const wks=[];let wi=0;
 for(let m=36;m<=84;m++){
   if(!IS_BLACK[m%12]){
     const w=document.createElement("div");w.className="wk";w.id="k"+m;
-    w.addEventListener("mousedown",e=>{e.preventDefault();if(loaded)playMidi(m);});
-    w.addEventListener("touchstart",e=>{e.preventDefault();if(loaded)playMidi(m);},{passive:false});
+    w.addEventListener("mousedown",e=>{e.preventDefault();if(loaded)playMidiHold(m);});
+    w.addEventListener("touchstart",e=>{e.preventDefault();if(loaded)playMidiHold(m);},{passive:false});
+    w.addEventListener("touchend",e=>{e.preventDefault();stopMidiHold(m);},{passive:false});
+    w.addEventListener("mouseenter",e=>{if(e.buttons===1&&loaded)playMidiHold(m);});
     piano.appendChild(w);wks.push({midi:m,idx:wi});wi++;
   }
 }
@@ -429,8 +472,10 @@ for(let m=36;m<=84;m++){
   if(IS_BLACK[m%12]){
     const lw=wks.filter(w=>w.midi<m).slice(-1)[0];if(!lw)continue;
     const b=document.createElement("div");b.className="bk";b.id="k"+m;b.style.left=(lw.idx*34+23)+"px";
-    b.addEventListener("mousedown",e=>{e.preventDefault();if(loaded)playMidi(m);});
-    b.addEventListener("touchstart",e=>{e.preventDefault();if(loaded)playMidi(m);},{passive:false});
+    b.addEventListener("mousedown",e=>{e.preventDefault();if(loaded)playMidiHold(m);});
+    b.addEventListener("touchstart",e=>{e.preventDefault();if(loaded)playMidiHold(m);},{passive:false});
+    b.addEventListener("touchend",e=>{e.preventDefault();stopMidiHold(m);},{passive:false});
+    b.addEventListener("mouseenter",e=>{if(e.buttons===1&&loaded)playMidiHold(m);});
     piano.appendChild(b);
   }
 }
@@ -494,7 +539,7 @@ const IS_SHARP=[false,true,false,true,false,false,true,false,true,false,true,fal
 function addNoteToStaff(midi){noteHistory.push(midi);if(noteHistory.length>20)noteHistory.shift();if(document.getElementById("pane-notes").classList.contains("active"))drawStaff();}
 function drawStaff(){
   const canvas=$("staffCanvas");if(!canvas)return;
-  const clef=$("clefSelect").value,W=Math.max(600,noteHistory.length*34+120);canvas.width=W;
+  const clef=$("clefSelect").value,W=Math.max(1200,noteHistory.length*34+120);canvas.width=W;
   const ctx=canvas.getContext("2d");ctx.clearRect(0,0,W,160);ctx.fillStyle="#f8f8f0";ctx.fillRect(0,0,W,160);
   const lineY=pos=>100-pos*7;
   ctx.strokeStyle="#333";ctx.lineWidth=1.2;

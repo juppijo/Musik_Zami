@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SONIC LISSAJOUS — Audio Visualizer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#000520;
+  --bg2:#00092a;
+  --surface:rgba(0,10,40,0.88);
+  --acc:#00e5ff;
+  --acc2:#ff00bb;
+  --acc3:#8800ff;
+  --text:#c8e8ff;
+  --dim:rgba(150,210,255,0.45);
+  --glow:0 0 18px rgba(0,245,255,0.7),0 0 40px rgba(0,245,255,0.2);
+  --glow2:0 0 18px rgba(255,0,187,0.7);
+  --b:rgba(0,245,255,0.25);
+  --bbg:rgba(0,245,255,0.07);
+}
+body.day {
+  --bg:#a8d1ff;
+  --bg2:#82b1ff;
+  --surface:rgba(150,190,240,0.9);
+  --acc:#0044aa;
+  --acc2:#aa0055;
+  --acc3:#440099;
+  --text:#001a33;
+  --dim:rgba(0,30,80,0.5);
+  --glow:0 0 18px rgba(0,80,204,0.5),0 0 40px rgba(0,80,204,0.15);
+  --glow2:0 0 18px rgba(204,0,119,0.5);
+  --b:rgba(0,60,184,0.25);
+  --bbg:rgba(0,60,184,0.07);
+}
+
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);transition:background .5s,color .5s}
+
+#wrap {
+  position:fixed;inset:0;z:0;
+
+  filter: blur(0.5px) brightness(1.2) contrast(1.1);
+  /* Ein leichter Bloom-Effekt für das gesamte Canvas */
+  drop-shadow: 0 0 10px var(--acc);
+}
+
+canvas {
+  display: block;
+  width: 100%!important;
+  height: 100%!important;
+  /* Fügt einen weichen Glow hinzu */
+  filter: blur(1px) brightness(1.5) contrast(1.3);
+}
+
+/* ── OVERLAY ── */
+#overlay{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%,rgba(0,20,60,.96) 0%,rgba(0,5,26,.99) 100%);
+  transition:opacity .8s ease;
+}
+body.day #overlay{background:radial-gradient(ellipse at 50% 40%,rgba(170,210,255,.96) 0%,rgba(200,225,255,.99) 100%)}
+#overlay.gone{opacity:0;pointer-events:none}
+
+.ov-ring{
+  width:90px;height:90px;border-radius:50%;
+  border:1.5px solid var(--acc);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:28px;
+  box-shadow:var(--glow),inset 0 0 30px rgba(0,245,255,.04);
+  animation:ringpulse 3s ease-in-out infinite;
+}
+@keyframes ringpulse{0%,100%{box-shadow:var(--glow)}50%{box-shadow:var(--glow2)}}
+.ov-ring svg{width:40px;height:40px;fill:var(--acc)}
+#overlay h1{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1.8rem,5vw,3.2rem);letter-spacing:.3em;color:var(--acc);text-shadow:var(--glow);margin-bottom:6px}
+#overlay p{color:var(--dim);letter-spacing:.2em;font-size:.8rem;margin-bottom:36px}
+.ov-btns{display:flex;flex-direction:column;align-items:center;gap:10px}
+.ov-btn{background:transparent;border:1px solid var(--acc);color:var(--acc);font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;padding:14px 36px;cursor:pointer;border-radius:3px;transition:all .3s;box-shadow:var(--glow)}
+.ov-btn:hover{background:rgba(0,245,255,.1);transform:scale(1.04)}
+.ov-btn2{background:transparent;border:1px solid var(--dim);color:var(--dim);font-family:'Rajdhani';font-size:.75rem;letter-spacing:.15em;padding:9px 26px;cursor:pointer;border-radius:3px;transition:all .3s}
+.ov-btn2:hover{border-color:var(--acc2);color:var(--acc2)}
+
+/* ── HUD TOP ── */
+#hud{position:fixed;inset:0;z-index:10;pointer-events:none}
+#topbar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;
+  background:linear-gradient(to bottom,rgba(0,5,16,.75) 0%,transparent 100%);
+  pointer-events:all;
+}
+body.day #topbar{background:linear-gradient(to bottom,rgba(210,235,255,.75) 0%,transparent 100%)}
+#logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:.95rem;letter-spacing:.3em;color:var(--acc);text-shadow:var(--glow);transition:color .5s,text-shadow .5s}
+#logo span{display:block;font-family:'Rajdhani';font-weight:300;font-size:.55rem;letter-spacing:.2em;color:var(--dim);margin-top:2px;text-shadow:none}
+.btnrow{display:flex;gap:8px;align-items:center}
+.hbtn{
+  background:var(--bbg);border:1px solid var(--b);color:var(--acc);
+  font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:.12em;
+  padding:7px 13px;cursor:pointer;border-radius:3px;
+  transition:all .22s;backdrop-filter:blur(8px);
+}
+.hbtn:hover{background:rgba(0,245,255,.18);box-shadow:var(--glow);transform:translateY(-1px)}
+.hbtn svg{width:12px;height:12px;vertical-align:middle;margin-right:3px}
+body.day .hbtn:hover{background:rgba(0,80,204,.15)}
+
+/* ── MODE PILLS ── */
+#modes{
+  position:absolute;top:64px;left:50%;transform:translateX(-50%);
+  display:flex;gap:5px;pointer-events:all;
+}
+.mbtn{
+  background:var(--bbg);border:1px solid var(--b);color:var(--dim);
+  font-family:'Orbitron',sans-serif;font-size:.45rem;letter-spacing:.1em;
+  padding:5px 11px;cursor:pointer;border-radius:3px;
+  transition:all .2s;backdrop-filter:blur(6px);
+}
+.mbtn.on,.mbtn:hover{background:rgba(0,245,255,.14);color:var(--acc);border-color:var(--acc)}
+
+/* ── BOTTOM ── */
+#btmbar{
+  position:absolute;bottom:0;left:0;right:0;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:14px 22px;
+  background:linear-gradient(to top,rgba(0,5,16,.75) 0%,transparent 100%);
+}
+body.day #btmbar{background:linear-gradient(to top,rgba(210,235,255,.75) 0%,transparent 100%)}
+#ampbox{display:flex;flex-direction:column;gap:3px}
+#ampbox .lbl{font-size:.55rem;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+#ampbox .val{font-family:'Orbitron',sans-serif;font-size:1.3rem;font-weight:700;color:var(--acc);text-shadow:var(--glow);transition:color .3s}
+#fqbars{display:flex;align-items:flex-end;gap:2px;height:38px}
+.fbar{width:4px;background:var(--acc);border-radius:2px 2px 0 0;opacity:.7;min-height:2px}
+#pill{
+  display:flex;align-items:center;gap:7px;
+  background:var(--surface);border:1px solid var(--b);
+  border-radius:100px;padding:5px 13px;
+  backdrop-filter:blur(12px);font-size:.6rem;letter-spacing:.1em;color:var(--text);
+}
+#dot{width:7px;height:7px;border-radius:50%;background:#f44;box-shadow:0 0 8px #f44;transition:all .3s}
+#dot.on{background:#0f8;box-shadow:0 0 8px #0f8;animation:blink 1.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── CONTROL PANEL ── */
+#panel{
+  position:fixed;bottom:0;left:0;right:0;z-index:20;
+  background:rgba(0,8,22,.92);
+  border-top:1px solid var(--b);
+  backdrop-filter:blur(16px);
+  padding:14px 20px 16px;
+  max-height:220px;overflow-y:auto;
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+body.day #panel{background:rgba(200,225,255,.92)}
+#panel.closed{transform:translateY(100%)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px 16px}
+.pgrp{display:flex;flex-direction:column;gap:4px}
+.pgrp label{font-size:.58rem;letter-spacing:.14em;color:var(--dim);text-transform:uppercase}
+.pgrp span{color:var(--acc);font-family:'Orbitron',sans-serif;font-size:.6rem}
+input[type=range]{width:100%;cursor:pointer;accent-color:var(--acc);height:4px}
+select{
+  padding:4px 7px;border-radius:3px;
+  background:rgba(0,20,50,.8);color:var(--text);
+  border:1px solid var(--b);font-size:.7rem;cursor:pointer;width:100%;
+}
+body.day select{background:rgba(180,220,255,.8)}
+#paneltoggle{
+  position:fixed;bottom:0;right:20px;z-index:21;
+  background:var(--bbg);border:1px solid var(--b);border-bottom:none;
+  color:var(--acc);font-family:'Orbitron',sans-serif;font-size:.48rem;
+  letter-spacing:.1em;padding:6px 12px;cursor:pointer;border-radius:3px 3px 0 0;
+  backdrop-filter:blur(8px);transition:all .2s;
+}
+#paneltoggle:hover{background:rgba(0,245,255,.15)}
+
+/* Versteckt alles außer dem Canvas im Vollbildmodus */
+:fullscreen #ui, 
+:fullscreen #hud, 
+:fullscreen #sysBtn, 
+:fullscreen #themeBtn,
+:fullscreen #overlay {
+  display: none !important;
+}
+
+/* Versteckt den Mauszeiger im Vollbildmodus für maximale Immersion */
+:fullscreen {
+  cursor: crosshair; /* Ein feines Fadenkreuz */
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── OVERLAY ── -->
+<div id="overlay">
+  <div class="ov-ring">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+  </div>
+  <h1>SONIC LISSAJOUS</h1>
+  <p>3D AUDIO REACTIVE · LISSAJOUS &amp; KARDIOIDE</p>
+  <div class="ov-btns">
+    <button class="ov-btn" id="sysBtn">🔊 SYSTEM-AUDIO (Lautsprecher)</button>
+    <button class="ov-btn" style="opacity:.7;font-size:.58rem" id="micBtn">🎙 MIKROFON</button>
+    <button class="ov-btn2" id="demoBtn">DEMO MODUS (kein Audio)</button>
+  </div>
+  <p style="margin-top:16px;font-size:.62rem;color:var(--dim);letter-spacing:.1em;text-align:center;max-width:340px">
+    💡 System-Audio: Im Browser-Dialog <strong style="color:var(--acc)">"Audio teilen"</strong> aktivieren
+  </p>
+</div>
+
+<!-- ── CANVAS ── -->
+<div id="wrap"><canvas id="c"></canvas></div>
+
+<!-- ── HUD ── -->
+<div id="hud">
+  <div id="topbar">
+    <div id="logo">SONIC LISSAJOUS<span>AUDIO REACTIVE CURVE VISUALIZER</span></div>
+    <div class="btnrow">
+      <div id="modes">
+        <button class="mbtn on" data-m="lissajous">LISSAJOUS</button>
+        <button class="mbtn" data-m="cardioid">KARDIOIDE</button>
+        <button class="mbtn" data-m="combined">KOMBINIERT</button>
+      </div>
+      <button class="hbtn" id="themeBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>DAY
+      </button>
+      <button class="hbtn" id="fsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>VOLLBILD
+      </button>
+    </div>
+  </div>
+
+  <div id="btmbar">
+    <div id="ampbox"><div class="lbl">AMPLITUDE</div><div class="val" id="ampVal">—</div></div>
+    <div id="fqbars"></div>
+    <div id="pill"><div id="dot"></div><span id="dotTxt">BEREIT</span></div>
+  </div>
+</div>
+
+<!-- ── CONTROL PANEL ── -->
+<button id="paneltoggle">▲ PARAMETER</button>
+<div id="panel">
+  <div class="pgrid">
+    <div class="pgrp"><label>Frequenz X <span id="fxV">3.0</span></label><input type="range" id="fxS" min="1" max="20" step="1" value="3"></div>
+    <div class="pgrp"><label>Frequenz Y <span id="fyV">2.0</span></label><input type="range" id="fyS" min="1" max="20" step="1" value="2"></div>
+    <div class="pgrp"><label>Frequenz Z <span id="fzV">1.0</span></label><input type="range" id="fzS" min="1" max="20" step="1" value="1"></div>
+    <div class="pgrp"><label>Phase X <span id="pxV">0.00</span></label><input type="range" id="pxS" min="0" max="6.28" step="0.05" value="0"></div>
+    <div class="pgrp"><label>Phase Y <span id="pyV">1.57</span></label><input type="range" id="pyS" min="0" max="6.28" step="0.05" value="1.57"></div>
+    <div class="pgrp"><label>Phase Z <span id="pzV">0.00</span></label><input type="range" id="pzS" min="0" max="6.28" step="0.05" value="0"></div>
+    <div class="pgrp"><label>Amplitude <span id="aV">0.7</span></label><input type="range" id="aS" min="0.1" max="4" step="0.05" value="0.7"></div>
+    <div class="pgrp"><label>Geschwindigkeit <span id="sV">7.0</span></label><input type="range" id="sS" min="0" max="20" step="0.05" value="7"></div>
+    <div class="pgrp"><label>Farbversatz <span id="hV">0.00</span></label><input type="range" id="hS" min="0" max="1" step="0.01" value="0"></div>
+    <div class="pgrp"><label>Kardioide Gr. <span id="csV">2.0</span></label><input type="range" id="csS" min="0.5" max="5" step="0.1" value="2"></div>
+    <div class="pgrp"><label>Audio-Reaktion <span id="arV">1.0</span></label><input type="range" id="arS" min="0" max="3" step="0.05" value="1"></div>
+    <div class="pgrp"><label>Segmente <span id="segV">1200</span></label><input type="range" id="segS" min="200" max="4000" step="100" value="1200"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────
+//  PARAMS
+// ─────────────────────────────────
+const P = {
+  freqX:3, freqY:2, freqZ:1,
+  phaseX:0, phaseY:Math.PI/2, phaseZ:0,
+  amplitude:0.7, speed:7, hueShift:0,
+  cardioidSize:2, audioReact:1,
+  segments:1200, curveType:'lissajous'
+};
+
+// ─────────────────────────────────
+//  AUDIO
+// ─────────────────────────────────
+let actx, analyser, data, demoOscs=[], isDemo=false;
+const FFT=512;
+
+function initAudioCtx(){
+  if(!actx){
+    actx=new(window.AudioContext||window.webkitAudioContext)();
+    analyser=actx.createAnalyser();
+    analyser.fftSize=FFT;
+    analyser.smoothingTimeConstant=0.80;
+    data=new Uint8Array(analyser.frequencyBinCount);
+  }
+}
+
+async function startSystemAudio(){
+  initAudioCtx();
+  try{
+    const stream=await navigator.mediaDevices.getDisplayMedia({
+      video:{width:1,height:1,frameRate:1},
+      audio:{echoCancellation:false,noiseSuppression:false,sampleRate:44100}
+    });
+    stream.getVideoTracks().forEach(t=>t.stop());
+    const audioTracks=stream.getAudioTracks();
+    if(audioTracks.length===0){
+      setStatus(false,'Kein Audio gewaehlt – Mikro-Fallback');
+      await startMic(); return;
+    }
+    actx.createMediaStreamSource(stream).connect(analyser);
+    setStatus(true,'SYSTEM-AUDIO AKTIV');
+    audioTracks[0].addEventListener('ended',()=>setStatus(false,'STREAM BEENDET'));
+  }catch(e){
+    console.warn('getDisplayMedia:',e);
+    await startMic();
+  }
+}
+
+async function startMic(){
+  initAudioCtx();
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false},video:false});
+    actx.createMediaStreamSource(s).connect(analyser);
+    setStatus(true,'MIKROFON AKTIV');
+  }catch(e){
+    setStatus(false,'Kein Zugriff – Demo');
+    startDemo();
+  }
+}
+
+function startDemo(){
+  initAudioCtx();
+  isDemo=true;
+  const merger=actx.createChannelMerger(1);
+  const masterGain=actx.createGain();
+  masterGain.gain.value=0.001;
+  merger.connect(masterGain);
+  masterGain.connect(analyser);
+  const freqs=[55,110,165,220,330,440,550,660,880,1100,1320];
+  freqs.forEach((f,i)=>{
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type=['sine','triangle','sawtooth','square','sine'][i%5];
+    o.frequency.value=f;
+    g.gain.value=0.1+Math.random()*.2;
+    o.connect(g); g.connect(merger); o.start();
+    demoOscs.push({o,g,base:f});
+  });
+  let dt=0;
+  (function animDemo(){
+    dt+=0.004;
+    demoOscs.forEach((d,i)=>{
+      const w=Math.sin(dt*(1+i*.4)+i*1.1)*.5+.5;
+      d.o.frequency.value=d.base*(1+Math.sin(dt*.6+i)*.06);
+      d.g.gain.value=0.04+w*.4;
+    });
+    requestAnimationFrame(animDemo);
+  })();
+  setStatus(true,'DEMO MODUS');
+}
+
+function getFreq(){ if(analyser){analyser.getByteFrequencyData(data);return data;}return null; }
+function freqBand(lo,hi){
+  if(!data)return 0;
+  let s=0,c=0;
+  const bpb=(actx.sampleRate/2)/data.length;
+  for(let i=Math.floor(lo/bpb);i<=Math.min(Math.ceil(hi/bpb),data.length-1);i++){s+=data[i];c++;}
+  return c?s/(c*255):0;
+}
+function setStatus(on,txt){
+  document.getElementById('dot').className=on?'on':'';
+  document.getElementById('dotTxt').textContent=txt;
+}
+
+// ─────────────────────────────────
+//  THREE.JS
+// ─────────────────────────────────
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,1000);
+camera.position.set(0,0,8);
+
+// BG
+function makeBG(dark){
+  const cv=document.createElement('canvas'); cv.width=2;cv.height=512;
+  const cx=cv.getContext('2d'), g=cx.createLinearGradient(0,0,0,512);
+  if(dark){
+    g.addColorStop(0,'#000520');
+    g.addColorStop(.5,'#00092a');
+    g.addColorStop(1,'#000328');
+  }
+  else{
+    g.addColorStop(0,'#82b1ff');
+    g.addColorStop(.5,'#a8d1ff');
+    g.addColorStop(1,'#c2e0ff');
+  }
+  cx.fillStyle=g;cx.fillRect(0,0,2,512);
+  return new THREE.CanvasTexture(cv);
+}
+scene.background=makeBG(true);
+
+// Stars
+const stGeo=new THREE.BufferGeometry();
+const stPos=new Float32Array(2000*3);
+for(let i=0;i<2000*3;i++)stPos[i]=(Math.random()-.5)*400;
+stGeo.setAttribute('position',new THREE.BufferAttribute(stPos,3));
+const stars=new THREE.Points(stGeo,new THREE.PointsMaterial({color:0x99ccff,size:.2,transparent:true,opacity:.55}));
+scene.add(stars);
+
+// Grid
+/*
+function mkGrid(dark){
+  const g=new THREE.GridHelper(20,20,dark?0x002233:0x88aacc,dark?0x001122:0xaabbdd);
+  g.position.y=-3.5; g.material.transparent=true; g.material.opacity=.25; return g;
+}
+let grid=mkGrid(true); scene.add(grid);
+*/
+
+// ── CURVE GEOMETRY ──
+const SEGS=()=>P.segments;
+
+const mat1 = new THREE.LineBasicMaterial({
+  vertexColors: true, 
+  transparent: true, 
+  opacity: 1,
+  linewidth: 3 // Füge diese Zeile hinzu (Standard ist 1)
+});
+
+const mat2 = new THREE.LineBasicMaterial({
+  vertexColors: true, 
+  transparent: true, 
+  opacity: .75,
+  linewidth: 2 // Hier kannst du die zweite Linie etwas dünner machen
+});
+
+function emptyGeo(){return new THREE.BufferGeometry();}
+let line1=new THREE.Line(emptyGeo(),mat1);
+let line2=new THREE.Line(emptyGeo(),mat2);
+scene.add(line1); scene.add(line2);
+
+// Ghost trail lines (echo effect)
+const GHOSTS=5;
+const ghostLines=[];
+
+for(let g=0; g<GHOSTS; g++){
+  const m = new THREE.LineBasicMaterial({
+    vertexColors: true, 
+    transparent: true, 
+    opacity: .12-g*.018,
+    linewidth: 2 // Hier für die Geister-Linien
+  });
+  const l = new THREE.Line(emptyGeo(), m);
+  scene.add(l);
+  ghostLines.push(l);
+}
+
+let prevGeoms=[];
+
+function buildLissajous(fxMod=0,fyMod=0,fzMod=0,ampMod=0,phaseMod=0){
+  const n=SEGS();
+  const pos=new Float32Array((n+1)*3);
+  const col=new Float32Array((n+1)*3);
+  const amp=P.amplitude+ampMod;
+  const fx=P.freqX+fxMod, fy=P.freqY+fyMod, fz=P.freqZ+fzMod;
+  for(let i=0;i<=n;i++){
+    const t=(i/n)*Math.PI*2;
+    const x=amp*Math.sin(fx*t+P.phaseX+phaseMod);
+    const y=amp*Math.sin(fy*t+P.phaseY);
+    const z=amp*Math.sin(fz*t+P.phaseZ);
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+    const hue=(i/n+P.hueShift)%1;
+    const c=new THREE.Color().setHSL(hue,1,.55);
+
+    // glow effect
+    col[i*3] = c.r; 
+    col[i*3+1] = c.g; 
+    col[i*3+2] = c.b;
+
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  return geo;
+}
+
+function buildCardioid(ampMod=0,sizeMod=0){
+  const n=SEGS();
+  const pos=new Float32Array((n+1)*3);
+  const col=new Float32Array((n+1)*3);
+  const a=P.cardioidSize+sizeMod;
+  const amp=P.amplitude+ampMod;
+  for(let i=0;i<=n;i++){
+    const t=(i/n)*Math.PI*2;
+    const r=a*(1-Math.cos(t));
+    const x=r*Math.cos(t)*(amp/2);
+    const y=r*Math.sin(t)*(amp/2);
+    const z=a*Math.sin(t*2)*0.5*(1+ampMod*.3);
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z;
+    const hue=((i/n)+P.hueShift+.5)%1;
+    const c=new THREE.Color().setHSL(hue,1,.55);
+    col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  return geo;
+}
+
+function rebuildCurves(fxM,fyM,fzM,aM,pM,sM){
+  // push ghost
+  if(prevGeoms.length>0){
+    const oldest=prevGeoms.shift();
+    if(oldest) oldest.dispose();
+  }
+  prevGeoms.push(line1.geometry.clone());
+  ghostLines.forEach((gl,i)=>{
+    const src=prevGeoms[prevGeoms.length-1-i];
+    if(src){
+      gl.geometry.dispose();
+      gl.geometry=src.clone();
+    }
+  });
+
+  const g1=P.curveType==='cardioid'?buildCardioid(aM,sM):buildLissajous(fxM,fyM,fzM,aM,pM);
+  const g2=P.curveType==='cardioid'?buildLissajous(fxM,fyM,fzM,aM,pM):buildCardioid(aM,sM);
+
+  line1.geometry.dispose(); line1.geometry=g1;
+  line2.geometry.dispose(); line2.geometry=g2;
+  line2.visible=(P.curveType==='combined');
+}
+
+// ── CAMERA CONTROL ──
+let angle=0, phi=0.1, radius=8, dragging=false, lx=0, ly=0;
+canvas.addEventListener('mousedown',e=>{dragging=true;lx=e.clientX;ly=e.clientY});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  angle+=(e.clientX-lx)*.006; phi=Math.max(-.7,Math.min(.7,phi-(e.clientY-ly)*.005));
+  lx=e.clientX;ly=e.clientY;
+});
+canvas.addEventListener('wheel',e=>{radius=Math.max(4,Math.min(25,radius+e.deltaY*.04));e.preventDefault()},{passive:false});
+canvas.addEventListener('touchstart',e=>{dragging=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY});
+canvas.addEventListener('touchend',()=>dragging=false);
+canvas.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  angle+=(e.touches[0].clientX-lx)*.007;
+  phi=Math.max(-.7,Math.min(.7,phi-(e.touches[0].clientY-ly)*.005));
+  lx=e.touches[0].clientX;ly=e.touches[0].clientY;
+});
+
+// ── MINI FREQ BARS ──
+const fbCont=document.getElementById('fqbars');
+const NBARS=28; const fbEls=[];
+for(let i=0;i<NBARS;i++){const b=document.createElement('div');b.className='fbar';fbCont.appendChild(b);fbEls.push(b);}
+function updateFBars(d){
+  if(!d)return;
+  const step=Math.floor(d.length/NBARS);
+  const dark=!document.body.classList.contains('day');
+  fbEls.forEach((b,i)=>{
+    const v=d[i*step]/255;
+    b.style.height=(v*36+2)+'px';
+    b.style.background=`hsl(${dark?180+i*5:210+i*4},100%,${40+v*40}%)`;
+  });
+}
+
+// ── MAIN LOOP ──
+let T=0, frameCount=0;
+const ampValEl=document.getElementById('ampVal');
+
+// Ganz oben außerhalb der animate-Funktion:
+let introScale = 0.1;
+
+function animate(){
+  requestAnimationFrame(animate);
+  T+=0.016*P.speed;
+  frameCount++;
+
+  if (introScale < 1.0) {
+    introScale += 0.0005; // Geschwindigkeit des Wachsens
+  }
+
+  const fd=getFreq();
+  if(fd)updateFBars(fd);
+
+  // Audio bands
+  const bass=freqBand(20,200)*P.audioReact;
+  const mid =freqBand(200,2000)*P.audioReact;
+  const hi  =freqBand(2000,8000)*P.audioReact;
+  const total=fd?(fd.reduce((a,b)=>a+b,0)/(fd.length*255)):Math.sin(T*.5)*.5+.5;
+
+  // Rebuild curve every N frames
+  const rebuildEvery=3;
+  if(frameCount%rebuildEvery===0){
+
+    //const fxM=bass*2.7, fyM=mid*1.8, fzM=hi*1.5;
+    //const aM=bass*1.8, sM=bass*1.1, pM=mid*.6;
+
+    // ÄNDERUNG: Vorher stand hier fxM = bass * 2.5;
+    // Wir setzen die Form-Modulation auf 0 oder einen festen Wert:
+    const fxM = 0; 
+    const fyM = 0;
+    const fzM = 0;
+
+    // Behalte aM (Amplitude-Modulation) bei oder setze sie auf 0, 
+    // wenn die Linienform völlig starr bleiben soll:
+    const aM = 0; 
+    const sM = 0; 
+    const pM = 0;
+
+    rebuildCurves(fxM,fyM,fzM,aM,pM,sM);
+  }
+
+  // Auto-rotate
+  if(!dragging) angle+=0.004;
+  camera.position.x=Math.sin(angle)*radius;
+  camera.position.z=Math.cos(angle)*radius;
+  camera.position.y=phi*8+total*.5;
+  camera.lookAt(0,0,0);
+
+  // Curve rotation follows audio
+  line1.rotation.x=T*.18;
+  line1.rotation.z=T*.08+bass*.3;
+  line2.rotation.x=T*.18;
+  line2.rotation.z=T*.08+bass*.3;
+  ghostLines.forEach(gl=>{
+    gl.rotation.x=line1.rotation.x;
+    gl.rotation.z=line1.rotation.z;
+  });
+
+  // HueShift with time + audio
+  P.hueShift=(P.hueShift+0.0008+total*.001)%1;
+  document.getElementById('hS').value=P.hueShift;
+  document.getElementById('hV').textContent=P.hueShift.toFixed(2);
+
+  // Stars
+  stars.rotation.y+=0.0001+total*.0002;
+  stars.material.opacity=.4+total*.2;
+
+  ampValEl.textContent=Math.round(total*100)+'%';
+
+  // Wir berechnen einen kombinierten Wert aus allen drei Bändern
+  // Die Multiplikatoren (1.5, 1.2, 0.8) kannst du anpassen, um die Sensibilität zu steuern
+  const totalZoom = 0.5 + (bass * 2.4) + (mid * 1.6) + (hi * 0.8) * introScale;
+
+  // Den Zoom auf die Hauptlinien anwenden
+  line1.scale.set(totalZoom, totalZoom, totalZoom);
+  line2.scale.set(totalZoom, totalZoom, totalZoom);
+
+  // Den Zoom auf alle Geister-Linien (Echos) anwenden
+  ghostLines.forEach(gl => {
+    gl.scale.set(totalZoom, totalZoom, totalZoom);
+  });
+
+  renderer.render(scene,camera);
+}
+animate();
+
+// ── RESIZE ──
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+// ── PANEL CONTROLS ──
+const sliders=[
+  {id:'fxS',d:'fxV',key:'freqX',dec:1},
+  {id:'fyS',d:'fyV',key:'freqY',dec:1},
+  {id:'fzS',d:'fzV',key:'freqZ',dec:1},
+  {id:'pxS',d:'pxV',key:'phaseX',dec:2},
+  {id:'pyS',d:'pyV',key:'phaseY',dec:2},
+  {id:'pzS',d:'pzV',key:'phaseZ',dec:2},
+  {id:'aS', d:'aV', key:'amplitude',dec:1},
+  {id:'sS', d:'sV', key:'speed',dec:2},
+  {id:'hS', d:'hV', key:'hueShift',dec:2},
+  {id:'csS',d:'csV',key:'cardioidSize',dec:1},
+  {id:'arS',d:'arV',key:'audioReact',dec:2},
+  {id:'segS',d:'segV',key:'segments',dec:0},
+];
+sliders.forEach(sl=>{
+  const inp=document.getElementById(sl.id);
+  const dsp=document.getElementById(sl.d);
+  inp.addEventListener('input',e=>{
+    P[sl.key]=parseFloat(e.target.value);
+    dsp.textContent=P[sl.key].toFixed(sl.dec);
+  });
+});
+
+// ── MODE BUTTONS ──
+document.querySelectorAll('.mbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.mbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    P.curveType=b.dataset.m;
+    line2.visible=(P.curveType==='combined');
+  });
+});
+
+// ── PANEL TOGGLE ──
+const panel=document.getElementById('panel');
+const ptBtn=document.getElementById('paneltoggle');
+let panelOpen=false;
+ptBtn.addEventListener('click',()=>{
+  panelOpen=!panelOpen;
+  panel.classList.toggle('closed',!panelOpen);
+  ptBtn.textContent=panelOpen?'▼ PARAMETER':'▲ PARAMETER';
+});
+panel.classList.add('closed');
+
+// ── THEME ──
+let isDark=true;
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  isDark=!isDark;
+  document.body.classList.toggle('day',!isDark);
+  scene.background=makeBG(isDark);
+
+  // Diese Zeilen bitte entfernen oder auskommentieren:
+  // scene.remove(grid);
+  // grid.geometry.dispose();
+  // grid=mkGrid(isDark);
+  // scene.add(grid);
+
+  stars.visible=isDark;
+
+  const b=document.getElementById('themeBtn');
+  b.innerHTML=isDark
+    ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>DAY`
+    :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>DARK`;
+});
+
+// ── FULLSCREEN ──
+document.getElementById('fsBtn').addEventListener('click',()=>{
+  document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+});
+document.addEventListener('fullscreenchange',()=>{
+  const fs=!!document.fullscreenElement;
+  document.getElementById('fsBtn').innerHTML=fs
+    ?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>VERLASSEN`
+    :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>VOLLBILD`;
+});
+
+// ── SCREENSAVER (Inaktivität) ──
+let ssTimer=null, ssInterval=null, ssActive=false;
+function startSS(){
+  if(ssActive)return; ssActive=true;
+  ssInterval=setInterval(()=>{
+    const r=Math.random();
+
+    // Ändert die Frequenzen auf GANZE ZAHLEN zwischen 1 und 10
+    if(r < .25){
+        // Math.floor(Math.random() * 10) + 1 ergibt ganze Zahlen von 1 bis 10
+        P.freqX = Math.floor(Math.random() * 10) + 1;
+        P.freqY = Math.floor(Math.random() * 10) + 1;
+        P.freqZ = Math.floor(Math.random() * 10) + 1;
+
+        /*
+        
+        // Die Anzeige im Panel ebenfalls aktualisieren (optional)
+        document.getElementById('fxV').textContent = P.freqX.toFixed(1);
+        document.getElementById('fyV').textContent = P.freqY.toFixed(1);
+        document.getElementById('fzV').textContent = P.freqZ.toFixed(1);
+        
+        // Die Slider-Positionen im UI anpassen
+        document.getElementById('fxS').value = P.freqX;
+        document.getElementById('fyS').value = P.freqY;
+        document.getElementById('fzS').value = P.freqZ;
+
+        */
+    }
+
+    else if(r<.5){P.phaseX=Math.random()*Math.PI*2;P.phaseY=Math.random()*Math.PI*2;P.phaseZ=Math.random()*Math.PI*2;}
+    else if(r<.7){const m=['lissajous','cardioid','combined'];P.curveType=m[Math.floor(Math.random()*3)];}
+    else{P.cardioidSize=.5+Math.random()*4;}
+    document.querySelectorAll('.mbtn').forEach(b=>{b.classList.toggle('on',b.dataset.m===P.curveType)});
+  },5000);
+}
+function stopSS(){
+  if(!ssActive)return; ssActive=false;
+  if(ssInterval){clearInterval(ssInterval);ssInterval=null;}
+}
+function resetSS(){
+  stopSS();
+  if(ssTimer)clearTimeout(ssTimer);
+  ssTimer=setTimeout(startSS,12000);
+}
+['mousemove','keydown','click','touchstart'].forEach(ev=>document.addEventListener(ev,resetSS));
+resetSS();
+
+// ── START BUTTONS ──
+document.getElementById('sysBtn').addEventListener('click',async()=>{
+  document.getElementById('overlay').classList.add('gone');
+  await startSystemAudio();
+});
+document.getElementById('micBtn').addEventListener('click',async()=>{
+  document.getElementById('overlay').classList.add('gone');
+  await startMic();
+});
+document.getElementById('demoBtn').addEventListener('click',()=>{
+  document.getElementById('overlay').classList.add('gone');
+  startDemo();
+});
+</script>
+</body>
+</html>

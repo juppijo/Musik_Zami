@@ -25,18 +25,18 @@
   --bbg:rgba(0,245,255,0.07);
 }
 body.day {
-  --bg:#a8d1ff;
-  --bg2:#82b1ff;
-  --surface:rgba(150,190,240,0.9);
+  --bg:#9181ff;
+  --bg2:#7161ff;
+  --surface:rgba(150,140,240,0.9);
   --acc:#0044aa;
-  --acc2:#aa0055;
+  --acc2:#880055;
   --acc3:#440099;
   --text:#001a33;
   --dim:rgba(0,30,80,0.5);
-  --glow:0 0 18px rgba(0,80,204,0.5),0 0 40px rgba(0,80,204,0.15);
-  --glow2:0 0 18px rgba(204,0,119,0.5);
-  --b:rgba(0,60,184,0.25);
-  --bbg:rgba(0,60,184,0.07);
+  --glow:0 0 18px rgba(20,80,204,0.5),0 0 40px rgba(0,80,204,0.15);
+  --glow2:0 0 18px rgba(40,40,140,0.5);
+  --b:rgba(0,60,150,0.25);
+  --bbg:rgba(0,60,150,0.07);
 }
 
 html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Rajdhani',sans-serif;color:var(--text);transition:background .5s,color .5s}
@@ -401,9 +401,9 @@ function makeBG(dark){
     g.addColorStop(1,'#000328');
   }
   else{
-    g.addColorStop(0,'#82b1ff');
-    g.addColorStop(.5,'#a8d1ff');
-    g.addColorStop(1,'#c2e0ff');
+    g.addColorStop(0,'#4241ff');
+    g.addColorStop(.5,'#5261ff');
+    g.addColorStop(1,'#6281ff');
   }
   cx.fillStyle=g;cx.fillRect(0,0,2,512);
   return new THREE.CanvasTexture(cv);

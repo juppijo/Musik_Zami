@@ -5,8 +5,8 @@
 
 // ── Standard-Sender ───────────────────────────────────────────
 const DEFAULT_STATIONS = [
-  { name: 'BRF 1', url: 'https://streaming.brf.be/brf1-high.mp3', genre: 'Regional', icon: '📻' },
-  { name: 'BRF 2', url: 'https://streaming.brf.be/brf2-high.mp3', genre: 'Regional', icon: '📻' },
+  { name: 'BRF 1', url: 'https://streaming.brf.be/brf1-high.mp3', genre: 'Regional', icon: '🇧🇪' },
+  { name: 'BRF 2', url: 'https://streaming.brf.be/brf2-high.mp3', genre: 'Regional', icon: '🇧🇪' },
   { name: 'WDR 1', url: 'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3', genre: '', icon: '📻' },
   { name: 'WDR 2', url: 'https://wdr-wdr2-aachenundregion.icecastssl.wdr.de/wdr/wdr2/aachenundregion/mp3/128/stream.mp3', genre: 'Regional', icon: '📻' },
   { name: 'WDR 3', url: 'https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3', genre: '', icon: '📻' },

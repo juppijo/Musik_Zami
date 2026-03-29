@@ -5,21 +5,23 @@
 
 // ── Standard-Sender ───────────────────────────────────────────
 const DEFAULT_STATIONS = [
-  { name: 'BBC World Service',     url: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service',  genre: 'News / Talk',          icon: '🌍' },
-  { name: 'Radio Paradise',        url: 'https://stream.radioparadise.com/mp3-192',                 genre: 'Rock / Eclectic',      icon: '🎸' },
-  { name: 'SomaFM Groove Salad',   url: 'https://ice1.somafm.com/groovesalad-256-mp3',              genre: 'Ambient / Electronic', icon: '🌿' },
-  { name: 'SomaFM Secret Agent',   url: 'https://ice1.somafm.com/secretagent-128-mp3',              genre: 'Lounge / Spy Jazz',    icon: '🕵️' },
-  { name: 'SomaFM Lush',           url: 'https://ice1.somafm.com/lush-128-mp3',                     genre: 'Dream Pop / Indie',    icon: '🌸' },
-  { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3',             genre: 'Space / Ambient',      icon: '🚀' },
-  { name: 'SomaFM Beat Blender',   url: 'https://ice1.somafm.com/beatblender-128-mp3',              genre: 'Electronic / Chill',   icon: '🎧' },
-  { name: 'Jazz24',                url: 'https://live.amperwave.net/direct/ppm-jazz24aac128-ibc1',  genre: 'Jazz',                 icon: '🎷' },
-  { name: 'KEXP Seattle',          url: 'https://live-aacplus-64.kexp.org/kexp64.aac',              genre: 'Indie / Alternative',  icon: '🎵' },
-  { name: 'FIP Radio',             url: 'https://icecast.radiofrance.fr/fip-midfi.mp3',             genre: 'Eclectic / French',    icon: '🗼' },
-  { name: 'Deutschlandfunk',       url: 'https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3', genre: 'News / Kultur (DE)',   icon: '🇩🇪' },
-  { name: 'Radio Swiss Jazz',      url: 'https://stream.srg-ssr.ch/rj/mp3_128.m3u',                genre: 'Jazz (CH)',            icon: '🎺' },
-  { name: 'Classical WQXR',        url: 'https://stream.wqxr.org/wqxr',                            genre: 'Klassik',              icon: '🎻' },
-  { name: 'Radio Swiss Classic',   url: 'https://stream.srg-ssr.ch/rsc_de/mp3_128.m3u',            genre: 'Klassik (CH)',         icon: '🎹' },
-  { name: '1.FM Absolute Trance',  url: 'https://strm112.1.fm/trance_mobile_aac',                  genre: 'Trance / EDM',         icon: '💫' },
+  { name: 'BRF 1', url: 'https://streaming.brf.be/brf1-high.mp3', genre: 'Regional', icon: '📻' },
+  { name: 'BRF 2', url: 'https://streaming.brf.be/brf2-high.mp3', genre: 'Regional', icon: '📻' },
+  { name: 'WDR 1', url: 'https://wdr-1live-live.icecastssl.wdr.de/wdr/1live/live/mp3/128/stream.mp3', genre: '', icon: '📻' },
+  { name: 'WDR 2', url: 'https://wdr-wdr2-aachenundregion.icecastssl.wdr.de/wdr/wdr2/aachenundregion/mp3/128/stream.mp3', genre: 'Regional', icon: '📻' },
+  { name: 'WDR 3', url: 'https://wdr-wdr3-live.icecastssl.wdr.de/wdr/wdr3/live/mp3/128/stream.mp3', genre: '', icon: '📻' },
+  { name: 'WRD 4', url: 'https://wdr-wdr4-live.icecastssl.wdr.de/wdr/wdr4/live/mp3/128/stream.mp3', genre: '80 er Jahre', icon: '📻' },
+  { name: 'WDR 5', url: 'https://wdr-wdr5-live.icecastssl.wdr.de/wdr/wdr5/live/mp3/128/stream.mp3', genre: '', icon: '📻' },
+  { name: 'Deutschlandfunk', url: 'https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3', genre: 'News / Kultur (DE)', icon: '🇩🇪' },
+  { name: 'Radio Paradise', url: 'https://stream.radioparadise.com/mp3-192', genre: 'Rock / Eclectic', icon: '🎸' },
+  { name: 'SomaFM Groove Salad', url: 'https://ice1.somafm.com/groovesalad-256-mp3', genre: 'Ambient / Electronic', icon: '🌿' },
+  { name: 'SomaFM Secret Agent', url: 'https://ice1.somafm.com/secretagent-128-mp3', genre: 'Lounge / Spy Jazz', icon: '🕵️' },
+  { name: 'SomaFM Lush', url: 'https://ice1.somafm.com/lush-128-mp3', genre: 'Dream Pop / Indie', icon: '🌸' },
+  { name: 'SomaFM Deep Space One', url: 'https://ice1.somafm.com/deepspaceone-128-mp3', genre: 'Space / Ambient', icon: '🚀' },
+  { name: 'SomaFM Beat Blender', url: 'https://ice1.somafm.com/beatblender-128-mp3', genre: 'Electronic / Chill', icon: '🎧' },
+  { name: 'FIP Radio', url: 'https://icecast.radiofrance.fr/fip-midfi.mp3', genre: 'Eclectic / French', icon: '🗼' },
+  { name: 'Classical WQXR', url: 'https://stream.wqxr.org/wqxr', genre: 'Klassik', icon: '🎻' },
+  { name: '1.FM Absolute Trance', url: 'https://strm112.1.fm/trance_mobile_aac', genre: 'Trance / EDM', icon: '💫' },
 ];
 
 // ── Farbmodi ──────────────────────────────────────────────────
@@ -228,8 +230,10 @@ function renderList() {
       </div>
       <div class="st-icon">${esc(st.icon || '📻')}</div>
       <div class="st-info">
-        <div class="st-name">${esc(st.name)}</div>
-        <div class="st-genre">${esc(st.genre || '')}</div>
+        <div 
+          class="st-name">${esc(st.name)}
+          <a class="st-genre"> - -  ${esc(st.genre || '')}</a>
+        </div>
       </div>
       <div class="st-bars">
         <div class="st-bar"></div>

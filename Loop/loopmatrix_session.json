@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "theme": "plasma",
+  "dark": true,
+  "masterVol": 1,
+  "bpm": 120,
+  "loops": [
+    {
+      "name": "Om1",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": true
+    },
+    {
+      "name": "klangschale",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": true
+    },
+    {
+      "name": "Om Tare 1",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": true
+    },
+    {
+      "name": "LOOP 04",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": true
+    },
+    {
+      "name": "LOOP 05",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 06",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 07",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 08",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 09",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 10",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 11",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 12",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 13",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 14",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 15",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    },
+    {
+      "name": "LOOP 16",
+      "vol": 0.8,
+      "rate": 1,
+      "looping": true,
+      "hasAudio": false
+    }
+  ]
+}

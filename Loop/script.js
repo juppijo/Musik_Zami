@@ -35,7 +35,23 @@ const loops       = [];
 const rings       = [];          // background pulse rings
 const particles   = [];          // floating sparks
 
+// ── BPM Beat State ──────────────────────────────────────────────
+let bpm           = 120;
+let beatInterval  = 500;         // ms per beat (60000 / bpm)
+let lastBeatTime  = 0;           // performance.now() of last beat
+let beatPhase     = 0;           // 0..1 decay within one beat
+let beatActive    = false;       // true while BPM clock is running
+
+// ── Master Recording State ──────────────────────────────────────
+let masterRecorder  = null;
+let masterRecChunks = [];
+let masterRecording = false;
+let masterRecStart  = 0;
+let masterRecTick   = null;
+
 // ── Audio Init ──────────────────────────────────────────────────
+let masterRecDest = null;   // MediaStreamDestinationNode
+
 function initAudio() {
   if (audioCtx) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -47,8 +63,11 @@ function initAudio() {
   masterAnalyser = audioCtx.createAnalyser();
   masterAnalyser.fftSize      = 2048;
   masterAnalyser.smoothingTimeConstant = 0.78;
+  masterRecDest  = audioCtx.createMediaStreamDestination();
+
   masterGain.connect(masterAnalyser);
   masterAnalyser.connect(audioCtx.destination);
+  masterGain.connect(masterRecDest);   // tap for recording
 }
 
 // ── Loop Object ─────────────────────────────────────────────────
@@ -296,6 +315,7 @@ function startLoop(lp) {
   lp.src     = src;
   lp.playing = true;
   updateCardUI(lp);
+  if (!beatActive) startBeatClock(); // start BPM clock on first play
 
   src.onended = () => {
     if (!lp.looping) {
@@ -513,6 +533,61 @@ function toggleFS() {
   }
 }
 
+// ── BPM Beat Clock ───────────────────────────────────────────────
+function updateBeatClock(now) {
+  if (!beatActive) return;
+  const elapsed = now - lastBeatTime;
+  if (elapsed >= beatInterval) {
+    lastBeatTime = now - (elapsed % beatInterval); // keep phase tight
+    beatPhase    = 1.0;   // fresh flash
+    // Flash header dot
+    const dot = document.getElementById('bpmDot');
+    if (dot) {
+      dot.classList.add('flash');
+      setTimeout(() => dot.classList.remove('flash'), Math.min(80, beatInterval * 0.18));
+    }
+    // Fire beat blinker on all playing cards
+    drawBeatBlinker(1.0);
+  } else {
+    // Exponential decay between beats
+    beatPhase = Math.max(0, 1.0 - (elapsed / beatInterval) * 2.2);
+  }
+}
+
+function drawBeatBlinker(phase) {
+  loops.forEach(lp => {
+    if (!lp.card) return;
+    const [r,g,b] = hexRgb(lp.color);
+    if (lp.playing) {
+      // Bright flash on beat, fades out
+      const a = phase * 0.55;
+      lp.card.style.outline = `2px solid rgba(${r},${g},${b},${0.4 + phase * 0.6})`;
+      lp.card.style.outlineOffset = `${phase * 4}px`;
+    } else {
+      // Subtle idle pulse on all cards (dimmer)
+      const a = phase * 0.15;
+      lp.card.style.outline = `1px solid rgba(${r},${g},${b},${a})`;
+      lp.card.style.outlineOffset = `0px`;
+    }
+  });
+}
+
+function startBeatClock() {
+  bpm          = Math.max(1, +document.getElementById('bpmInput').value || 120);
+  beatInterval = 60000 / bpm;
+  lastBeatTime = performance.now();
+  beatPhase    = 0;
+  beatActive   = true;
+}
+
+function stopBeatClock() {
+  beatActive = false;
+  beatPhase  = 0;
+  loops.forEach(lp => {
+    if (lp.card) { lp.card.style.outline = ''; lp.card.style.outlineOffset = ''; }
+  });
+}
+
 // ── Animation Loop ───────────────────────────────────────────────
 function startAnim() {
   if (animRunning) return;
@@ -520,6 +595,9 @@ function startAnim() {
   (function loop() {
     if (!animRunning) return;
     requestAnimationFrame(loop);
+    const now = performance.now();
+    updateBeatClock(now);
+    if (beatActive) drawBeatBlinker(beatPhase);
     drawSpectrum();
     drawAllVU();
     if (lightSound) drawBgFx();
@@ -713,13 +791,88 @@ function toast(msg) {
   toastTid = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
+// ── Master Recorder ──────────────────────────────────────────────
+function toggleMasterRec() {
+  masterRecording ? stopMasterRec() : startMasterRec();
+}
+
+function startMasterRec() {
+  initAudio();
+  if (!masterRecDest) { toast('Audio nicht initialisiert!'); return; }
+
+  // Choose best supported format
+  const mime = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg']
+    .find(m => MediaRecorder.isTypeSupported(m)) || '';
+
+  masterRecChunks = [];
+  masterRecorder  = new MediaRecorder(masterRecDest.stream, mime ? { mimeType: mime } : {});
+  masterRecorder.ondataavailable = e => { if (e.data.size > 0) masterRecChunks.push(e.data); };
+  masterRecorder.onstop = finishMasterRec;
+  masterRecorder.start(200);
+
+  masterRecording = true;
+  masterRecStart  = performance.now();
+  updateRecBtn();
+  startRecTimer();
+  toast('⏺ Master-Aufnahme läuft…');
+}
+
+function stopMasterRec() {
+  if (masterRecorder && masterRecorder.state !== 'inactive') masterRecorder.stop();
+  masterRecording = false;
+  clearInterval(masterRecTick);
+  updateRecBtn();
+}
+
+function finishMasterRec() {
+  const mime = masterRecChunks[0]?.type || 'audio/webm';
+  const ext  = mime.includes('ogg') ? 'ogg' : 'webm';
+  const blob = new Blob(masterRecChunks, { type: mime });
+  const dur  = ((performance.now() - masterRecStart) / 1000).toFixed(1);
+
+  // Offer download immediately
+  dlBlob(blob, `loopmatrix_rec_${timestamp()}.${ext}`);
+  toast(`✓ Aufnahme gespeichert (${dur}s) — als ${ext.toUpperCase()}`);
+
+  // Reset timer display
+  const el = document.getElementById('recTimer');
+  if (el) el.textContent = '';
+}
+
+function startRecTimer() {
+  const el = document.getElementById('recTimer');
+  masterRecTick = setInterval(() => {
+    if (!masterRecording || !el) return;
+    const s = Math.floor((performance.now() - masterRecStart) / 1000);
+    const mm = String(Math.floor(s/60)).padStart(2,'0');
+    const ss = String(s % 60).padStart(2,'0');
+    el.textContent = `${mm}:${ss}`;
+  }, 500);
+}
+
+function updateRecBtn() {
+  const btn = document.getElementById('masterRecBtn');
+  if (!btn) return;
+  btn.classList.toggle('recording', masterRecording);
+  btn.innerHTML = masterRecording
+    ? '<span class="rec-dot"></span> STOP REC'
+    : '<span class="rec-dot"></span> REC';
+}
+
+function timestamp() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
 // ── Master Controls ──────────────────────────────────────────────
 function playAll() {
   initAudio();
   loops.forEach(lp => { if (lp.buf && !lp.playing) startLoop(lp); });
+  startBeatClock();
 }
 function stopAll() {
   loops.forEach(lp => stopLoop(lp));
+  stopBeatClock();
 }
 
 // ── Resize ───────────────────────────────────────────────────────
@@ -770,9 +923,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (masterGain) masterGain.gain.setTargetAtTime(+e.target.value, audioCtx.currentTime, 0.02);
   });
 
+  // BPM input — update clock live
+  document.getElementById('bpmInput').addEventListener('input', () => {
+    if (beatActive) startBeatClock(); // restart with new BPM
+  });
+  document.getElementById('bpmInput').addEventListener('change', () => {
+    if (beatActive) startBeatClock();
+  });
+
   // Play all / Stop all
   document.getElementById('playAllBtn').addEventListener('click', playAll);
   document.getElementById('stopAllBtn').addEventListener('click', stopAll);
+  document.getElementById('masterRecBtn').addEventListener('click', toggleMasterRec);
 
   // Session save/load
   document.getElementById('saveSessionBtn').addEventListener('click', () => {

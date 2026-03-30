@@ -39,9 +39,12 @@
       <div class="bpm-display">
         <span class="bpm-label">BPM</span>
         <input type="number" id="bpmInput" min="40" max="240" value="120">
+        <span id="bpmDot" title="Beat-Blinker aktiv wenn Loops spielen"></span>
       </div>
       <button id="playAllBtn" class="hdr-action-btn play">▶ ALLE</button>
       <button id="stopAllBtn" class="hdr-action-btn stop">■ STOP</button>
+      <button id="masterRecBtn" class="hdr-action-btn rec"><span class="rec-dot"></span> REC</button>
+      <span id="recTimer" class="rec-timer"></span>
     </div>
 
     <div class="header-controls">

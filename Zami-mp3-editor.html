@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Metadata Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+
+        .upload-area:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .editor-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .cover-section {
+            text-align: center;
+        }
+
+        #coverPreview {
+            width: 250px;
+            height: 250px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+        }
+
+        .cover-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .metadata-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .button-group .btn {
+            flex: 1;
+        }
+
+        #coverInput {
+            display: none;
+        }
+
+        .info-message {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .file-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #coverPreview {
+                width: 200px;
+                height: 200px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵✨ Zami's MP3 Editor ✨🎶</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <h2>MP3-Datei hier ablegen</h2>
+            <p>oder klicken zum Auswählen</p>
+            <input type="file" id="fileInput" accept=".mp3">
+        </div>
+
+        <div class="editor-section" id="editorSection">
+            <div class="content-grid">
+                <div class="cover-section">
+                    <img id="coverPreview" src="" alt="Album Cover">
+                    <div class="cover-buttons">
+                        <button class="btn btn-primary" onclick="document.getElementById('coverInput').click()">
+                            Cover ändern
+                        </button>
+                        <button class="btn btn-secondary" onclick="removeCover()">
+                            Cover entfernen
+                        </button>
+                    </div>
+                    <input type="file" id="coverInput" accept="image/*">
+                </div>
+
+                <div class="metadata-section">
+                    <div class="form-group">
+                        <label for="title">Titel</label>
+                        <input type="text" id="title" placeholder="Song-Titel">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="artist">Künstler</label>
+                        <input type="text" id="artist" placeholder="Künstlername">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="album">Album</label>
+                        <input type="text" id="album" placeholder="Album-Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">Jahr</label>
+                        <input type="text" id="year" placeholder="Jahr">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genre">Genre</label>
+                        <input type="text" id="genre" placeholder="Genre">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Kommentar</label>
+                        <textarea id="comment" placeholder="Zusätzliche Informationen"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lyrics">Songtext (Lyrics)</label>
+                        <textarea id="lyrics" placeholder="Songtext hier eingeben..." style="min-height: 150px;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="file-info">
+                <strong>📂 Dateipfad:</strong> <span id="filePath">-</span>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="saveMP3()">
+                    💾 MP3 Speichern
+                </button>
+                <button class="btn btn-secondary" onclick="resetEditor()">
+                    🔄 Neue Datei
+                </button>
+            </div>
+
+            <div class="info-message">
+                Die bearbeitete MP3-Datei wird mit aktualisierten Metadaten heruntergeladen
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let currentCover = null;
+        let audioData = null;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const editorSection = document.getElementById('editorSection');
+        const coverInput = document.getElementById('coverInput');
+        const coverPreview = document.getElementById('coverPreview');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.mp3')) {
+                // Für Drag&Drop nur Dateiname verfügbar
+                document.getElementById('filePath').textContent = file.name;
+                handleFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Versuche den vollständigen Pfad zu bekommen
+                try {
+                    const fullPath = e.target.value;
+                    if (fullPath) {
+                        document.getElementById('filePath').textContent = fullPath;
+                    } else {
+                        document.getElementById('filePath').textContent = file.name;
+                    }
+                } catch (err) {
+                    document.getElementById('filePath').textContent = file.name;
+                }
+                handleFile(file);
+            }
+        });
+
+        coverInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    currentCover = e.target.result;
+                    coverPreview.src = currentCover;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function handleFile(file) {
+            currentFile = file;
+            
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                audioData = e.target.result;
+                loadMetadata(file);
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadMetadata(file) {
+            jsmediatags.read(file, {
+                onSuccess: (tag) => {
+                    const tags = tag.tags;
+                    
+                    // Debug: Zeige alle Tags in der Console
+                    console.log('Alle Tags:', tags);
+                    
+                    document.getElementById('title').value = tags.title || '';
+                    document.getElementById('artist').value = tags.artist || '';
+                    document.getElementById('album').value = tags.album || '';
+                    document.getElementById('year').value = tags.year || '';
+                    document.getElementById('genre').value = tags.genre || '';
+                    
+                    // Kommentar laden - verschiedene mögliche Formate
+                    let commentText = '';
+                    if (tags.comment) {
+                        console.log('Comment object:', tags.comment);
+                        if (typeof tags.comment === 'string') {
+                            commentText = tags.comment;
+                        } else if (tags.comment.text) {
+                            commentText = tags.comment.text;
+                        } else if (tags.comment.data) {
+                            commentText = tags.comment.data;
+                        }
+                    }
+                    document.getElementById('comment').value = commentText;
+                    
+                    // Lyrics laden - ALLE möglichen Felder durchsuchen
+                    let lyricsText = '';
+                    
+                    // Durchsuche alle Tags nach Lyrics
+                    for (let key in tags) {
+                        if (key.toLowerCase().includes('lyric') || key.toLowerCase().includes('uslt')) {
+                            console.log('Gefundenes Lyrics-Feld:', key, tags[key]);
+                            const lyricsObj = tags[key];
+                            if (typeof lyricsObj === 'string') {
+                                lyricsText = lyricsObj;
+                                break;
+                            } else if (lyricsObj && typeof lyricsObj === 'object') {
+                                if (lyricsObj.text) {
+                                    lyricsText = lyricsObj.text;
+                                    break;
+                                } else if (lyricsObj.data) {
+                                    lyricsText = lyricsObj.data;
+                                    break;
+                                } else if (lyricsObj.lyrics) {
+                                    lyricsText = lyricsObj.lyrics;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    document.getElementById('lyrics').value = lyricsText;
+
+                    if (tags.picture) {
+                        const pic = tags.picture;
+                        const base64 = arrayBufferToBase64(pic.data);
+                        currentCover = `data:${pic.format};base64,${base64}`;
+                        coverPreview.src = currentCover;
+                    } else {
+                        coverPreview.src = '';
+                        currentCover = null;
+                    }
+
+                    uploadArea.style.display = 'none';
+                    editorSection.style.display = 'block';
+                },
+                onError: (error) => {
+                    alert('Fehler beim Lesen der Metadaten: ' + error.type);
+                }
+            });
+        }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+
+        function removeCover() {
+            currentCover = null;
+            coverPreview.src = '';
+        }
+
+        function saveMP3() {
+            if (!audioData) return;
+
+            const title = document.getElementById('title').value;
+            const artist = document.getElementById('artist').value;
+            const album = document.getElementById('album').value;
+            const year = document.getElementById('year').value;
+            const genre = document.getElementById('genre').value;
+            const comment = document.getElementById('comment').value;
+            const lyrics = document.getElementById('lyrics').value;
+
+            // Entferne alte ID3-Tags aus den MP3-Daten
+            const cleanedAudioData = removeID3Tags(new Uint8Array(audioData));
+            
+            const writer = new ID3Writer(cleanedAudioData);
+            
+            if (title) writer.setFrame('TIT2', title);
+            if (artist) writer.setFrame('TPE1', artist);
+            if (album) writer.setFrame('TALB', album);
+            if (year) writer.setFrame('TYER', year);
+            if (genre) writer.setFrame('TCON', genre);
+            
+            if (comment) {
+                writer.setFrame('COMM', {
+                    language: 'eng',
+                    description: '',
+                    text: comment
+                });
+            }
+
+            if (lyrics) {
+                writer.setFrame('USLT', {
+                    language: 'eng',
+                    description: '',
+                    text: lyrics
+                });
+            }
+
+            if (currentCover) {
+                const base64Data = currentCover.split(',')[1];
+                const binaryData = atob(base64Data);
+                const arrayBuffer = new Uint8Array(binaryData.length);
+                for (let i = 0; i < binaryData.length; i++) {
+                    arrayBuffer[i] = binaryData.charCodeAt(i);
+                }
+                
+                writer.setFrame('APIC', {
+                    type: 3,
+                    data: arrayBuffer,
+                    description: 'Cover'
+                });
+            }
+
+            const taggedData = writer.addTag();
+            const blob = new Blob([taggedData], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (title || 'edited') + '.mp3';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function removeID3Tags(buffer) {
+            // Prüfe ob ID3v2 Tag vorhanden ist
+            if (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) {
+                // ID3v2 gefunden, berechne die Größe
+                const size = ((buffer[6] & 0x7f) << 21) |
+                            ((buffer[7] & 0x7f) << 14) |
+                            ((buffer[8] & 0x7f) << 7) |
+                            (buffer[9] & 0x7f);
+                
+                // Schneide den ID3-Tag ab (Header + Tag-Größe)
+                return buffer.slice(10 + size);
+            }
+            return buffer;
+        }
+
+        function resetEditor() {
+            currentFile = null;
+            currentCover = null;
+            audioData = null;
+            fileInput.value = '';
+            
+            document.getElementById('title').value = '';
+            document.getElementById('artist').value = '';
+            document.getElementById('album').value = '';
+            document.getElementById('year').value = '';
+            document.getElementById('genre').value = '';
+            document.getElementById('comment').value = '';
+            document.getElementById('lyrics').value = '';
+            document.getElementById('filePath').textContent = '-';
+            coverPreview.src = '';
+            
+            editorSection.style.display = 'none';
+            uploadArea.style.display = 'block';
+        }
+
+        class ID3Writer {
+            constructor(buffer) {
+                this.buffer = buffer;
+                this.frames = [];
+            }
+
+            setFrame(name, value) {
+                this.frames.push({ name, value });
+            }
+
+            addTag() {
+                const frames = this.encodeFrames();
+                const tagSize = frames.length;
+                const header = this.createHeader(tagSize);
+                
+                const result = new Uint8Array(header.length + frames.length + this.buffer.length);
+                result.set(header, 0);
+                result.set(frames, header.length);
+                result.set(this.buffer, header.length + frames.length);
+                
+                return result;
+            }
+
+            createHeader(size) {
+                const header = new Uint8Array(10);
+                header[0] = 0x49; // I
+                header[1] = 0x44; // D
+                header[2] = 0x33; // 3
+                header[3] = 0x03; // version
+                header[4] = 0x00; // revision
+                header[5] = 0x00; // flags
+                
+                const synchsafeSize = this.encodeSize(size);
+                header[6] = synchsafeSize[0];
+                header[7] = synchsafeSize[1];
+                header[8] = synchsafeSize[2];
+                header[9] = synchsafeSize[3];
+                
+                return header;
+            }
+
+            encodeSize(size) {
+                return [
+                    (size >> 21) & 0x7f,
+                    (size >> 14) & 0x7f,
+                    (size >> 7) & 0x7f,
+                    size & 0x7f
+                ];
+            }
+
+            encodeFrames() {
+                let result = new Uint8Array(0);
+                
+                for (const frame of this.frames) {
+                    const encoded = this.encodeFrame(frame);
+                    const newResult = new Uint8Array(result.length + encoded.length);
+                    newResult.set(result);
+                    newResult.set(encoded, result.length);
+                    result = newResult;
+                }
+                
+                return result;
+            }
+
+            encodeFrame(frame) {
+                let data;
+                
+                if (frame.name === 'APIC') {
+                    data = this.encodeAPIC(frame.value);
+                } else if (frame.name === 'COMM') {
+                    data = this.encodeCOMM(frame.value);
+                } else if (frame.name === 'USLT') {
+                    data = this.encodeUSLT(frame.value);
+                } else {
+                    data = this.encodeText(frame.value);
+                }
+                
+                const header = new Uint8Array(10);
+                for (let i = 0; i < 4; i++) {
+                    header[i] = frame.name.charCodeAt(i);
+                }
+                
+                const size = data.length;
+                header[4] = (size >> 24) & 0xff;
+                header[5] = (size >> 16) & 0xff;
+                header[6] = (size >> 8) & 0xff;
+                header[7] = size & 0xff;
+                header[8] = 0;
+                header[9] = 0;
+                
+                const result = new Uint8Array(header.length + data.length);
+                result.set(header);
+                result.set(data, header.length);
+                
+                return result;
+            }
+
+            encodeText(text) {
+                const encoder = new TextEncoder();
+                const encoded = encoder.encode(text);
+                const result = new Uint8Array(1 + encoded.length);
+                result[0] = 0x03; // UTF-8
+                result.set(encoded, 1);
+                return result;
+            }
+
+            encodeCOMM(value) {
+                const encoder = new TextEncoder();
+                const lang = value.language || 'eng';
+                const desc = value.description || '';
+                const text = value.text || '';
+                
+                const langBytes = encoder.encode(lang.substring(0, 3));
+                const descBytes = encoder.encode(desc);
+                const textBytes = encoder.encode(text);
+                
+                const result = new Uint8Array(1 + 3 + descBytes.length + 1 + textBytes.length);
+                let offset = 0;
+                
+                result[offset++] = 0x03; // UTF-8 encoding
+                result.set(langBytes, offset);
+                offset += 3;
+                result.set(descBytes, offset);
+                offset += descBytes.length;
+                result[offset++] = 0x00; // null terminator
+                result.set(textBytes, offset);
+                
+                return result;
+            }
+
+            encodeUSLT(value) {
+                const encoder = new TextEncoder();
+                const lang = value.language || 'eng';
+                const desc = value.description || '';
+                const text = value.text || '';
+                
+                const langBytes = encoder.encode(lang.substring(0, 3));
+                const descBytes = encoder.encode(desc);
+                const textBytes = encoder.encode(text);
+                
+                const result = new Uint8Array(1 + 3 + descBytes.length + 1 + textBytes.length);
+                let offset = 0;
+                
+                result[offset++] = 0x03; // UTF-8 encoding
+                result.set(langBytes, offset);
+                offset += 3;
+                result.set(descBytes, offset);
+                offset += descBytes.length;
+                result[offset++] = 0x00; // null terminator
+                result.set(textBytes, offset);
+                
+                return result;
+            }
+
+            encodeAPIC(value) {
+                const mimeType = 'image/jpeg';
+                const encoder = new TextEncoder();
+                const mime = encoder.encode(mimeType);
+                
+                const result = new Uint8Array(1 + mime.length + 1 + 1 + 1 + value.data.length);
+                let offset = 0;
+                
+                result[offset++] = 0x00; // encoding
+                result.set(mime, offset);
+                offset += mime.length;
+                result[offset++] = 0x00; // null terminator
+                result[offset++] = value.type || 0x03;
+                result[offset++] = 0x00; // description null
+                result.set(value.data, offset);
+                
+                return result;
+            }
+        }
+    </script>
+</body>
+</html>

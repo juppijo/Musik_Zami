@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoundFont Touch Player Pro – Dokumentation</title>
+<style>
+:root {
+  --bg: #0d0d0d;
+  --bg-panel: #171717;
+  --bg-panel-2: #1e1e1e;
+  --gold: #c9a227;
+  --gold-bright: #e0bb3a;
+  --text: #e8e6e0;
+  --text-dim: #a8a49a;
+  --border: #333029;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.65;
+}
+
+@font-face {
+  font-family: 'Bebas Neue';
+  src: local('Bebas Neue');
+}
+
+.wrapper {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 50px 30px 100px;
+}
+
+h1 {
+  font-family: 'Bebas Neue', 'Barlow', sans-serif;
+  letter-spacing: 1px;
+  font-size: 2.6rem;
+  color: var(--gold-bright);
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-family: 'Bebas Neue', 'Barlow', sans-serif;
+  letter-spacing: 0.5px;
+  font-size: 1.6rem;
+  color: var(--gold);
+  margin-top: 48px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+h3 {
+  font-family: 'Bebas Neue', 'Barlow', sans-serif;
+  letter-spacing: 0.5px;
+  font-size: 1.25rem;
+  color: var(--gold-bright);
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+h4 {
+  font-size: 1.05rem;
+  color: var(--text);
+  margin-top: 22px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.subtitle {
+  color: var(--text-dim);
+  font-size: 1.02rem;
+  margin-bottom: 20px;
+  max-width: 700px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.badge.html { background: #e34c26; }
+.badge.js { background: #f0db4f; color: #1a1a1a; }
+.badge.webaudio { background: #2b6cb0; }
+.badge.webmidi { background: #2f855a; }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+ul, ol {
+  padding-left: 22px;
+  margin: 10px 0;
+}
+
+li { margin-bottom: 6px; }
+
+code {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  color: var(--gold-bright);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88em;
+}
+
+pre {
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86rem;
+  color: var(--text);
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+
+.callout {
+  background: var(--bg-panel);
+  border-left: 3px solid var(--gold);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  color: var(--text-dim);
+}
+
+.callout strong { color: var(--gold-bright); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 24px;
+  background: var(--bg-panel);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+th {
+  background: var(--bg-panel-2);
+  color: var(--gold-bright);
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+.status-ok { color: #4ade80; }
+.status-warn { color: var(--gold-bright); }
+
+a { color: var(--gold-bright); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.filetree {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 18px;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+
+footer {
+  margin-top: 60px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.emoji { margin-right: 6px; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <h1><span class="emoji">🎵</span>SoundFont Touch Player Pro</h1>
+  <p class="subtitle">Ein vollständiger, browserbasierter Musik-Player mit SoundFont-Samples, MIDI-Unterstützung, Drum-Sequencer, Mixer und Aufnahme-Funktion. Keine Installation nötig – einfach die HTML-Datei im Browser öffnen.</p>
+
+  <div class="badges">
+    <span class="badge html">🌐 HTML5</span>
+    <span class="badge js">JS JavaScript</span>
+    <span class="badge webaudio">Web Audio API</span>
+    <span class="badge webmidi">Web MIDI API</span>
+  </div>
+
+  <hr>
+
+  <h2><span class="emoji">🚀</span>Schnellstart</h2>
+  <ol>
+    <li>Datei <code>player.html</code> herunterladen</li>
+    <li>In <strong>Google Chrome</strong> oder <strong>Microsoft Edge</strong> öffnen</li>
+    <li>Instrument wählen → 🔵 <strong>Laden</strong> klicken</li>
+    <li>Spielen!</li>
+  </ol>
+
+  <div class="callout">
+    ⚠️ <strong>Firefox wird nicht unterstützt</strong> – die Web MIDI API ist nur in Chrome/Edge verfügbar.
+  </div>
+
+  <hr>
+
+  <h2><span class="emoji">📋</span>Funktionsübersicht</h2>
+
+  <h3><span class="emoji">🎹</span>Klavier-Tab</h3>
+  <ul>
+    <li>Vollständige Klaviertastatur von <strong>C2 bis C6</strong></li>
+    <li>Weiße und schwarze Tasten mit korrekter Darstellung</li>
+    <li>Klicken mit der Maus oder Antippen auf Touchscreen</li>
+    <li>Multi-Touch-fähig auf Smartphones und Tablets</li>
+  </ul>
+
+  <h3><span class="emoji">🎸</span>Gitarren-Tab</h3>
+  <ul>
+    <li>6 Saiten in Standard-Stimmung (E2, A2, D3, G3, B3, E4)</li>
+    <li><strong>Klicken</strong> oder <strong>Wischen</strong> entlang der Saite für verschiedene Bünde (0–12)</li>
+    <li>Touch-optimiert für Smartphone</li>
+  </ul>
+
+  <h3><span class="emoji">🎵</span>Akkorde-Tab</h3>
+  <ul>
+    <li><strong>6 Akkordtypen:</strong> Dur, Moll, 7th, m7, Maj7, Sus4</li>
+    <li><strong>12 Grundtöne:</strong> C bis B (alle Vorzeichen)</li>
+    <li>Akkord antippen → alle Noten erklingen gleichzeitig</li>
+  </ul>
+
+  <h3><span class="emoji">🎹</span>Arpeggiator</h3>
+  <table>
+    <tr><th>Einstellung</th><th>Beschreibung</th></tr>
+    <tr><td>Muster</td><td>Aufwärts / Abwärts / Auf+Ab / Zufällig</td></tr>
+    <tr><td>BPM</td><td>60–240 Beats pro Minute</td></tr>
+    <tr><td>Oktaven</td><td>1–3 Oktaven</td></tr>
+    <tr><td>Swing</td><td>0–100% Swing-Feeling</td></tr>
+  </table>
+
+  <h3><span class="emoji">🥁</span>Drums-Tab</h3>
+  <ul>
+    <li><strong>16 Live-Pads:</strong> Kick, Snare, Hi-Hat, Toms, Crash, Ride, Clap, Cowbell, u.v.m.</li>
+    <li>Echte GM-Percussion-Samples (mit synthetischem Fallback)</li>
+  </ul>
+
+  <h3><span class="emoji">🎛️</span>Step-Sequencer</h3>
+  <ul>
+    <li><strong>16 Steps</strong> pro Instrument</li>
+    <li>Farbkodiert: Kick/Snare = rot, Hi-Hat = grün, Cymbal = gold, Clap = lila, Tom = blau</li>
+    <li>BPM-Regler (40–200)</li>
+    <li>🔵 Play / ⬛ Stop und 🗑️ Clear</li>
+  </ul>
+
+  <h3><span class="emoji">📝</span>Noten-Tab</h3>
+  <ul>
+    <li>Gespielte Noten erscheinen in Echtzeit im <strong>Notensystem</strong></li>
+    <li>Umschaltbar zwischen <strong>Violinschlüssel</strong> und <strong>Bassschlüssel</strong></li>
+    <li>Vorzeichen (♯) werden korrekt dargestellt</li>
+    <li>Letzte 20 Noten bleiben sichtbar</li>
+    <li>🗑️ Clear löscht die Anzeige</li>
+  </ul>
+
+  <h3><span class="emoji">🎚️</span>Mixer-Tab</h3>
+  <p>Mehrspuriger Sequencer mit <strong>4 unabhängigen Spuren</strong>.</p>
+  <table>
+    <tr><th>Funktion</th><th>Beschreibung</th></tr>
+    <tr><td>Instrument</td><td>Pro Spur wählbar (15+ Instrumente)</td></tr>
+    <tr><td>Volume</td><td>Lautstärke pro Spur (0–100%)</td></tr>
+    <tr><td>Pan</td><td>Stereo-Panorama Links/Rechts</td></tr>
+    <tr><td>M (Mute)</td><td>Spur stummschalten</td></tr>
+    <tr><td>S (Solo)</td><td>Nur diese Spur hören</td></tr>
+    <tr><td>Steps</td><td>16 Steps pro Spur ein/ausschalten</td></tr>
+    <tr><td>Note</td><td>Ton pro aktivem Step wählbar (C3–C5)</td></tr>
+  </table>
+  <ul>
+    <li><strong>Master BPM</strong> und <strong>Master Volume</strong></li>
+    <li>🔵 Play / ⏸️ Pause / ⬛ Stop</li>
+  </ul>
+
+  <h3><span class="emoji">🎤</span>Aufnahme-Tab</h3>
+
+  <h4>Aufnehmen</h4>
+  <ol>
+    <li>🔴 REC klicken → Aufnahme startet (roter Blinker)</li>
+    <li>Noten, Akkorde oder Drums spielen</li>
+    <li>⬛ Stop → Aufnahme wird gespeichert</li>
+  </ol>
+
+  <h4>Wiedergabe</h4>
+  <ul>
+    <li>🔵 Play → Aufnahme mit exaktem Timing abspielen</li>
+    <li>🔁 Loop → Endlosschleife ein/aus</li>
+  </ul>
+
+  <h4>Slots</h4>
+  <ul>
+    <li>Bis zu <strong>5 Aufnahmen</strong> gleichzeitig speichern</li>
+    <li>Pro Slot: Dauer und Event-Anzahl sichtbar</li>
+    <li>🔵 Abspielen oder 🗑️ Löschen</li>
+  </ul>
+
+  <h4>Export</h4>
+  <table>
+    <tr><th>Format</th><th>Beschreibung</th></tr>
+    <tr><td>⬇️ MIDI (.mid)</td><td>Standard MIDI-Datei – importierbar in Cubase, Reaper, GarageBand, FL Studio</td></tr>
+    <tr><td>⬇️ Audio (.webm)</td><td>Echtzeit-Audio-Aufnahme des Ausgangssignals</td></tr>
+  </table>
+
+  <hr>
+
+  <h2><span class="emoji">⚙️</span>Globale Einstellungen</h2>
+  <table>
+    <tr><th>Regler</th><th>Funktion</th></tr>
+    <tr><td>🔊 Lautstärke</td><td>Globale Lautstärke (0–100%)</td></tr>
+    <tr><td>🌊 Hall/Reverb</td><td>Hall-Effekt (0–90%)</td></tr>
+    <tr><td>🎼 Transpose</td><td>Tonart verschieben (−12 bis +12 Halbtöne)</td></tr>
+    <tr><td>⛶ Vollbild</td><td>Vollbildmodus ein/aus</td></tr>
+  </table>
+
+  <hr>
+
+  <h2><span class="emoji">🎹</span>MIDI-Unterstützung</h2>
+  <div class="callout">
+    ⚠️ MIDI funktioniert nur in <strong>Chrome/Edge</strong> (Web MIDI API).<br>
+    Bei Betrieb als lokale Datei (<code>file://</code>) oder auf <code>localhost</code> ist MIDI voll funktionsfähig.
+  </div>
+
+  <h3>Einrichtung</h3>
+  <ol>
+    <li>MIDI-Gerät anschließen</li>
+    <li>🎹 MIDI Button klicken → Browser fragt nach Erlaubnis → <strong>Zulassen</strong></li>
+    <li>MIDI-Eingang und -Ausgang aus den Dropdowns wählen</li>
+  </ol>
+
+  <h3>MIDI Through Port (Linux)</h3>
+  <p>Unter Linux wird <strong>MIDI Through Port-0</strong> automatisch erkannt und ausgewählt.<br>
+  Falls ein zweiter Synthesizer (z.B. FluidSynth) gleichzeitig läuft und Doppeltöne entstehen:</p>
+
+  <pre><code># Laufende Synthesizer anzeigen
+ps aux | grep -E "fluidsynth|timidity|qsynth"
+
+# FluidSynth beenden
+pkill fluidsynth
+
+# MIDI-Verbindungen anzeigen (ALSA)
+aconnect -l</code></pre>
+
+  <h3>MIDI-Kanäle</h3>
+  <table>
+    <tr><th>Kanal</th><th>Verwendung</th></tr>
+    <tr><td>Kanal 1 (0)</td><td>Melodie-Instrumente (Klavier, Gitarre, Akkorde)</td></tr>
+    <tr><td>Kanal 10 (9)</td><td>Percussion / Drums (GM-Standard)</td></tr>
+  </table>
+
+  <hr>
+
+  <h2><span class="emoji">🎼</span>Instrumente</h2>
+  <p>Die App nutzt <strong>FluidR3 GM SoundFont-Samples</strong> von <a href="#">gleitz/midi-js-soundfonts</a>.</p>
+
+  <table>
+    <tr><th>Kategorie</th><th>Instrumente</th></tr>
+    <tr><td>🎹 Klavier</td><td>Grand Piano, Bright Piano, Electric Piano, Harpsichord</td></tr>
+    <tr><td>🎸 Gitarre</td><td>Guitar Nylon, Guitar Steel, Guitar Clean, Guitar Jazz, Distortion, Bass</td></tr>
+    <tr><td>🎻 Streicher</td><td>Violin, Cello, String Ensemble</td></tr>
+    <tr><td>🎺 Bläser</td><td>Trumpet, Alto Sax, Flute, Clarinet</td></tr>
+    <tr><td>🎹 Orgel</td><td>Church Organ, Accordion, Choir</td></tr>
+    <tr><td>🔔 Glocken</td><td>Glockenspiel, Vibraphone, Marimba, Tubular Bells, Tinkle Bell, Steel Drums, Xylophone</td></tr>
+  </table>
+
+  <hr>
+
+  <h2><span class="emoji">🖥️</span>Kompatibilität</h2>
+  <table>
+    <tr><th>Plattform</th><th>Browser</th><th>Status</th></tr>
+    <tr><td>Windows 10/11</td><td>Chrome, Edge</td><td class="status-ok">✅ Voll funktionsfähig inkl. MIDI</td></tr>
+    <tr><td>macOS</td><td>Chrome, Edge</td><td class="status-ok">✅ Voll funktionsfähig inkl. MIDI</td></tr>
+    <tr><td>Linux</td><td>Chrome</td><td class="status-ok">✅ Voll funktionsfähig inkl. MIDI</td></tr>
+    <tr><td>Android</td><td>Chrome</td><td class="status-ok">✅ Touch-optimiert (kein MIDI)</td></tr>
+    <tr><td>iPhone / iPad</td><td>Safari</td><td class="status-warn">⚠️ Audio funktioniert, kein MIDI</td></tr>
+    <tr><td>Firefox (alle)</td><td>Firefox</td><td class="status-warn">⚠️ Kein MIDI, Audio funktioniert</td></tr>
+  </table>
+
+  <hr>
+
+  <h2><span class="emoji">🔧</span>Technische Details</h2>
+  <ul>
+    <li><strong>Kein Framework</strong> – reines HTML5, CSS3, Vanilla JavaScript</li>
+    <li><strong>Web Audio API</strong> – für Audio-Synthese, Reverb, Gain, Panning</li>
+    <li><strong>Web MIDI API</strong> – für MIDI Ein- und Ausgang</li>
+    <li><strong>MediaRecorder API</strong> – für Audio-Aufnahme</li>
+    <li><strong>SoundFont-Samples</strong> – MP3-Format, geladen via <code>fetch()</code> von GitHub CDN</li>
+    <li><strong>Noten-Anzeige</strong> – gezeichnet mit HTML5 Canvas</li>
+    <li><strong>Keine externe Abhängigkeit</strong> – läuft vollständig offline nach erstem Laden</li>
+  </ul>
+
+  <h3>Lokaler Webserver (empfohlen für MIDI)</h3>
+  <pre><code># Python 3
+python3 -m http.server 8080</code></pre>
+  <pre><code># Node.js
+npx serve .</code></pre>
+  <p>Dann im Browser: <code>http://localhost:8080/player.html</code></p>
+
+  <hr>
+
+  <h2><span class="emoji">📁</span>Dateistruktur</h2>
+  <div class="filetree">
+soundfont-touch-player/<br>
+└── player.html&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Gesamte App (eine einzelne Datei)
+  </div>
+
+  <hr>
+
+  <h2><span class="emoji">📄</span>Lizenz</h2>
+  <p>MIT License – frei verwendbar, veränderbar und weitergabe erlaubt.</p>
+
+  <hr>
+
+  <h2><span class="emoji">🙏</span>Danksagung</h2>
+  <ul>
+    <li><a href="#">gleitz/midi-js-soundfonts</a> – FluidR3 GM SoundFont Samples</li>
+    <li><a href="#">Web Audio API</a> – MDN Dokumentation</li>
+    <li><a href="#">Web MIDI API</a> – MDN Dokumentation</li>
+  </ul>
+
+  <footer>Erstellt mit ❤️ und Claude AI</footer>
+
+</div>
+</body>
+</html>

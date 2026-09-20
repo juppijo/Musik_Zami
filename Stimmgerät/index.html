@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="gold">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0b08">
+  <title>Stimmgerät – Gitarre und Ukulele</title>
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('stimm-style') || 'gold'; } catch (e) {}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>Stimmgerät</h1>
+      <p>Für Gitarre und Ukulele, direkt im Browser</p>
+    </div>
+    <div class="actions">
+      <div class="menu-wrap">
+        <button id="btnStyles" class="btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="styleMenu">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8.2-9-8.2Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+          <span>Styles</span>
+        </button>
+        <div id="styleMenu" class="menu" role="menu" aria-label="Styles" hidden></div>
+      </div>
+      <button id="btnFullscreen" class="btn" type="button" aria-pressed="false">
+        <svg id="fsIcon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M4 4h6v2H6v4H4V4Zm10 0h6v6h-2V6h-4V4ZM4 14h2v4h4v2H4v-6Zm14 0h2v6h-6v-2h4v-4Z"/></svg>
+        <span id="fsLabel">Vollbild</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section class="controls" aria-label="Einstellungen">
+      <div class="seg" id="instSeg" role="radiogroup" aria-label="Instrument">
+        <button type="button" role="radio" aria-checked="true"  data-inst="gitarre">Gitarre</button>
+        <button type="button" role="radio" aria-checked="false" data-inst="ukulele">Ukulele</button>
+      </div>
+
+      <div class="field">
+        <label for="tuningSel">Stimmung</label>
+        <select id="tuningSel"></select>
+      </div>
+
+      <div class="seg" id="modeSeg" role="radiogroup" aria-label="Modus">
+        <button type="button" role="radio" aria-checked="true"  data-mode="mic">Mikrofon</button>
+        <button type="button" role="radio" aria-checked="false" data-mode="tone">Referenzton</button>
+      </div>
+
+      <div class="field">
+        <span id="a4Label" class="label">Kammerton A</span>
+        <div class="stepper" role="group" aria-labelledby="a4Label">
+          <button id="a4Minus" type="button" aria-label="Kammerton um 1 Hertz senken">−</button>
+          <output id="a4Out">440 Hz</output>
+          <button id="a4Plus" type="button" aria-label="Kammerton um 1 Hertz erhöhen">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tuner idle" id="tuner">
+      <svg id="gauge" class="gauge" viewBox="0 0 400 250" role="img" aria-label="Zeigerinstrument: Abweichung in Cent"></svg>
+
+      <div class="readout">
+        <div class="note" aria-hidden="false">
+          <span id="noteName">–</span><sub id="noteOct"></sub>
+        </div>
+        <p id="centsText" class="cents"></p>
+        <p id="statusText" class="status" aria-live="polite">Das Mikrofon ist aus.</p>
+        <dl class="freqs">
+          <div><dt>Gespielt</dt><dd id="hzNow">– Hz</dd></div>
+          <div><dt>Soll</dt><dd id="hzTarget">– Hz</dd></div>
+        </dl>
+        <button id="btnMic" class="btn primary big" type="button">Mikrofon starten</button>
+        <p id="micError" class="error" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <section class="strings" aria-labelledby="stringsTitle">
+      <div class="strings-head">
+        <h2 id="stringsTitle">Saiten</h2>
+        <button id="btnClearDone" class="link" type="button" hidden>Häkchen löschen</button>
+      </div>
+      <div id="stringRow" class="string-row" role="group" aria-label="Saite wählen"></div>
+      <p id="stringHint" class="tip"></p>
+    </section>
+
+  </main>
+
+  <footer class="bottombar">
+    <label for="vol">Lautstärke Referenzton</label>
+    <input id="vol" type="range" min="0" max="100" value="80">
+  </footer>
+
+</div>
+</body>
+</html>

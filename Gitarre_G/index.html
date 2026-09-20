@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gitarren-Akkorde & Zupfmuster Lernen</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Gitarren-Lernstudio</h1>
+    <p>Meistere einfache Akkorde und geschmeidiges Zupfen</p>
+    <button id="fullscreenBtn" class="btn">Vollbild</button>
+  </header>
+
+  <main class="container">
+    
+    <!-- Sektion: Akkorde -->
+    <section class="card-section">
+      <h2>1. Grundakkorde</h2>
+      <div class="card-grid" id="chordGrid">
+        
+        <!-- C-Dur -->
+        <div class="card" onclick="playChord([261.63, 329.63, 392.00, 523.25])">
+          <h3>C-Dur</h3>
+          <div class="fretboard">
+            <span class="string muted">X</span>
+            <span class="string">3</span>
+            <span class="string">2</span>
+            <span class="string open">0</span>
+            <span class="string">1</span>
+            <span class="string open">0</span>
+          </div>
+          <small>Saiten: E A D G H e (von links nach rechts)</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- G-Dur -->
+        <div class="card" onclick="playChord([196.00, 246.94, 293.66, 392.00, 587.33, 783.99])">
+          <h3>G-Dur</h3>
+          <div class="fretboard">
+            <span class="string">3</span>
+            <span class="string">2</span>
+            <span class="string open">0</span>
+            <span class="string open">0</span>
+            <span class="string">0</span>
+            <span class="string">3</span>
+          </div>
+          <small>Saiten: E A D G H e</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- A-Moll -->
+        <div class="card" onclick="playChord([220.00, 293.66, 440.00, 523.25, 659.25])">
+          <h3>A-Moll (Am)</h3>
+          <div class="fretboard">
+            <span class="string muted">X</span>
+            <span class="string open">0</span>
+            <span class="string">2</span>
+            <span class="string">2</span>
+            <span class="string">1</span>
+            <span class="string open">0</span>
+          </div>
+          <small>Saiten: E A D G H e</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- E-Moll -->
+        <div class="card" onclick="playChord([164.81, 246.94, 329.63, 392.00, 493.88, 659.25])">
+          <h3>E-Moll (Em)</h3>
+          <div class="fretboard">
+            <span class="string open">0</span>
+            <span class="string">2</span>
+            <span class="string">2</span>
+            <span class="string open">0</span>
+            <span class="string open">0</span>
+            <span class="string open">0</span>
+          </div>
+          <small>Saiten: E A D G H e</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sektion: Zupfmuster -->
+    <section class="card-section">
+      <h2>2. Zupfmuster (Fingerpicking)</h2>
+      <p class="subtitle">Finger-Zuordnung: <strong>Daumen (p)</strong> = Bass-Saiten (E, A, D) | <strong>Zeigefinger (i)</strong> = G-Saite | <strong>Mittelfinger (m)</strong> = H-Saite | <strong>Ringfinger (a)</strong> = hohe e-Saite</p>
+
+      <div class="pattern-box">
+        <h3>Muster 1: Das klassische 4/4-Muster</h3>
+        <p class="pattern-sequence">Bass (p) &rarr; G (i) &rarr; H (m) &rarr; hohe e (a) &rarr; H (m) &rarr; G (i)</p>
+        <button class="btn" onclick="playPattern([110, 196, 246.94, 329.63, 246.94, 196])">Muster abspielen 🎶</button>
+      </div>
+
+      <div class="pattern-box">
+        <h3>Muster 2: 3/4-Walzer-Muster</h3>
+        <p class="pattern-sequence">Bass (p) &rarr; G+H+e gleichzeitig &rarr; G+H+e gleichzeitig</p>
+        <button class="btn" onclick="playWaltzPattern()">Muster abspielen 🎶</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+:root {
+  --bg-color: #f4f6f8;
+  --card-bg: #ffffff;
+  --primary: #2c3e50;
+  --accent: #e67e22;
+  --accent-hover: #d35400;
+  --text: #333333;
+  --border: #e0e0e0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text);
+  line-height: 1.6;
+  padding-bottom: 40px;
+}
+
+header {
+  background-color: var(--primary);
+  color: white;
+  text-align: center;
+  padding: 2rem 1rem;
+  position: relative;
+}
+
+header h1 {
+  margin-bottom: 0.5rem;
+}
+
+#fullscreenBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.card-section {
+  margin-bottom: 3rem;
+}
+
+.card-section h2 {
+  color: var(--primary);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.subtitle {
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid var(--border);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.fretboard {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 1rem 0;
+}
+
+.string {
+  width: 28px;
+  height: 36px;
+  background-color: #ecf0f1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--primary);
+  border: 1px solid #bdc3c7;
+}
+
+.string.muted {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.string.open {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.card small {
+  display: block;
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.btn, .play-btn {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.btn:hover, .play-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.pattern-box {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  border-left: 5px solid var(--accent);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pattern-sequence {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--primary);
+  margin: 0.8rem 0;
+}

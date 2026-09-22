@@ -98,6 +98,25 @@
     line-height:1.05;
     letter-spacing:-0.01em;
   }
+  input.titleinput{
+    font-family:var(--font-display);
+    font-size:clamp(28px,5vw,42px);
+    font-weight:600;
+    margin:0 0 4px;
+    line-height:1.05;
+    letter-spacing:-0.01em;
+    background:transparent;
+    border:none;
+    border-bottom:1px dashed transparent;
+    color:var(--text);
+    padding:0;
+    width:100%;
+    max-width:520px;
+  }
+  input.titleinput:hover, input.titleinput:focus{
+    border-bottom-color:var(--line);
+    outline:none;
+  }
   .titleblock p{
     margin:0;
     color:var(--text-dim);
@@ -324,10 +343,13 @@
 
   <header class="top">
     <div class="titleblock">
-      <h1>Somewhere Over the Rainbow</h1>
+      <input class="titleinput" id="titleInput" value="Somewhere Over the Rainbow" aria-label="Songtitel">
       <p>Israel Kamakawiwo‘ole · Ukulele-Version für Anfänger · Stimmung G C E A</p>
     </div>
     <div class="controls">
+      <button class="ctrl" id="saveBtn" title="Als JSON speichern">💾 Speichern</button>
+      <button class="ctrl" id="loadBtn" title="JSON laden">📂 Laden</button>
+      <input type="file" id="loadInput" accept="application/json,.json" style="display:none">
       <button class="ctrl" id="soundBtn" title="Ton an/aus">🔊 Ton</button>
       <button class="ctrl" id="themeBtn" title="Stil wechseln">🎨 <span id="themeLabel">Koa</span></button>
       <button class="ctrl" id="fsBtn" title="Vollbild">⛶ Vollbild</button>
@@ -339,6 +361,7 @@
     <span><b>Kapodaster:</b> nicht nötig</span>
     <span><b>Schlagmuster:</b> ↓ ↓↑ ↑↓↑ (D DU UDU)</span>
     <span><b>Akkorde:</b> G · D · Em · C · Cadd9 · B7</span>
+    <span id="ioStatus" style="color:var(--accent); font-weight:600;"></span>
   </div>
 
   <section class="hero">
@@ -485,7 +508,7 @@ function playChordSound(name){
 }
 
 /* ---------------- Song structure (chords only — no lyrics) ---------------- */
-const SONG = [
+const DEFAULT_SONG = [
   { heading:"Intro", lines:[
     { chords:["G","D","Em","C"] },
     { chords:["G","D","Em","Cadd9","C"] },
@@ -515,78 +538,107 @@ const SONG = [
   ]},
 ];
 
-/* Flatten into a single ordered chord-step sequence for autoplay */
-const STEPS = []; // {sectionIdx, lineIdx, chordIdx, chord}
-SONG.forEach((sec, sIdx)=>{
-  sec.lines.forEach((line, lIdx)=>{
-    line.chords.forEach((ch, cIdx)=>{
-      STEPS.push({ sectionIdx:sIdx, lineIdx:lIdx, chordIdx:cIdx, chord:ch });
-    });
-  });
-});
-
-/* ---------------- Render static song DOM ---------------- */
+let SONG = [];
+let STEPS = []; // {sectionIdx, lineIdx, chordIdx, chord}
 const songEl = document.getElementById('song');
-SONG.forEach((sec, sIdx)=>{
-  const secDiv = document.createElement('div');
-  secDiv.className = 'section';
-  const h = document.createElement('div');
-  h.className = 'section-heading';
-  h.textContent = sec.heading;
-  secDiv.appendChild(h);
-
-  sec.lines.forEach((line, lIdx)=>{
-    const lineDiv = document.createElement('div');
-    lineDiv.className = 'line';
-    lineDiv.id = `line-${sIdx}-${lIdx}`;
-
-    const chips = document.createElement('div');
-    chips.className = 'chips';
-    line.chords.forEach((ch,cIdx)=>{
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.textContent = ch;
-      chip.id = `chip-${sIdx}-${lIdx}-${cIdx}`;
-      chip.style.cursor = 'pointer';
-      chip.addEventListener('click', ()=> jumpTo(sIdx,lIdx,cIdx));
-      chips.appendChild(chip);
-    });
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'lyric';
-    input.placeholder = 'eigenen Text hier einfügen…';
-    input.setAttribute('aria-label', `Songtext für ${sec.heading} Zeile ${lIdx+1}`);
-    const storeKey = `sotr-lyric-${sIdx}-${lIdx}`;
-    try{
-      const saved = localStorage.getItem(storeKey);
-      if(saved) input.value = saved;
-    }catch(e){}
-    input.addEventListener('input', ()=>{
-      try{ localStorage.setItem(storeKey, input.value); }catch(e){}
-    });
-
-    lineDiv.appendChild(chips);
-    lineDiv.appendChild(input);
-    secDiv.appendChild(lineDiv);
-  });
-
-  songEl.appendChild(secDiv);
-});
-
-/* ---------------- Chord reference strip ---------------- */
 const stripEl = document.getElementById('chordStrip');
-Object.keys(CHORDS).forEach(name=>{
-  const card = document.createElement('div');
-  card.className = 'mini';
-  card.id = `mini-${name}`;
-  card.innerHTML = chordSVG(name, 64) + `<div class="mininame">${name}</div>`;
-  card.addEventListener('click', ()=>{
-    const idx = STEPS.findIndex(s=>s.chord===name);
-    if(idx>=0) goToStep(idx);
+
+/* Builds STEPS from SONG */
+function buildSteps(){
+  STEPS = [];
+  SONG.forEach((sec, sIdx)=>{
+    sec.lines.forEach((line, lIdx)=>{
+      line.chords.forEach((ch, cIdx)=>{
+        STEPS.push({ sectionIdx:sIdx, lineIdx:lIdx, chordIdx:cIdx, chord:ch });
+      });
+    });
   });
-  stripEl.appendChild(card);
-});
+}
+
+/* Renders the section/line/chip/lyric-input DOM from SONG.
+   lyricsOverride: optional array mirroring SONG with .lines[].lyric text to prefill instead of localStorage. */
+function buildSongDOM(lyricsOverride){
+  songEl.innerHTML = '';
+  SONG.forEach((sec, sIdx)=>{
+    const secDiv = document.createElement('div');
+    secDiv.className = 'section';
+    const h = document.createElement('div');
+    h.className = 'section-heading';
+    h.textContent = sec.heading;
+    secDiv.appendChild(h);
+
+    sec.lines.forEach((line, lIdx)=>{
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'line';
+      lineDiv.id = `line-${sIdx}-${lIdx}`;
+
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      line.chords.forEach((ch,cIdx)=>{
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = ch;
+        chip.id = `chip-${sIdx}-${lIdx}-${cIdx}`;
+        chip.style.cursor = 'pointer';
+        chip.addEventListener('click', ()=> jumpTo(sIdx,lIdx,cIdx));
+        chips.appendChild(chip);
+      });
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'lyric';
+      input.placeholder = 'eigenen Text hier einfügen…';
+      input.setAttribute('aria-label', `Songtext für ${sec.heading} Zeile ${lIdx+1}`);
+      const storeKey = `sotr-lyric-${sIdx}-${lIdx}`;
+      const overrideText = lyricsOverride && lyricsOverride[sIdx] && lyricsOverride[sIdx].lines[lIdx]
+        ? lyricsOverride[sIdx].lines[lIdx].lyric : undefined;
+      if(overrideText !== undefined){
+        input.value = overrideText;
+        try{ localStorage.setItem(storeKey, overrideText); }catch(e){}
+      } else {
+        try{
+          const saved = localStorage.getItem(storeKey);
+          if(saved) input.value = saved;
+        }catch(e){}
+      }
+      input.addEventListener('input', ()=>{
+        try{ localStorage.setItem(storeKey, input.value); }catch(e){}
+      });
+
+      lineDiv.appendChild(chips);
+      lineDiv.appendChild(input);
+      secDiv.appendChild(lineDiv);
+    });
+
+    songEl.appendChild(secDiv);
+  });
+}
+
+/* Rebuilds the chord reference strip — shows every known chord shape,
+   so alternates (like B7) stay visible even if unused in the current sequence. */
+function buildChordStrip(){
+  stripEl.innerHTML = '';
+  Object.keys(CHORDS).forEach(name=>{
+    const card = document.createElement('div');
+    card.className = 'mini';
+    card.id = `mini-${name}`;
+    card.innerHTML = chordSVG(name, 64) + `<div class="mininame">${name}</div>`;
+    card.addEventListener('click', ()=>{
+      const idx = STEPS.findIndex(s=>s.chord===name);
+      if(idx>=0) goToStep(idx);
+    });
+    stripEl.appendChild(card);
+  });
+}
+
+function loadSong(songData, lyricsOverride){
+  SONG = songData;
+  buildSteps();
+  buildSongDOM(lyricsOverride);
+  buildChordStrip();
+}
+
+loadSong(DEFAULT_SONG);
 
 /* ---------------- Hero + state ---------------- */
 const heroDiagramEl = document.getElementById('heroDiagram');
@@ -723,6 +775,142 @@ themeBtn.addEventListener('click', ()=>{
   applyTheme();
 });
 applyTheme();
+
+/* ---------------- Title ---------------- */
+const titleInput = document.getElementById('titleInput');
+try{
+  const savedTitle = localStorage.getItem('sotr-title');
+  if(savedTitle) titleInput.value = savedTitle;
+}catch(e){}
+titleInput.addEventListener('input', ()=>{
+  try{ localStorage.setItem('sotr-title', titleInput.value); }catch(e){}
+});
+
+/* ---------------- Save / Load as JSON ---------------- */
+const ioStatus = document.getElementById('ioStatus');
+function showStatus(msg, isError){
+  ioStatus.textContent = msg;
+  ioStatus.style.color = isError ? '#e05a4e' : 'var(--accent)';
+  clearTimeout(showStatus._t);
+  showStatus._t = setTimeout(()=>{ ioStatus.textContent=''; }, 4000);
+}
+
+function gatherState(){
+  const sections = SONG.map((sec, sIdx)=>({
+    heading: sec.heading,
+    lines: sec.lines.map((line, lIdx)=>{
+      const input = document.getElementById(`line-${sIdx}-${lIdx}`)?.querySelector('input.lyric');
+      return { chords: line.chords.slice(), lyric: input ? input.value : '' };
+    })
+  }));
+  return {
+    type: 'ukulele-song-state',
+    version: 1,
+    title: titleInput.value || 'Ukulele Song',
+    tempo: bpm,
+    theme: THEMES[themeIdx],
+    sections
+  };
+}
+
+function slugify(str){
+  return (str || 'song').toLowerCase()
+    .replace(/[^a-z0-9äöüß\s-]/g,'')
+    .trim()
+    .replace(/\s+/g,'-')
+    .slice(0,60) || 'song';
+}
+
+async function saveJSONFile(filename, jsonText){
+  try{
+    const downloads = window.claude ? await window.claude.use('downloads') : null;
+    if(downloads){
+      try{
+        const result = await downloads.save({ filename, data: jsonText });
+        showStatus(result.status === 'delivered' ? 'Übergeben.' : 'Gespeichert.');
+        return;
+      }catch(err){
+        if(err && err.code === 'declined'){ return; }
+        // fall through to local fallback on other errors
+      }
+    }
+  }catch(e){ /* capability not available */ }
+
+  // Fallback: works when this file is opened directly in a normal browser tab
+  try{
+    const blob = new Blob([jsonText], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    showStatus('Gespeichert.');
+  }catch(e){
+    showStatus('Speichern hier nicht möglich.', true);
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  const state = gatherState();
+  const json = JSON.stringify(state, null, 2);
+  saveJSONFile(`${slugify(state.title)}.json`, json);
+});
+
+const loadInput = document.getElementById('loadInput');
+document.getElementById('loadBtn').addEventListener('click', ()=> loadInput.click());
+loadInput.addEventListener('change', (e)=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      applyState(data);
+      showStatus('Geladen.');
+    }catch(err){
+      showStatus('Datei konnte nicht gelesen werden.', true);
+    }
+  };
+  reader.onerror = () => showStatus('Datei konnte nicht gelesen werden.', true);
+  reader.readAsText(file);
+  loadInput.value = '';
+});
+
+function applyState(data){
+  if(!data || typeof data !== 'object') throw new Error('invalid');
+
+  if(typeof data.title === 'string' && data.title.trim()){
+    titleInput.value = data.title;
+    try{ localStorage.setItem('sotr-title', data.title); }catch(e){}
+  }
+
+  if(Array.isArray(data.sections) && data.sections.length){
+    const songData = data.sections.map(sec => ({
+      heading: sec.heading || 'Abschnitt',
+      lines: (sec.lines || []).map(l => ({ chords: Array.isArray(l.chords) ? l.chords : [] }))
+    }));
+    loadSong(songData, data.sections);
+    currentStep = 0;
+    playing = false;
+    clearTimeout(timer);
+    playBtn.textContent = '▶ Abspielen';
+    render(false);
+  }
+
+  if(typeof data.tempo === 'number' && data.tempo >= 60 && data.tempo <= 220){
+    bpm = Math.round(data.tempo);
+    tempoSlider.value = bpm;
+    tempoLabel.textContent = `Tempo: ${bpm} bpm`;
+  }
+
+  if(typeof data.theme === 'string' && THEMES.includes(data.theme)){
+    themeIdx = THEMES.indexOf(data.theme);
+    applyTheme();
+  }
+}
 
 /* ---------------- init ---------------- */
 render(false);

@@ -1,0 +1,166 @@
+{
+  "type": "ukulele-song-state",
+  "version": 1,
+  "title": "Somewhere Over the Rainbow",
+  "tempo": 170,
+  "theme": "lagoon",
+  "sections": [
+    {
+      "heading": "Intro",
+      "lines": [
+        {
+          "chords": [
+            "G",
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "Ooh, ooh, ooh, ooh..."
+        },
+        {
+          "chords": [
+            "G",
+            "D",
+            "Em",
+            "Cadd9",
+            "C"
+          ],
+          "lyric": "Mmm, mmm, mmm, mmm..."
+        }
+      ]
+    },
+    {
+      "heading": "Strophe 1",
+      "lines": [
+        {
+          "chords": [
+            "G",
+            "D"
+          ],
+          "lyric": "Somewhere G over the rainbow, D"
+        },
+        {
+          "chords": [
+            "C",
+            "G"
+          ],
+          "lyric": "C way up G high"
+        },
+        {
+          "chords": [
+            "C",
+            "G"
+          ],
+          "lyric": "And the C dreams that you dream of G once in a lullaby D Em C"
+        },
+        {
+          "chords": [
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "D Em C"
+        }
+      ]
+    },
+    {
+      "heading": "Strophe 2",
+      "lines": [
+        {
+          "chords": [
+            "G",
+            "D"
+          ],
+          "lyric": "Somewhere G over the rainbow, "
+        },
+        {
+          "chords": [
+            "C",
+            "G"
+          ],
+          "lyric": "D blue birds Em fly C"
+        },
+        {
+          "chords": [
+            "C",
+            "G"
+          ],
+          "lyric": "And the G dreams that you dream of, C dreams really do come G true"
+        },
+        {
+          "chords": [
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "D Em C"
+        }
+      ]
+    },
+    {
+      "heading": "Bridge",
+      "lines": [
+        {
+          "chords": [
+            "G"
+          ],
+          "lyric": "Someday I'll G wish upon a star"
+        },
+        {
+          "chords": [
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "D Wake up where the clouds are far Em behind C me"
+        },
+        {
+          "chords": [
+            "G"
+          ],
+          "lyric": "Where G trouble melts like lemon drops"
+        },
+        {
+          "chords": [
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "D High above the chimney tops, that's Em where you'll C find me"
+        }
+      ]
+    },
+    {
+      "heading": "Outro",
+      "lines": [
+        {
+          "chords": [
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "Somewhere G over the rainbow, D bluebirds Em fly C"
+        },
+        {
+          "chords": [
+            "G",
+            "D",
+            "C",
+            "G"
+          ],
+          "lyric": "And the G dreams that you dare to, D oh why, oh C why can't G I?"
+        },
+        {
+          "chords": [
+            "C",
+            "G",
+            "D",
+            "Em",
+            "C"
+          ],
+          "lyric": "Well, I see G trees of green and D red roses C too G I'll see them C bloom for B7 me and Em you C And I C think to myself... D What a wonderful G world! C G"
+        }
+      ]
+    }
+  ]
+}

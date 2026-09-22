@@ -1,0 +1,128 @@
+{
+  "title": "Over the Rainbow",
+  "artist": "Israel Kamakawiwoʻole • Ukulele Playalong",
+  "bpm": 115,
+  "chords": {
+    "G": {
+      "frets": [
+        0,
+        2,
+        3,
+        2
+      ],
+      "fingers": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "notes": [
+        392,
+        261.63,
+        392,
+        587.33
+      ]
+    },
+    "D": {
+      "frets": [
+        2,
+        2,
+        2,
+        0
+      ],
+      "fingers": [
+        1,
+        2,
+        3,
+        0
+      ],
+      "notes": [
+        440,
+        293.66,
+        440,
+        587.33
+      ]
+    },
+    "Em": {
+      "frets": [
+        0,
+        4,
+        3,
+        2
+      ],
+      "fingers": [
+        0,
+        3,
+        2,
+        1
+      ],
+      "notes": [
+        392,
+        329.63,
+        392,
+        587.33
+      ]
+    },
+    "C": {
+      "frets": [
+        0,
+        0,
+        0,
+        3
+      ],
+      "fingers": [
+        0,
+        0,
+        0,
+        3
+      ],
+      "notes": [
+        392,
+        261.63,
+        329.63,
+        523.25
+      ]
+    },
+    "Cadd9": {
+      "frets": [
+        0,
+        0,
+        0,
+        5
+      ],
+      "fingers": [
+        0,
+        0,
+        0,
+        4
+      ],
+      "notes": [
+        392,
+        261.63,
+        329.63,
+        587.33
+      ]
+    },
+    "B7": {
+      "frets": [
+        2,
+        3,
+        2,
+        2
+      ],
+      "fingers": [
+        1,
+        3,
+        1,
+        1
+      ],
+      "notes": [
+        440,
+        293.66,
+        370,
+        493.88
+      ]
+    }
+  },
+  "content": "[Intro & Lautgesang]\n[G] [D] [Em] [C]\n[G] [D] [Em] [Cadd9] [C]\nOoh, ooh, ooh, ooh...\n[G] [D] [C] [G]\n[C] [B7] [Em] [C]\nMmm, mmm, mmm, mmm...\n\n[Strophe 1]\nSomewhere [G] over the rainbow, [C] way up [G] high\nAnd the [C] dreams that you dream of [G] once in a lullaby [D] [Em] [C]\n\n[Strophe 2]\nSomewhere [G] over the rainbow, [D] blue birds [Em] fly [C]\nAnd the [G] dreams that you dream of, [C] dreams really do come [G] true\n\n[Bridge]\nSomeday I'll [G] wish upon a star\n[D] Wake up where the clouds are far [Em] behind [C] me\nWhere [G] trouble melts like lemon drops\n[D] High above the chimney tops, that's [Em] where you'll [C] find me\n\n[Strophe 3]\nSomewhere [G] over the rainbow, [D] bluebirds [Em] fly [C]\nAnd the [G] dreams that you dare to, [D] oh why, oh [C] why can't [G] I?\n\n[Outro]\nWell, I see [G] trees of green and [D] red roses [C] too [G]\nI'll see them [C] bloom for [B7] me and [Em] you [C]\nAnd I [C] think to myself... [D] What a wonderful [G] world! [C] [G]"
+}

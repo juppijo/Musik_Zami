@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ukulele-Akkorde & Zupfmuster Lernen</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Ukulele Lernstudio 🌺</h1>
+    <p>Lerne einfache Akkorde und geschmeidige Zupfmuster für die Ukulele</p>
+    <button id="fullscreenBtn" class="btn-fullscreen">Vollbild ⛶</button>
+  </header>
+
+  <main class="container">
+    
+    <!-- Sektion 1: Akkorde -->
+    <section class="card-section">
+      <h2>1. Die 4 wichtigsten Grundakkorde</h2>
+      <p class="section-desc">Klicke auf eine Karte, um den Akkord zu hören!</p>
+
+      <div class="card-grid">
+        
+        <!-- C-Dur -->
+        <div class="card" onclick="playUkuleleChord([392.00, 261.63, 329.63, 523.25])">
+          <h3>C-Dur</h3>
+          <div class="fretboard">
+            <div class="string-col"><span class="label">G</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">C</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">E</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">A</span><span class="fret finger">3</span></div>
+          </div>
+          <small>3. Bund auf der A-Saite (Ringfinger)</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- G-Dur -->
+        <div class="card" onclick="playUkuleleChord([392.00, 293.66, 392.00, 440.00])">
+          <h3>G-Dur</h3>
+          <div class="fretboard">
+            <div class="string-col"><span class="label">G</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">C</span><span class="fret finger">2</span></div>
+            <div class="string-col"><span class="label">E</span><span class="fret finger">3</span></div>
+            <div class="string-col"><span class="label">A</span><span class="fret finger">2</span></div>
+          </div>
+          <small>C (2. Bund), E (3. Bund), A (2. Bund)</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- A-Moll -->
+        <div class="card" onclick="playUkuleleChord([440.00, 261.63, 329.63, 440.00])">
+          <h3>A-Moll (Am)</h3>
+          <div class="fretboard">
+            <div class="string-col"><span class="label">G</span><span class="fret finger">2</span></div>
+            <div class="string-col"><span class="label">C</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">E</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">A</span><span class="fret open">0</span></div>
+          </div>
+          <small>2. Bund auf der G-Saite (Mittelfinger)</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+        <!-- F-Dur -->
+        <div class="card" onclick="playUkuleleChord([440.00, 261.63, 349.23, 440.00])">
+          <h3>F-Dur</h3>
+          <div class="fretboard">
+            <div class="string-col"><span class="label">G</span><span class="fret finger">2</span></div>
+            <div class="string-col"><span class="label">C</span><span class="fret open">0</span></div>
+            <div class="string-col"><span class="label">E</span><span class="fret finger">1</span></div>
+            <div class="string-col"><span class="label">A</span><span class="fret open">0</span></div>
+          </div>
+          <small>G (2. Bund), E (1. Bund)</small>
+          <button class="play-btn">Anhören 🎵</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Sektion 2: Zupfmuster -->
+    <section class="card-section">
+      <h2>2. Zupfmuster (Fingerpicking)</h2>
+      <div class="info-box">
+        <strong>Finger-Zuordnung für die Rechten Hand:</strong><br>
+        👍 <strong>Daumen (p):</strong> G-Saite & C-Saite | ✌️ <strong>Zeigefinger (i):</strong> E-Saite | 🖕 <strong>Mittelfinger (m):</strong> A-Saite
+      </div>
+
+      <div class="pattern-card">
+        <h3>Muster 1: Das klassische 4/4 Zupfmuster</h3>
+        <p class="pattern-desc">C-Saite (p) &rarr; E-Saite (i) &rarr; A-Saite (m) &rarr; E-Saite (i)</p>
+        <button class="btn" onclick="playPattern1()">Muster Vorspielen 🎶</button>
+      </div>
+
+      <div class="pattern-card">
+        <h3>Muster 2: Insel-Zupfen (3/4 & 4/4 Wechsel)</h3>
+        <p class="pattern-desc">G-Saite (p) &rarr; C-Saite (p) &rarr; E-Saite (i) &rarr; A-Saite (m)</p>
+        <button class="btn" onclick="playPattern2()">Muster Vorspielen 🎶</button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

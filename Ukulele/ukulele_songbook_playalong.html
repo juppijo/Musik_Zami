@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Over the Rainbow - Ukulele Playalong & Chord Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for smooth lyrics viewing */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Theme Presets */
+        .theme-tropical {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #0d9488 50%, #0284c7 100%);
+            --card-bg: rgba(255, 255, 255, 0.88);
+            --card-border: rgba(255, 255, 255, 0.4);
+            --text-main: #0f172a;
+            --accent: #0284c7;
+            --chord-color: #0284c7;
+        }
+        .theme-sunset {
+            --bg-gradient: linear-gradient(135deg, #2e1065 0%, #7c2d12 50%, #c2410c 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(255, 255, 255, 0.3);
+            --text-main: #1c1917;
+            --accent: #ea580c;
+            --chord-color: #ea580c;
+        }
+        .theme-dark {
+            --bg-gradient: linear-gradient(135deg, #090d16 0%, #111827 50%, #1f2937 100%);
+            --card-bg: rgba(31, 41, 55, 0.85);
+            --card-border: rgba(75, 85, 99, 0.4);
+            --text-main: #f9fafb;
+            --accent: #f59e0b;
+            --chord-color: #fbbf24;
+        }
+        .theme-clean {
+            --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-border: rgba(226, 232, 240, 0.8);
+            --text-main: #0f172a;
+            --accent: #2563eb;
+            --chord-color: #2563eb;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            transition: background 0.5s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+        }
+
+        .chord-badge {
+            color: var(--chord-color);
+            font-weight: 700;
+            background-color: rgba(2, 132, 199, 0.12);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chord-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: rgba(2, 132, 199, 0.25);
+        }
+
+        /* Pulse glow animation for beat visualization */
+        @keyframes beatPulse {
+            0% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 8px currentColor); }
+            100% { transform: scale(1); opacity: 0.5; }
+        }
+        .active-beat {
+            animation: beatPulse 0.15s ease-out;
+            color: #f59e0b !important;
+        }
+
+        .line-highlight {
+            background-color: rgba(245, 158, 11, 0.15);
+            border-left: 4px solid #f59e0b;
+            border-radius: 0 8px 8px 0;
+            padding-left: 8px;
+            transition: background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="theme-tropical font-sans antialiased flex flex-col min-h-screen">
+
+    <header class="sticky top-0 z-40 w-full glass-card border-b shadow-md backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+            
+            <!-- Song Title & Info -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg text-lg">
+                    <i class="fa-solid fa-guitar"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight font-display flex items-center gap-2">
+                        Over the Rainbow
+                        <span class="text-xs font-normal px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                            IZ Style
+                        </span>
+                    </h1>
+                    <p class="text-xs opacity-75 font-medium">Israel Kamakawiwoʻole • Ukulele Anfänger Guide & Songbook</p>
+                </div>
+            </div>
+
+            <!-- Header Actions & Controls -->
+            <div class="flex items-center flex-wrap gap-2 sm:gap-3">
+                
+                <!-- Style / Theme Selector -->
+                <div class="relative inline-block">
+                    <button id="themeToggleBtn" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white/40 hover:bg-white/60 dark:bg-gray-800/50 dark:hover:bg-gray-700/60 border border-white/30 transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-palette text-amber-500"></i>
+                        <span>Stil</span>
+                    </button>
+                    <!-- Theme Dropdown menu -->
+                    <div id="themeMenu" class="hidden absolute right-0 mt-2 w-44 rounded-xl glass-card shadow-2xl py-2 z-50 border text-xs">
+                        <button onclick="setTheme('theme-tropical')" class="w-full text-left px-4 py-2 hover:bg-black/5 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-teal-500"></span> Tropische Insel
+                        </button>
+                        <button onclick="setTheme('theme-sunset')" class="w-full text-left px-4 py-2 hover:bg-black/5 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-orange-500"></span> Sonnenuntergang
+                        </button>
+                        <button onclick="setTheme('theme-dark')" class="w-full text-left px-4 py-2 hover:bg-black/5 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-gray-800"></span> Dunkelstudio
+                        </button>
+                        <button onclick="setTheme('theme-clean')" class="w-full text-left px-4 py-2 hover:bg-black/5 flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-blue-500"></span> Clean Minimal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fullscreen Button -->
+                <button id="fullscreenBtn" class="px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg bg-white/40 hover:bg-white/60 dark:bg-gray-800/50 dark:hover:bg-gray-700/60 border border-white/30 transition flex items-center gap-2 shadow-sm" title="Vollbild umschalten">
+                    <i class="fa-solid fa-expand"></i>
+                    <span class="hidden sm:inline">Vollbild</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Chords Library & Strumming Pattern Visualizer (4 Cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Interactive Ukulele Chord Diagrams Panel -->
+            <section class="glass-card rounded-2xl p-5 shadow-lg border">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold font-display flex items-center gap-2">
+                        <i class="fa-solid fa-music text-amber-500"></i>
+                        Akkord-Übersicht (GCEA)
+                    </h2>
+                    <span class="text-xs opacity-75 bg-black/5 dark:bg-white/10 px-2 py-1 rounded">Anfänger</span>
+                </div>
+
+                <p class="text-xs opacity-80 mb-4">
+                    Klicke auf einen Akkord, um das Diagramm zu vergrößern und den Klang abzuspielen!
+                </p>
+
+                <!-- Chord Grid -->
+                <div id="chordGrid" class="grid grid-cols-3 gap-3">
+                    <!-- Dynamic chords will be injected here -->
+                </div>
+            </section>
+
+            <!-- Strumming Pattern & Metronome Panel -->
+            <section class="glass-card rounded-2xl p-5 shadow-lg border">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold font-display flex items-center gap-2">
+                        <i class="fa-solid fa-drum text-amber-500"></i>
+                        Schlagmuster (Island Strum)
+                    </h2>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">
+                        ↓  ↓↑  ↑↓↑
+                    </span>
+                </div>
+
+                <p class="text-xs opacity-80 mb-4">
+                    Klassischer Reggae/Hawaiian Uke Rhythmus. Auf die Pfeile achten & im Takt bleiben!
+                </p>
+
+                <!-- Strum Visualizer Bar -->
+                <div class="bg-black/10 dark:bg-white/5 rounded-xl p-4 mb-4 border border-black/5">
+                    <div class="flex justify-between items-center text-center max-w-xs mx-auto" id="strumBar">
+                        <!-- Beat 1: Down -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="0">
+                            <span class="text-2xl font-black text-amber-500">↓</span>
+                            <span class="text-[10px] opacity-60 font-mono">1</span>
+                        </div>
+                        <!-- Beat 1.5: miss -->
+                        <div class="strum-beat flex flex-col items-center opacity-30" data-beat="1">
+                            <span class="text-lg font-bold">·</span>
+                            <span class="text-[10px] font-mono">&</span>
+                        </div>
+                        <!-- Beat 2: Down -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="2">
+                            <span class="text-2xl font-black text-amber-500">↓</span>
+                            <span class="text-[10px] opacity-60 font-mono">2</span>
+                        </div>
+                        <!-- Beat 2.5: Up -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="3">
+                            <span class="text-2xl font-black text-sky-500">↑</span>
+                            <span class="text-[10px] opacity-60 font-mono">&</span>
+                        </div>
+                        <!-- Beat 3: miss -->
+                        <div class="strum-beat flex flex-col items-center opacity-30" data-beat="4">
+                            <span class="text-lg font-bold">·</span>
+                            <span class="text-[10px] font-mono">3</span>
+                        </div>
+                        <!-- Beat 3.5: Up -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="5">
+                            <span class="text-2xl font-black text-sky-500">↑</span>
+                            <span class="text-[10px] opacity-60 font-mono">&</span>
+                        </div>
+                        <!-- Beat 4: Down -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="6">
+                            <span class="text-2xl font-black text-amber-500">↓</span>
+                            <span class="text-[10px] opacity-60 font-mono">4</span>
+                        </div>
+                        <!-- Beat 4.5: Up -->
+                        <div class="strum-beat flex flex-col items-center" data-beat="7">
+                            <span class="text-2xl font-black text-sky-500">↑</span>
+                            <span class="text-[10px] opacity-60 font-mono">&</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playalong Play / Tempo Bar -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <button id="playBtn" class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-play" id="playIcon"></i>
+                            <span id="playBtnText">Playalong Starten</span>
+                        </button>
+                        <button id="audioTestBtn" class="px-3 py-3 rounded-xl bg-white/40 hover:bg-white/60 dark:bg-gray-800/50 border border-white/30 text-xs font-semibold" title="Sound-Test">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+
+                    <!-- Tempo Control Slider -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs font-medium">
+                            <span class="opacity-80">Tempo / Geschwindigkeit</span>
+                            <span class="font-bold text-amber-600 dark:text-amber-400" id="bpmDisplay">115 BPM</span>
+                        </div>
+                        <input type="range" id="bpmSlider" min="50" max="180" value="115" class="w-full accent-amber-500 cursor-pointer">
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Song Sheet, Lyrics & Auto-Scroll (7 Cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+            
+            <!-- Song Control Bar -->
+            <div class="glass-card rounded-2xl p-4 shadow-md border flex flex-wrap items-center justify-between gap-3">
+                
+                <!-- Transpose Controls -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold opacity-80">Transponieren:</span>
+                    <div class="inline-flex rounded-lg shadow-sm border border-black/10 dark:border-white/10 overflow-hidden">
+                        <button id="transposeDown" class="px-2.5 py-1 text-xs font-bold bg-white/40 hover:bg-white/70 dark:bg-gray-800/60 dark:hover:bg-gray-700/60 transition">-1</button>
+                        <span id="transposeValue" class="px-3 py-1 text-xs font-mono font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center">0</span>
+                        <button id="transposeUp" class="px-2.5 py-1 text-xs font-bold bg-white/40 hover:bg-white/70 dark:bg-gray-800/60 dark:hover:bg-gray-700/60 transition">+1</button>
+                    </div>
+                    <button id="transposeReset" class="text-[11px] underline opacity-60 hover:opacity-100 ml-1">Reset</button>
+                </div>
+
+                <!-- Font Size & AutoScroll Toggle -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
+                        <button id="fontDec" class="px-2 py-1 text-xs font-bold rounded bg-black/5 dark:bg-white/10 hover:bg-black/10">A-</button>
+                        <button id="fontInc" class="px-2 py-1 text-xs font-bold rounded bg-black/5 dark:bg-white/10 hover:bg-black/10">A+</button>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold select-none">
+                        <input type="checkbox" id="autoScrollCheck" class="rounded text-amber-500 focus:ring-amber-400 h-4 w-4" checked>
+                        <span>Auto-Scroll</span>
+                    </label>
+                </div>
+
+            </div>
+
+            <!-- Songbook Song Container -->
+            <div class="glass-card rounded-2xl p-6 shadow-xl border flex-grow relative">
+                
+                <div id="lyricsContainer" class="space-y-6 max-h-[620px] overflow-y-auto pr-2 scroll-smooth text-base leading-relaxed">
+                    
+                    <!-- Intro -->
+                    <div class="song-section" data-section="intro">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Intro & Lautgesang]
+                        </div>
+                        <div class="line my-2">
+                            <span class="chord-badge" data-chord="G">G</span>
+                            <span class="chord-badge" data-chord="D">D</span>
+                            <span class="chord-badge" data-chord="Em">Em</span>
+                            <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-2">
+                            <span class="chord-badge" data-chord="G">G</span>
+                            <span class="chord-badge" data-chord="D">D</span>
+                            <span class="chord-badge" data-chord="Em">Em</span>
+                            <span class="chord-badge" data-chord="Cadd9">Cadd9</span>
+                            <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-2 text-sm italic opacity-80">
+                            Ooh, ooh, ooh, ooh...
+                        </div>
+                        <div class="line my-2">
+                            <span class="chord-badge" data-chord="G">G</span>
+                            <span class="chord-badge" data-chord="D">D</span>
+                            <span class="chord-badge" data-chord="C">C</span>
+                            <span class="chord-badge" data-chord="G">G</span>
+                        </div>
+                        <div class="line my-2">
+                            <span class="chord-badge" data-chord="C">C</span>
+                            <span class="chord-badge" data-chord="B7">B7</span>
+                            <span class="chord-badge" data-chord="Em">Em</span>
+                            <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-2 text-sm italic opacity-80">
+                            Mmm, mmm, mmm, mmm...
+                        </div>
+                    </div>
+
+                    <!-- Strophe 1 -->
+                    <div class="song-section" data-section="verse1">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Strophe 1]
+                        </div>
+                        <div class="line my-3">
+                            Somewhere <span class="chord-badge" data-chord="G">G</span> over the rainbow, <span class="chord-badge" data-chord="C">C</span> way up <span class="chord-badge" data-chord="G">G</span> high
+                        </div>
+                        <div class="line my-3">
+                            And the <span class="chord-badge" data-chord="C">C</span> dreams that you dream of <span class="chord-badge" data-chord="G">G</span> once in a lullaby <span class="chord-badge" data-chord="D">D</span> <span class="chord-badge" data-chord="Em">Em</span> <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                    </div>
+
+                    <!-- Strophe 2 -->
+                    <div class="song-section" data-section="verse2">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Strophe 2]
+                        </div>
+                        <div class="line my-3">
+                            Somewhere <span class="chord-badge" data-chord="G">G</span> over the rainbow, <span class="chord-badge" data-chord="D">D</span> blue birds <span class="chord-badge" data-chord="Em">Em</span> fly <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-3">
+                            And the <span class="chord-badge" data-chord="G">G</span> dreams that you dream of, <span class="chord-badge" data-chord="C">C</span> dreams really do come <span class="chord-badge" data-chord="G">G</span> true
+                        </div>
+                    </div>
+
+                    <!-- Refrain / Bridge -->
+                    <div class="song-section" data-section="bridge">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Bridge]
+                        </div>
+                        <div class="line my-3">
+                            Someday I'll <span class="chord-badge" data-chord="G">G</span> wish upon a star
+                        </div>
+                        <div class="line my-3">
+                            <span class="chord-badge" data-chord="D">D</span> Wake up where the clouds are far <span class="chord-badge" data-chord="Em">Em</span> behind <span class="chord-badge" data-chord="C">C</span> me
+                        </div>
+                        <div class="line my-3">
+                            Where <span class="chord-badge" data-chord="G">G</span> trouble melts like lemon drops
+                        </div>
+                        <div class="line my-3">
+                            <span class="chord-badge" data-chord="D">D</span> High above the chimney tops, that's <span class="chord-badge" data-chord="Em">Em</span> where you'll <span class="chord-badge" data-chord="C">C</span> find me
+                        </div>
+                    </div>
+
+                    <!-- Strophe 3 -->
+                    <div class="song-section" data-section="verse3">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Strophe 3]
+                        </div>
+                        <div class="line my-3">
+                            Somewhere <span class="chord-badge" data-chord="G">G</span> over the rainbow, <span class="chord-badge" data-chord="D">D</span> bluebirds <span class="chord-badge" data-chord="Em">Em</span> fly <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-3">
+                            And the <span class="chord-badge" data-chord="G">G</span> dreams that you dare to, <span class="chord-badge" data-chord="D">D</span> oh why, oh <span class="chord-badge" data-chord="C">C</span> why can't <span class="chord-badge" data-chord="G">G</span> I?
+                        </div>
+                    </div>
+
+                    <!-- Outro -->
+                    <div class="song-section" data-section="outro">
+                        <div class="text-xs font-bold tracking-wider uppercase opacity-50 mb-2 border-b pb-1">
+                            [Outro]
+                        </div>
+                        <div class="line my-2">
+                            Well, I see <span class="chord-badge" data-chord="G">G</span> trees of green and <span class="chord-badge" data-chord="D">D</span> red roses <span class="chord-badge" data-chord="C">C</span> too <span class="chord-badge" data-chord="G">G</span>
+                        </div>
+                        <div class="line my-2">
+                            I'll see them <span class="chord-badge" data-chord="C">C</span> bloom for <span class="chord-badge" data-chord="B7">B7</span> me and <span class="chord-badge" data-chord="Em">Em</span> you <span class="chord-badge" data-chord="C">C</span>
+                        </div>
+                        <div class="line my-2">
+                            And I <span class="chord-badge" data-chord="C">C</span> think to myself... <span class="chord-badge" data-chord="D">D</span> What a wonderful <span class="chord-badge" data-chord="G">G</span> world! <span class="chord-badge" data-chord="C">C</span> <span class="chord-badge" data-chord="G">G</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <div id="chordModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card bg-white/90 dark:bg-gray-900/90 rounded-2xl p-6 max-w-sm w-full shadow-2xl border flex flex-col items-center relative text-center">
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-black dark:hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="modalChordTitle" class="text-2xl font-black font-display mb-1 text-amber-500">G Akkord</h3>
+            <p id="modalChordSubtitle" class="text-xs opacity-75 mb-4">GCEA Stimmung • Ukulele</p>
+            
+            <div id="modalSvgContainer" class="w-48 h-56 my-2">
+                <!-- Large SVG Chord diagram injected here -->
+            </div>
+
+            <button id="modalPlayBtn" class="mt-4 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-volume-high"></i> Akkord Anhören
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Standard Ukulele Chords in GCEA tuning (Frets 1-4, string order: G C E A)
+        const chordData = {
+            "G": { frets: [0, 2, 3, 2], fingers: [0, 1, 3, 2], notes: [392.00, 261.63, 392.00, 587.33] },
+            "D": { frets: [2, 2, 2, 0], fingers: [1, 2, 3, 0], notes: [440.00, 293.66, 440.00, 587.33] },
+            "Em": { frets: [0, 4, 3, 2], fingers: [0, 3, 2, 1], notes: [392.00, 329.63, 392.00, 587.33] },
+            "C": { frets: [0, 0, 0, 3], fingers: [0, 0, 0, 3], notes: [392.00, 261.63, 329.63, 523.25] },
+            "Cadd9": { frets: [0, 0, 0, 5], fingers: [0, 0, 0, 4], notes: [392.00, 261.63, 329.63, 587.33] },
+            "B7": { frets: [2, 3, 2, 2], fingers: [1, 3, 1, 1], notes: [440.00, 293.66, 370.00, 493.88] }
+        };
+
+        const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        let transposeOffset = 0;
+        let isPlaying = false;
+        let playTimer = null;
+        let currentBeat = 0;
+        let bpm = 115;
+        let audioCtx = null;
+        let fontSizePx = 16;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playUkulelePluck(freq, delay = 0) {
+            initAudio();
+            const now = audioCtx.currentTime + delay;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            // Plucked string synthesis simulation
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(3000, now);
+            filter.frequency.exponentialRampToValueAtTime(400, now + 0.8);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(now);
+            osc.stop(now + 1.2);
+        }
+
+        function playChordSound(chordName) {
+            const data = chordData[chordName];
+            if (!data) return;
+            initAudio();
+            
+            // Strum strings with small delay for realistic sound
+            data.notes.forEach((freq, idx) => {
+                playUkulelePluck(freq, idx * 0.04);
+            });
+        }
+
+        function createUkuleleSVG(frets, fingers, size = 'small') {
+            const isLarge = size === 'large';
+            const width = isLarge ? 180 : 80;
+            const height = isLarge ? 220 : 100;
+            const startX = isLarge ? 30 : 15;
+            const startY = isLarge ? 35 : 20;
+            const stringGap = isLarge ? 40 : 16;
+            const fretGap = isLarge ? 38 : 18;
+
+            let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" class="mx-auto">`;
+
+            // Nut line
+            svg += `<rect x="${startX}" y="${startY - 4}" width="${stringGap * 3}" height="4" fill="currentColor" opacity="0.8"/>`;
+
+            // Fret lines (4 frets)
+            for (let i = 0; i <= 4; i++) {
+                const y = startY + (i * fretGap);
+                svg += `<line x1="${startX}" y1="${y}" x2="${startX + stringGap * 3}" y2="${y}" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>`;
+            }
+
+            // String lines (G C E A)
+            for (let i = 0; i < 4; i++) {
+                const x = startX + (i * stringGap);
+                svg += `<line x1="${x}" y1="${startY}" x2="${x}" y2="${startY + fretGap * 4}" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>`;
+            }
+
+            // Finger Placement Dots
+            frets.forEach((fret, stringIdx) => {
+                const x = startX + (stringIdx * stringGap);
+                if (fret === 0) {
+                    // Open string circle above nut
+                    svg += `<circle cx="${x}" cy="${startY - 10}" r="${isLarge ? 5 : 3}" fill="none" stroke="currentColor" stroke-width="1.5"/>`;
+                } else {
+                    const y = startY + (fret * fretGap) - (fretGap / 2);
+                    svg += `<circle cx="${x}" cy="${y}" r="${isLarge ? 10 : 6}" fill="#f59e0b"/>`;
+                    if (isLarge && fingers && fingers[stringIdx]) {
+                        svg += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="bold" fill="#ffffff">${fingers[stringIdx]}</text>`;
+                    }
+                }
+            });
+
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function renderChordGrid() {
+            const container = document.getElementById('chordGrid');
+            container.innerHTML = '';
+
+            Object.keys(chordData).forEach(name => {
+                const chord = chordData[name];
+                const card = document.createElement('div');
+                card.className = "bg-white/40 dark:bg-gray-800/40 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-xl p-2 text-center border cursor-pointer transition shadow-sm hover:shadow-md flex flex-col items-center";
+                card.onclick = () => openChordModal(name);
+
+                card.innerHTML = `
+                    <div class="font-bold text-sm text-amber-600 dark:text-amber-400 mb-1">${name}</div>
+                    ${createUkuleleSVG(chord.frets, chord.fingers, 'small')}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openChordModal(chordName) {
+            const modal = document.getElementById('chordModal');
+            const title = document.getElementById('modalChordTitle');
+            const svgContainer = document.getElementById('modalSvgContainer');
+            const playBtn = document.getElementById('modalPlayBtn');
+
+            const chord = chordData[chordName] || chordData['G'];
+            title.textContent = `${chordName} Akkord`;
+            svgContainer.innerHTML = createUkuleleSVG(chord.frets, chord.fingers, 'large');
+            
+            playBtn.onclick = () => playChordSound(chordName);
+            playChordSound(chordName);
+
+            modal.classList.remove('hidden');
+        }
+
+        document.getElementById('closeModal').onclick = () => {
+            document.getElementById('chordModal').classList.add('hidden');
+        };
+
+        function transposeNote(note, semitones) {
+            const cleanNote = note.replace(/m|add9|7/g, '');
+            const suffix = note.slice(cleanNote.length);
+            const index = noteNames.indexOf(cleanNote);
+            if (index === -1) return note;
+            
+            let newIndex = (index + semitones) % 12;
+            if (newIndex < 0) newIndex += 12;
+            return noteNames[newIndex] + suffix;
+        }
+
+        function updateTransposition(delta) {
+            if (delta === 0) transposeOffset = 0;
+            else transposeOffset += delta;
+
+            document.getElementById('transposeValue').textContent = (transposeOffset > 0 ? '+' : '') + transposeOffset;
+
+            document.querySelectorAll('.chord-badge').forEach(badge => {
+                const orig = badge.getAttribute('data-chord');
+                if (orig) {
+                    badge.textContent = transposeNote(orig, transposeOffset);
+                }
+            });
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('playBtn');
+            const icon = document.getElementById('playIcon');
+            const text = document.getElementById('playBtnText');
+
+            if (isPlaying) {
+                initAudio();
+                icon.className = "fa-solid fa-pause";
+                text.textContent = "Pause";
+                startBeatLoop();
+            } else {
+                icon.className = "fa-solid fa-play";
+                text.textContent = "Playalong Starten";
+                clearInterval(playTimer);
+            }
+        }
+
+        function startBeatLoop() {
+            clearInterval(playTimer);
+            const intervalMs = (60 / bpm) * 1000 / 2; // 8th notes
+
+            playTimer = setInterval(() => {
+                // Highlight beat in strum visualizer
+                const beats = document.querySelectorAll('.strum-beat');
+                beats.forEach((b, idx) => {
+                    if (parseInt(b.getAttribute('data-beat')) === currentBeat) {
+                        b.classList.add('active-beat');
+                        // Soft click sound on beat 1 & 3
+                        if (currentBeat === 0 || currentBeat === 4) {
+                            playUkulelePluck(currentBeat === 0 ? 800 : 600, 0);
+                        }
+                    } else {
+                        b.classList.remove('active-beat');
+                    }
+                });
+
+                // Smooth lyrics auto scroll
+                if (document.getElementById('autoScrollCheck').checked && currentBeat === 0) {
+                    const lyrics = document.getElementById('lyricsContainer');
+                    lyrics.scrollTop += 2;
+                }
+
+                currentBeat = (currentBeat + 1) % 8;
+            }, intervalMs);
+        }
+
+        function setTheme(themeName) {
+            document.body.className = `${themeName} font-sans antialiased flex flex-col min-h-screen`;
+            document.getElementById('themeMenu').classList.add('hidden');
+        }
+
+        document.getElementById('themeToggleBtn').onclick = (e) => {
+            e.stopPropagation();
+            document.getElementById('themeMenu').classList.toggle('hidden');
+        };
+
+        document.addEventListener('click', () => {
+            document.getElementById('themeMenu').classList.add('hidden');
+        });
+
+        document.getElementById('fullscreenBtn').onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
+            }
+        };
+
+        window.onload = function() {
+            renderChordGrid();
+
+            // BPM Slider
+            const bpmSlider = document.getElementById('bpmSlider');
+            bpmSlider.oninput = (e) => {
+                bpm = parseInt(e.target.value);
+                document.getElementById('bpmDisplay').textContent = `${bpm} BPM`;
+                if (isPlaying) startBeatLoop();
+            };
+
+            // Play & Audio Test
+            document.getElementById('playBtn').onclick = togglePlay;
+            document.getElementById('audioTestBtn').onclick = () => playChordSound('G');
+
+            // Transpose Buttons
+            document.getElementById('transposeUp').onclick = () => updateTransposition(1);
+            document.getElementById('transposeDown').onclick = () => updateTransposition(-1);
+            document.getElementById('transposeReset').onclick = () => updateTransposition(0);
+
+            // Font Resizing
+            const lyrics = document.getElementById('lyricsContainer');
+            document.getElementById('fontInc').onclick = () => {
+                if (fontSizePx < 24) {
+                    fontSizePx += 2;
+                    lyrics.style.fontSize = `${fontSizePx}px`;
+                }
+            };
+            document.getElementById('fontDec').onclick = () => {
+                if (fontSizePx > 12) {
+                    fontSizePx -= 2;
+                    lyrics.style.fontSize = `${fontSizePx}px`;
+                }
+            };
+
+            // Click chord badge to play audio
+            document.querySelectorAll('.chord-badge').forEach(badge => {
+                badge.onclick = (e) => {
+                    const chord = e.target.getAttribute('data-chord');
+                    if (chord) playChordSound(chord);
+                };
+            });
+        };
+    </script>
+</body>
+</html>

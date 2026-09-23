@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="themeColorMeta" content="#2B1B12">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Somewhere Over the Rainbow – Ukulele</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,14 +75,49 @@
     color:var(--text);
     font-family:var(--font-body);
     -webkit-font-smoothing:antialiased;
-    min-height:100%;
+    height:100%;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
     transition:background .4s ease, color .4s ease;
   }
 
   .app{
     max-width:920px;
+    width:100%;
     margin:0 auto;
-    padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(40px + env(safe-area-inset-bottom,0px));
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    padding:calc(20px + env(safe-area-inset-top,0px)) 20px 0;
+  }
+
+  .fixed-top{
+    flex:0 0 auto;
+    border-bottom:1px solid var(--line);
+    padding-bottom:4px;
+  }
+
+  .scroll-area{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:calc(40px + env(safe-area-inset-bottom,0px));
+    scroll-padding-top:12px;
+  }
+  .scroll-area::-webkit-scrollbar{ width:8px; }
+  .scroll-area::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+
+  h2.section-title.sticky-sub{
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    padding:10px 0 12px;
+    margin:0 0 2px;
+    z-index:5;
+    box-shadow:0 10px 12px -8px var(--bg);
   }
 
   /* ---------- Header ---------- */
@@ -90,6 +129,8 @@
     gap:16px;
     margin-bottom:22px;
   }
+  .titleblock{ flex:1 1 240px; min-width:0; }
+  .controls{ flex:0 1 auto; }
   .titleblock h1{
     font-family:var(--font-display);
     font-size:clamp(28px,5vw,42px);
@@ -232,6 +273,7 @@
     display:flex;
     gap:12px;
     overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
     padding:4px 2px 14px;
     margin-bottom:8px;
   }
@@ -336,10 +378,62 @@
     .line{ flex-wrap:wrap; }
     .line .chips{ min-width:0; }
   }
+
+  @media (max-width:600px){
+    .app{ padding-left:12px; padding-right:12px; }
+
+    /* header: title + compact icon-only control row, one line each */
+    header.top{ flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px 10px; margin-bottom:8px; }
+    .titleblock{ flex:1 1 100%; order:1; }
+    .titleblock p{ display:none; } /* subtitle costs a full line for little value on phones */
+    input.titleinput{ font-size:clamp(20px,6vw,26px); margin-bottom:0; }
+    .controls{ order:2; flex:1 1 100%; display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start; }
+    button.ctrl{ padding:8px 10px; font-size:15px; flex:0 0 auto; gap:0; }
+    button.ctrl .btn-label{ display:none; } /* icon-only buttons keep the row short */
+
+    /* reference bar: shrink to one thin scrollable line instead of wrapping tall */
+    .infobar{
+      font-size:11px;
+      gap:0 14px;
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:6px 2px;
+      white-space:nowrap;
+    }
+    #ioStatus{ white-space:nowrap; }
+
+    /* hero: compact single card, smaller diagram, icon-only transport */
+    .hero{ padding:12px; gap:10px; grid-template-columns:auto 1fr; text-align:left; }
+    .hero .diagram-wrap svg{ width:64px !important; height:auto !important; }
+    .hero-right .label{ font-size:10px; margin-bottom:2px; }
+    .hero-right .chordname{ font-size:28px; margin:0 0 2px; }
+    .hero-right .position{ font-size:11px; }
+    .transport{ margin-top:8px; gap:6px; justify-content:flex-start; }
+    .transport button.ctrl{ flex:0 0 auto; min-width:0; padding:8px 10px; font-size:15px; }
+    .transport .tempo-label{ display:none; } /* slider itself is enough on phones */
+    .transport input[type=range]{ flex:1 1 90px; width:auto; }
+
+    h2.section-title{ font-size:15px; margin:10px 0 8px; }
+    h2.section-title.sticky-sub{ padding:6px 0 8px; }
+    .chordstrip{ padding-bottom:8px; }
+    .mini{ padding:6px 6px 5px; }
+    .mini svg{ width:44px !important; height:auto !important; }
+    .mini .mininame{ font-size:10.5px; margin-top:2px; }
+
+    .line{ padding:8px 10px; gap:8px; }
+    .line input.lyric{ font-size:16px; } /* 16px avoids iOS auto-zoom on focus */
+  }
+
+  @media (hover:none) and (pointer:coarse){
+    button.ctrl{ min-height:44px; min-width:44px; }
+    .chip{ padding:6px 10px; }
+  }
 </style>
 </head>
 <body>
 <div class="app">
+<div class="fixed-top">
 
   <header class="top">
     <div class="titleblock">
@@ -347,12 +441,12 @@
       <p>Israel Kamakawiwo‘ole · Ukulele-Version für Anfänger · Stimmung G C E A</p>
     </div>
     <div class="controls">
-      <button class="ctrl" id="saveBtn" title="Als JSON speichern">💾 Speichern</button>
-      <button class="ctrl" id="loadBtn" title="JSON laden">📂 Laden</button>
+      <button class="ctrl" id="saveBtn" title="Als JSON speichern">💾 <span class="btn-label">Speichern</span></button>
+      <button class="ctrl" id="loadBtn" title="JSON laden">📂 <span class="btn-label">Laden</span></button>
       <input type="file" id="loadInput" accept="application/json,.json" style="display:none">
-      <button class="ctrl" id="soundBtn" title="Ton an/aus">🔊 Ton</button>
-      <button class="ctrl" id="themeBtn" title="Stil wechseln">🎨 <span id="themeLabel">Koa</span></button>
-      <button class="ctrl" id="fsBtn" title="Vollbild">⛶ Vollbild</button>
+      <button class="ctrl" id="soundBtn" title="Ton an/aus"><span id="soundIcon">🔊</span> <span class="btn-label" id="soundLabel">Ton</span></button>
+      <button class="ctrl" id="themeBtn" title="Stil wechseln">🎨 <span class="btn-label" id="themeLabel">Koa</span></button>
+      <button class="ctrl" id="fsBtn" title="Vollbild">⛶ <span class="btn-label">Vollbild</span></button>
     </div>
   </header>
 
@@ -371,10 +465,10 @@
       <div class="chordname" id="heroName">G</div>
       <div class="position" id="heroPos">Strophe · Zeile 1</div>
       <div class="transport">
-        <button class="ctrl" id="hearBtn">🔊 Akkord hören</button>
-        <button class="ctrl" id="prevBtn">⏮ Zurück</button>
-        <button class="ctrl primary" id="playBtn">▶ Abspielen</button>
-        <button class="ctrl" id="nextBtn">Weiter ⏭</button>
+        <button class="ctrl" id="hearBtn"><span id="hearIcon">🔊</span> <span class="btn-label">Akkord hören</span></button>
+        <button class="ctrl" id="prevBtn">⏮ <span class="btn-label">Zurück</span></button>
+        <button class="ctrl primary" id="playBtn"><span id="playIcon">▶</span> <span class="btn-label" id="playLabel">Abspielen</span></button>
+        <button class="ctrl" id="nextBtn"><span class="btn-label">Weiter</span> ⏭</button>
         <span class="tempo-label" id="tempoLabel">Tempo: 170 bpm</span>
         <input type="range" id="tempoSlider" min="60" max="220" value="170">
       </div>
@@ -384,7 +478,10 @@
   <h2 class="section-title">Griffe</h2>
   <div class="chordstrip" id="chordStrip"></div>
 
-  <h2 class="section-title">Song ablaufen lassen</h2>
+</div>
+<div class="scroll-area">
+
+  <h2 class="section-title sticky-sub">Song ablaufen lassen</h2>
   <div class="song" id="song"></div>
 
   <p class="note">
@@ -392,6 +489,7 @@
   </p>
 
   <footer>Zum Üben: Play drücken, mitzählen, mitspielen. 🌈</footer>
+</div>
 </div>
 
 <script>
@@ -703,9 +801,15 @@ document.getElementById('nextBtn').addEventListener('click', ()=> goToStep(curre
 document.getElementById('prevBtn').addEventListener('click', ()=> goToStep(currentStep-1));
 
 const playBtn = document.getElementById('playBtn');
+const playIcon = document.getElementById('playIcon');
+const playLabel = document.getElementById('playLabel');
+function setPlayButton(isPlaying){
+  playIcon.textContent = isPlaying ? '⏸' : '▶';
+  playLabel.textContent = isPlaying ? 'Pause' : 'Abspielen';
+}
 playBtn.addEventListener('click', ()=>{
   playing = !playing;
-  playBtn.textContent = playing ? '⏸ Pause' : '▶ Abspielen';
+  setPlayButton(playing);
   if(playing){
     playChordSound(STEPS[currentStep].chord);
     scheduleNext();
@@ -719,8 +823,11 @@ document.getElementById('hearBtn').addEventListener('click', ()=>{
 });
 
 const soundBtn = document.getElementById('soundBtn');
+const soundIcon = document.getElementById('soundIcon');
+const soundLabel = document.getElementById('soundLabel');
 function updateSoundBtn(){
-  soundBtn.textContent = soundOn ? '🔊 Ton' : '🔇 Stumm';
+  soundIcon.textContent = soundOn ? '🔊' : '🔇';
+  soundLabel.textContent = soundOn ? 'Ton' : 'Stumm';
 }
 updateSoundBtn();
 soundBtn.addEventListener('click', ()=>{
@@ -764,10 +871,13 @@ try{
     themeIdx = THEMES.indexOf(savedTheme);
   }
 }catch(e){}
+const THEME_BG = { koa:"#2B1B12", lagoon:"#0C2A31", papier:"#F3EDE1" };
+const themeColorMeta = document.getElementById('themeColorMeta');
 function applyTheme(){
   const t = THEMES[themeIdx];
   document.documentElement.setAttribute('data-theme', t);
   themeLabel.textContent = THEME_LABELS[t];
+  if(themeColorMeta) themeColorMeta.setAttribute('content', THEME_BG[t] || '#2B1B12');
   try{ localStorage.setItem('sotr-theme', t); }catch(e){}
 }
 themeBtn.addEventListener('click', ()=>{
@@ -896,7 +1006,7 @@ function applyState(data){
     currentStep = 0;
     playing = false;
     clearTimeout(timer);
-    playBtn.textContent = '▶ Abspielen';
+    setPlayButton(false);
     render(false);
   }
 

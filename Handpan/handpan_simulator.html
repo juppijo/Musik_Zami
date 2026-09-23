@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handpan Sound Experience & Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Dynamic Themes */
+        .theme-bronze {
+            --bg-gradient: radial-gradient(circle at center, #2d1e18 0%, #150d0a 100%);
+            --pan-gradient: radial-gradient(circle at center, #8c5a3c 0%, #4a2e1d 60%, #2a180e 100%);
+            --pan-border: #b87b56;
+            --note-bg: radial-gradient(circle at center, #6e442b 0%, #3d2314 100%);
+            --note-border: rgba(184, 123, 86, 0.4);
+            --note-active: #f3a663;
+            --accent-color: #d97706;
+            --card-bg: rgba(45, 30, 24, 0.75);
+        }
+
+        .theme-cosmic {
+            --bg-gradient: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+            --pan-gradient: radial-gradient(circle at center, #3b0764 0%, #1e1b4b 60%, #090d16 100%);
+            --pan-border: #818cf8;
+            --note-bg: radial-gradient(circle at center, #312e81 0%, #1e1b4b 100%);
+            --note-border: rgba(129, 140, 248, 0.4);
+            --note-active: #a7f3d0;
+            --accent-color: #6366f1;
+            --card-bg: rgba(30, 27, 75, 0.75);
+        }
+
+        .theme-forest {
+            --bg-gradient: radial-gradient(circle at center, #064e3b 0%, #022c22 100%);
+            --pan-gradient: radial-gradient(circle at center, #14532d 0%, #064e3b 60%, #021a12 100%);
+            --pan-border: #34d399;
+            --note-bg: radial-gradient(circle at center, #065f46 0%, #022c22 100%);
+            --note-border: rgba(52, 211, 153, 0.4);
+            --note-active: #fef08a;
+            --accent-color: #10b981;
+            --card-bg: rgba(6, 78, 59, 0.75);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            transition: background 0.8s ease;
+        }
+
+        .handpan-body {
+            background: var(--pan-gradient);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7), inset 0 2px 10px rgba(255,255,255,0.15), 0 0 40px var(--note-border);
+            border: 4px solid var(--pan-border);
+            transition: all 0.5s ease;
+        }
+
+        .handpan-note {
+            background: var(--note-bg);
+            border: 2px solid var(--note-border);
+            box-shadow: inset 0 2px 6px rgba(255,255,255,0.2), 0 4px 10px rgba(0,0,0,0.4);
+            transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .handpan-note:hover {
+            border-color: var(--pan-border);
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.3), 0 0 15px var(--note-border);
+            transform: scale(1.03);
+        }
+
+        .handpan-note:active, .handpan-note.active {
+            transform: scale(0.95);
+            border-color: var(--note-active);
+            box-shadow: 0 0 25px var(--note-active), inset 0 0 15px var(--note-active);
+        }
+
+        .handpan-note.guide-highlight {
+            animation: pulse-guide 0.8s infinite alternate;
+            border-color: #f59e0b !important;
+        }
+
+        @keyframes pulse-guide {
+            0% { box-shadow: 0 0 10px #f59e0b, inset 0 0 5px #f59e0b; transform: scale(1); }
+            100% { box-shadow: 0 0 28px #f59e0b, inset 0 0 15px #f59e0b; transform: scale(1.07); }
+        }
+
+        @keyframes ripple {
+            0% { transform: scale(0.8); opacity: 0.9; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid var(--note-active);
+            pointer-events: none;
+            animation: ripple 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        }
+
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+    </style>
+</head>
+<body class="theme-bronze text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <header class="w-full px-6 py-4 flex justify-between items-center z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/40 text-amber-400 shadow-lg">
+                <i class="fa-solid fa-compact-disc text-xl animate-spin-slow"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-100">
+                    Handpan Studio
+                </h1>
+                <p class="text-xs text-slate-400">Warmer V1-Klang & V2-Features</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+            <!-- Scale Switcher -->
+            <select id="scaleSelect" class="glass-panel text-xs text-amber-200 px-3 py-2 rounded-xl border border-white/10 focus:outline-none cursor-pointer">
+                <option value="d_kurd" class="bg-slate-900 text-slate-200">D-Moll Kurd (Klassisch)</option>
+                <option value="ake_bono" class="bg-slate-900 text-slate-200">Ake Bono (Japanisch)</option>
+            </select>
+
+            <!-- Theme Toggle Button -->
+            <button id="themeBtn" class="glass-panel hover:bg-white/10 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 transition-all shadow-md">
+                <i class="fa-solid fa-palette text-amber-400"></i>
+                <span id="themeLabel" class="hidden sm:inline">Bronze</span>
+            </button>
+
+            <!-- Fullscreen Button -->
+            <button id="fullscreenBtn" class="glass-panel hover:bg-white/10 p-2.5 rounded-xl text-sm font-medium transition-all shadow-md" title="Vollbild umschalten">
+                <i class="fa-solid fa-expand text-slate-200"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 my-2 flex flex-col lg:flex-row items-center justify-center gap-8 z-10 flex-grow">
+        
+        <!-- Interactive Handpan Container -->
+        <div class="relative flex items-center justify-center p-2">
+            <div id="rippleContainer" class="absolute inset-0 pointer-events-none flex items-center justify-center"></div>
+
+            <!-- Handpan Main Body -->
+            <div id="handpanBody" class="handpan-body relative w-[330px] h-[330px] sm:w-[460px] sm:h-[460px] md:w-[490px] md:h-[490px] rounded-full flex items-center justify-center my-2 transition-all duration-300">
+                
+                <!-- Central Note (Ding) -->
+                <button data-index="0" data-note="D3" class="handpan-note absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full flex flex-col items-center justify-center z-10 text-amber-100 shadow-xl cursor-pointer">
+                    <span class="text-xs uppercase tracking-widest text-amber-300/80 font-bold">Ding</span>
+                    <span class="note-name text-lg sm:text-xl font-bold">D3</span>
+                    <span class="text-[10px] opacity-75 mt-0.5 bg-black/30 px-1.5 py-0.5 rounded">1 / A</span>
+                </button>
+
+                <!-- 8 Surrounding Tone Fields -->
+                <button data-index="1" data-note="A3" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="top: 8%; left: 50%; transform: translateX(-50%);">
+                    <span class="note-name text-xs sm:text-base font-bold">A3</span>
+                    <span class="text-[9px] opacity-75">Taste 2</span>
+                </button>
+
+                <button data-index="2" data-note="Bb3" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="top: 20%; right: 12%;">
+                    <span class="note-name text-xs sm:text-base font-bold">A#3</span>
+                    <span class="text-[9px] opacity-75">Taste 3</span>
+                </button>
+
+                <button data-index="3" data-note="C4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="top: 43%; right: 5%;">
+                    <span class="note-name text-xs sm:text-base font-bold">C4</span>
+                    <span class="text-[9px] opacity-75">Taste 4</span>
+                </button>
+
+                <button data-index="4" data-note="D4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="bottom: 20%; right: 12%;">
+                    <span class="note-name text-xs sm:text-base font-bold">D4</span>
+                    <span class="text-[9px] opacity-75">Taste 5</span>
+                </button>
+
+                <button data-index="5" data-note="E4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="bottom: 8%; left: 50%; transform: translateX(-50%);">
+                    <span class="note-name text-xs sm:text-base font-bold">E4</span>
+                    <span class="text-[9px] opacity-75">Taste 6</span>
+                </button>
+
+                <button data-index="6" data-note="F4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="bottom: 20%; left: 12%;">
+                    <span class="note-name text-xs sm:text-base font-bold">F4</span>
+                    <span class="text-[9px] opacity-75">Taste 7</span>
+                </button>
+
+                <button data-index="7" data-note="G4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="top: 43%; left: 5%;">
+                    <span class="note-name text-xs sm:text-base font-bold">G4</span>
+                    <span class="text-[9px] opacity-75">Taste 8</span>
+                </button>
+
+                <button data-index="8" data-note="A4" class="handpan-note absolute w-16 h-16 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center cursor-pointer text-slate-100" style="top: 20%; left: 12%;">
+                    <span class="note-name text-xs sm:text-base font-bold">A4</span>
+                    <span class="text-[9px] opacity-75">Taste 9</span>
+                </button>
+
+            </div>
+        </div>
+
+        <div class="w-full lg:w-96 flex flex-col gap-4">
+            
+            <!-- Learning Mode Panel -->
+            <div class="glass-panel p-4 rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-semibold flex items-center gap-2 text-amber-300">
+                        <i class="fa-solid fa-graduation-cap"></i> Lernmodus & Lieder
+                    </h2>
+                    <span id="lessonStatus" class="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300">Bereit</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">Übung wählen</label>
+                        <select id="songSelect" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="basic_1">1. Anfänger: Grundrhythmus</option>
+                            <option value="arpeggio">2. Kurd Arpeggio Entspannung</option>
+                            <option value="rhythm_1">3. Dynamischer 4/4 Beat</option>
+                            <option value="song_zen">4. Meditativer Stream (Song)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                            <span>Tempo (BPM)</span>
+                            <span id="bpmValue" class="text-amber-400 font-bold">80 BPM</span>
+                        </div>
+                        <input type="range" id="bpmSlider" min="40" max="160" value="80" class="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-700 rounded-lg">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="startLessonBtn" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
+                            <i class="fa-solid fa-play text-[10px]"></i> Übung Starten
+                        </button>
+                        <button id="stopLessonBtn" class="hidden flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
+                            <i class="fa-solid fa-stop text-[10px]"></i> Stoppen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recorder & File Import/Export Panel -->
+            <div class="glass-panel p-4 rounded-2xl shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-semibold flex items-center gap-2 text-emerald-400">
+                        <i class="fa-solid fa-record-vinyl"></i> Recorder & Dateien
+                    </h2>
+                    <span id="recordTimer" class="text-xs font-mono bg-black/40 px-2 py-0.5 rounded text-emerald-400 border border-emerald-500/30">00:00</span>
+                </div>
+
+                <!-- Record Controls -->
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <button id="recordBtn" class="bg-rose-600/80 hover:bg-rose-600 text-white py-2 px-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-circle text-[9px]"></i> Aufnehmen
+                    </button>
+                    <button id="stopRecordBtn" disabled class="bg-slate-700/50 opacity-50 cursor-not-allowed text-white py-2 px-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-square text-[9px]"></i> Stopp
+                    </button>
+                    <button id="playRecordBtn" disabled class="bg-slate-700/50 opacity-50 cursor-not-allowed text-white py-2 px-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-play text-[9px]"></i> Abspielen
+                    </button>
+                </div>
+
+                <!-- File Import/Export Actions -->
+                <div class="grid grid-cols-2 gap-2 border-t border-white/10 pt-3 mb-3">
+                    <button id="exportFileBtn" disabled class="bg-slate-700/50 opacity-50 cursor-not-allowed hover:bg-amber-600 text-white py-2 px-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all border border-white/10">
+                        <i class="fa-solid fa-download text-amber-400"></i> als Datei sichern
+                    </button>
+                    <label id="importFileLabel" class="bg-slate-800 hover:bg-slate-700 text-white py-2 px-2 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-white/10">
+                        <i class="fa-solid fa-upload text-sky-400"></i> Datei laden
+                        <input type="file" id="importFileInput" accept=".json" class="hidden">
+                    </label>
+                </div>
+
+                <!-- Browser Saved Songs -->
+                <div class="border-t border-white/10 pt-2">
+                    <label class="text-[11px] text-slate-400 block mb-1.5 flex justify-between items-center">
+                        <span>Gespeicherte Melodien (Browser)</span>
+                        <i class="fa-solid fa-hard-drive text-slate-400"></i>
+                    </label>
+                    <div id="savedSongsList" class="max-h-28 overflow-y-auto space-y-1.5 pr-1">
+                        <div class="text-xs text-slate-500 text-center py-2 italic">Keine Melodien vorhanden</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="w-full py-2.5 px-6 text-center text-xs text-slate-400 glass-panel border-t border-white/5 z-20">
+        <p class="hidden sm:block">
+            <span class="text-amber-400 font-semibold">Tastatur:</span> [1 / A] Ding | [2 bis 9] Tonfelder | Rhythmen aufnehmen & als Datei (.json) speichern
+        </p>
+        <p class="sm:hidden">
+            Tippe auf die Felder zum Spielen
+        </p>
+    </footer>
+
+    <script>
+        // --- Web Audio Synthesizer Engine (Version 1 Warm & Resonant Sound) ---
+        class HandpanAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.reverbNode = null;
+
+                // Scale Frequencies
+                this.scales = {
+                    d_kurd: {
+                        'D3': 146.83, 'A3': 220.00, 'Bb3': 233.08, 'C4': 261.63,
+                        'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00
+                    },
+                    ake_bono: {
+                        'D3': 146.83, 'A3': 220.00, 'Bb3': 233.08, 'D4': 293.66,
+                        'Eb4': 311.13, 'G4': 392.00, 'Ab4': 415.30, 'Bb4': 466.16, 'C5': 523.25
+                    }
+                };
+
+                this.currentScale = 'd_kurd';
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+
+                // Master Gain
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.75;
+
+                // Warm, rich metallic reverb impulse (Version 1 characteristic)
+                this.reverbNode = this.ctx.createConvolver();
+                this.reverbNode.buffer = this.createImpulseResponse(3.5, 3.8); // Longer, warmer decay
+
+                const reverbGain = this.ctx.createGain();
+                reverbGain.gain.value = 0.55; // Rich ambient wet signal
+
+                // Signal routing
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.connect(this.reverbNode);
+                this.reverbNode.connect(reverbGain);
+                reverbGain.connect(this.ctx.destination);
+            }
+
+            // Warm Handpan Reverb Impulse Generator
+            createImpulseResponse(duration, decay) {
+                const sampleRate = this.ctx.sampleRate;
+                const length = sampleRate * duration;
+                const impulse = this.ctx.createBuffer(2, length, sampleRate);
+                const left = impulse.getChannelData(0);
+                const right = impulse.getChannelData(1);
+
+                for (let i = 0; i < length; i++) {
+                    const n = length - i;
+                    // Exponential warm decay envelope
+                    const envelope = Math.pow(n / length, decay);
+                    left[i] = (Math.random() * 2 - 1) * envelope;
+                    right[i] = (Math.random() * 2 - 1) * envelope;
+                }
+                return impulse;
+            }
+
+            getNoteFrequency(noteName) {
+                return this.scales[this.currentScale][noteName] || 261.63;
+            }
+
+            playNote(noteName) {
+                this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+
+                const freq = this.getNoteFrequency(noteName);
+                const now = this.ctx.currentTime;
+
+                // Fundamental Sine Wave (Deep, warm core)
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(freq, now);
+
+                // Octave Harmonic (Gives metal resonance)
+                const osc2 = this.ctx.createOscillator();
+                const gain2 = this.ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(freq * 2.0, now);
+
+                // Fifth Overtone (Metallic sparkle & warmth)
+                const osc3 = this.ctx.createOscillator();
+                const gain3 = this.ctx.createGain();
+                osc3.type = 'triangle';
+                osc3.frequency.setValueAtTime(freq * 3.0, now);
+
+                const isDing = noteName === 'D3';
+                // Version 1 long, rich sustain values
+                const decay1 = isDing ? 4.2 : 3.2; 
+                const decay2 = isDing ? 2.5 : 1.8;
+
+                // Envelopes for smooth physical slap + long acoustic decay
+                gain1.gain.setValueAtTime(0, now);
+                gain1.gain.linearRampToValueAtTime(0.85, now + 0.008);
+                gain1.gain.exponentialRampToValueAtTime(0.0001, now + decay1);
+
+                gain2.gain.setValueAtTime(0, now);
+                gain2.gain.linearRampToValueAtTime(0.25, now + 0.006);
+                gain2.gain.exponentialRampToValueAtTime(0.0001, now + decay2);
+
+                gain3.gain.setValueAtTime(0, now);
+                gain3.gain.linearRampToValueAtTime(0.12, now + 0.005);
+                gain3.gain.exponentialRampToValueAtTime(0.0001, now + decay2);
+
+                // Connect nodes
+                osc1.connect(gain1);
+                osc2.connect(gain2);
+                osc3.connect(gain3);
+
+                gain1.connect(this.masterGain);
+                gain2.connect(this.masterGain);
+                gain3.connect(this.masterGain);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc3.start(now);
+
+                osc1.stop(now + decay1 + 0.1);
+                osc2.stop(now + decay2 + 0.1);
+                osc3.stop(now + decay2 + 0.1);
+            }
+        }
+
+        const audioEngine = new HandpanAudioEngine();
+
+        // --- App State ---
+        let currentTheme = 'bronze';
+        let isRecording = false;
+        let recordedNotes = [];
+        let recordStartTime = 0;
+        let recordTimerInterval = null;
+        let isPlayingLesson = false;
+        let lessonTimeouts = [];
+
+        // Preset Lessons Definition
+        const lessons = {
+            basic_1: [
+                { note: 'D3', delay: 0 },
+                { note: 'A3', delay: 600 },
+                { note: 'D3', delay: 1200 },
+                { note: 'Bb3', delay: 1800 },
+                { note: 'D3', delay: 2400 },
+                { note: 'C4', delay: 3000 }
+            ],
+            arpeggio: [
+                { note: 'D3', delay: 0 }, { note: 'A3', delay: 400 },
+                { note: 'C4', delay: 800 }, { note: 'D4', delay: 1200 },
+                { note: 'F4', delay: 1600 }, { note: 'A4', delay: 2000 },
+                { note: 'G4', delay: 2400 }, { note: 'E4', delay: 2800 }
+            ],
+            rhythm_1: [
+                { note: 'D3', delay: 0 }, { note: 'A3', delay: 300 },
+                { note: 'D4', delay: 600 }, { note: 'A3', delay: 900 },
+                { note: 'D3', delay: 1200 }, { note: 'Bb3', delay: 1500 },
+                { note: 'D4', delay: 1800 }, { note: 'Bb3', delay: 2100 }
+            ],
+            song_zen: [
+                { note: 'D3', delay: 0 }, { note: 'A3', delay: 500 },
+                { note: 'C4', delay: 1000 }, { note: 'D4', delay: 1500 },
+                { note: 'A3', delay: 2000 }, { note: 'F4', delay: 2500 },
+                { note: 'E4', delay: 3000 }, { note: 'D4', delay: 3500 }
+            ]
+        };
+
+        const keyMap = {
+            '1': 0, 'a': 0, 'A': 0,
+            '2': 1, '3': 2, '4': 3,
+            '5': 4, '6': 5, '7': 6,
+            '8': 7, '9': 8
+        };
+
+        // --- DOM Elements ---
+        const noteButtons = document.querySelectorAll('.handpan-note');
+        const themeBtn = document.getElementById('themeBtn');
+        const themeLabel = document.getElementById('themeLabel');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const scaleSelect = document.getElementById('scaleSelect');
+        const rippleContainer = document.getElementById('rippleContainer');
+
+        const songSelect = document.getElementById('songSelect');
+        const bpmSlider = document.getElementById('bpmSlider');
+        const bpmValue = document.getElementById('bpmValue');
+        const startLessonBtn = document.getElementById('startLessonBtn');
+        const stopLessonBtn = document.getElementById('stopLessonBtn');
+        const lessonStatus = document.getElementById('lessonStatus');
+
+        const recordBtn = document.getElementById('recordBtn');
+        const stopRecordBtn = document.getElementById('stopRecordBtn');
+        const playRecordBtn = document.getElementById('playRecordBtn');
+        const exportFileBtn = document.getElementById('exportFileBtn');
+        const importFileInput = document.getElementById('importFileInput');
+        const recordTimer = document.getElementById('recordTimer');
+        const savedSongsList = document.getElementById('savedSongsList');
+
+        function updateScaleUI() {
+            const scaleKey = scaleSelect.value;
+            audioEngine.currentScale = scaleKey;
+            const currentScaleNotes = Object.keys(audioEngine.scales[scaleKey]);
+
+            noteButtons.forEach((btn, index) => {
+                const noteName = currentScaleNotes[index];
+                btn.setAttribute('data-note', noteName);
+                const nameSpan = btn.querySelector('.note-name');
+                if (nameSpan) nameSpan.textContent = noteName.replace('b', '#');
+            });
+        }
+
+        scaleSelect.addEventListener('change', updateScaleUI);
+
+        function triggerNote(noteName, indexOverride = null) {
+            audioEngine.playNote(noteName);
+
+            let btn = null;
+            if (indexOverride !== null) {
+                btn = document.querySelector(`[data-index="${indexOverride}"]`);
+            } else {
+                btn = document.querySelector(`[data-note="${noteName}"]`);
+            }
+
+            if (btn) {
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), 200);
+                createRipple(btn);
+            }
+
+            if (isRecording) {
+                const timeOffset = Date.now() - recordStartTime;
+                recordedNotes.push({ note: noteName, delay: timeOffset });
+            }
+        }
+
+        function createRipple(element) {
+            const rect = element.getBoundingClientRect();
+            const containerRect = rippleContainer.getBoundingClientRect();
+
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple-effect';
+
+            const size = rect.width * 1.2;
+            ripple.style.width = `${size}px`;
+            ripple.style.height = `${size}px`;
+
+            const x = rect.left + rect.width / 2 - containerRect.left - size / 2;
+            const y = rect.top + rect.height / 2 - containerRect.top - size / 2;
+
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+
+            rippleContainer.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 900);
+        }
+
+        // Attach Note Handlers
+        noteButtons.forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                triggerNote(btn.getAttribute('data-note'));
+            });
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                triggerNote(btn.getAttribute('data-note'));
+            });
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            const idx = keyMap[e.key];
+            if (idx !== undefined) {
+                const btn = document.querySelector(`[data-index="${idx}"]`);
+                if (btn) triggerNote(btn.getAttribute('data-note'), idx);
+            }
+        });
+
+        const themes = ['bronze', 'cosmic', 'forest'];
+        const themeNames = { bronze: 'Bronze', cosmic: 'Cosmic', forest: 'Forest' };
+
+        themeBtn.addEventListener('click', () => {
+            const currentIndex = themes.indexOf(currentTheme);
+            const nextTheme = themes[(currentIndex + 1) % themes.length];
+            document.body.classList.remove(`theme-${currentTheme}`);
+            document.body.classList.add(`theme-${nextTheme}`);
+            currentTheme = nextTheme;
+            themeLabel.textContent = themeNames[nextTheme];
+        });
+
+        // Fullscreen Toggle
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
+        bpmSlider.addEventListener('input', (e) => {
+            bpmValue.textContent = `${e.target.value} BPM`;
+        });
+
+        // Lesson Mode Engine
+        startLessonBtn.addEventListener('click', () => {
+            const songKey = songSelect.value;
+            const songData = lessons[songKey];
+            if (!songData) return;
+
+            stopLesson();
+
+            isPlayingLesson = true;
+            startLessonBtn.classList.add('hidden');
+            stopLessonBtn.classList.remove('hidden');
+            lessonStatus.textContent = 'Spielt...';
+            lessonStatus.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold';
+
+            const bpm = parseInt(bpmSlider.value);
+            const speedFactor = 80 / bpm;
+
+            songData.forEach(item => {
+                const calculatedDelay = item.delay * speedFactor;
+
+                const prepTimeout = setTimeout(() => {
+                    const btn = document.querySelector(`[data-note="${item.note}"]`);
+                    if (btn) btn.classList.add('guide-highlight');
+                }, Math.max(0, calculatedDelay - 200));
+
+                const playTimeout = setTimeout(() => {
+                    const btn = document.querySelector(`[data-note="${item.note}"]`);
+                    if (btn) btn.classList.remove('guide-highlight');
+                    triggerNote(item.note);
+                }, calculatedDelay);
+
+                lessonTimeouts.push(prepTimeout, playTimeout);
+            });
+
+            const totalDuration = songData[songData.length - 1].delay * speedFactor + 1000;
+            const endTimeout = setTimeout(() => stopLesson(), totalDuration);
+            lessonTimeouts.push(endTimeout);
+        });
+
+        stopLessonBtn.addEventListener('click', stopLesson);
+
+        function stopLesson() {
+            isPlayingLesson = false;
+            lessonTimeouts.forEach(t => clearTimeout(t));
+            lessonTimeouts = [];
+            noteButtons.forEach(btn => btn.classList.remove('guide-highlight'));
+
+            startLessonBtn.classList.remove('hidden');
+            stopLessonBtn.classList.add('hidden');
+            lessonStatus.textContent = 'Bereit';
+            lessonStatus.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300';
+        }
+
+        // Recorder Engine
+        recordBtn.addEventListener('click', () => {
+            isRecording = true;
+            recordedNotes = [];
+            recordStartTime = Date.now();
+
+            recordBtn.disabled = true;
+            recordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            stopRecordBtn.disabled = false;
+            stopRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
+            stopRecordBtn.classList.add('bg-rose-600');
+
+            playRecordBtn.disabled = true;
+            playRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            exportFileBtn.disabled = true;
+            exportFileBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            let seconds = 0;
+            recordTimer.textContent = "00:00";
+            recordTimerInterval = setInterval(() => {
+                seconds++;
+                const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const secs = String(seconds % 60).padStart(2, '0');
+                recordTimer.textContent = `${mins}:${secs}`;
+            }, 1000);
+        });
+
+        stopRecordBtn.addEventListener('click', () => {
+            if (!isRecording) return;
+            isRecording = false;
+            clearInterval(recordTimerInterval);
+
+            recordBtn.disabled = false;
+            recordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            stopRecordBtn.disabled = true;
+            stopRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            stopRecordBtn.classList.remove('bg-rose-600');
+
+            if (recordedNotes.length > 0) {
+                playRecordBtn.disabled = false;
+                playRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
+                playRecordBtn.classList.add('bg-emerald-600');
+
+                exportFileBtn.disabled = false;
+                exportFileBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
+
+                saveRecordingToStorage();
+            }
+        });
+
+        playRecordBtn.addEventListener('click', () => {
+            if (recordedNotes.length === 0) return;
+            playSequence(recordedNotes);
+        });
+
+        function playSequence(sequence) {
+            sequence.forEach(item => {
+                setTimeout(() => triggerNote(item.note), item.delay);
+            });
+        }
+
+        // Export JSON File
+        exportFileBtn.addEventListener('click', () => {
+            if (recordedNotes.length === 0) return;
+
+            const exportData = {
+                title: "Handpan Melody",
+                scale: scaleSelect.value,
+                createdAt: new Date().toISOString(),
+                notes: recordedNotes
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `handpan_melodie_${Date.now()}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        // Import JSON File
+        importFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const imported = JSON.parse(event.target.result);
+                    if (imported && Array.isArray(imported.notes)) {
+                        recordedNotes = imported.notes;
+                        
+                        if (imported.scale && audioEngine.scales[imported.scale]) {
+                            scaleSelect.value = imported.scale;
+                            updateScaleUI();
+                        }
+
+                        playRecordBtn.disabled = false;
+                        playRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
+                        playRecordBtn.classList.add('bg-emerald-600');
+
+                        exportFileBtn.disabled = false;
+                        exportFileBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
+
+                        saveImportedToStorage(imported.title || file.name.replace('.json', ''), recordedNotes);
+                    }
+                } catch (err) {
+                    console.error("Fehler beim Laden der Datei", err);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function saveRecordingToStorage() {
+            const songName = `Melodie ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+            saveImportedToStorage(songName, recordedNotes);
+        }
+
+        function saveImportedToStorage(title, notes) {
+            const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            savedSongs.push({
+                id: Date.now(),
+                title: title,
+                date: new Date().toLocaleDateString('de-DE'),
+                scale: scaleSelect.value,
+                data: notes
+            });
+            localStorage.setItem('handpan_songs_v2', JSON.stringify(savedSongs));
+            renderSavedSongs();
+        }
+
+        function renderSavedSongs() {
+            const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            savedSongsList.innerHTML = '';
+
+            if (savedSongs.length === 0) {
+                savedSongsList.innerHTML = `<div class="text-xs text-slate-500 text-center py-2 italic">Keine Melodien vorhanden</div>`;
+                return;
+            }
+
+            savedSongs.forEach(song => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-1.5 rounded-lg bg-black/30 hover:bg-black/50 border border-white/5 text-xs';
+                item.innerHTML = `
+                    <div class="truncate max-w-[120px]">
+                        <div class="font-medium text-slate-200 truncate">${song.title}</div>
+                        <div class="text-[9px] text-slate-400">${song.date}</div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="playSavedSong(${song.id})" class="p-1 bg-emerald-600/80 hover:bg-emerald-500 rounded text-white" title="Abspielen">
+                            <i class="fa-solid fa-play text-[9px]"></i>
+                        </button>
+                        <button onclick="exportSavedSong(${song.id})" class="p-1 bg-amber-600/80 hover:bg-amber-500 rounded text-white" title="Als Datei Exportieren">
+                            <i class="fa-solid fa-download text-[9px]"></i>
+                        </button>
+                        <button onclick="deleteSavedSong(${song.id})" class="p-1 bg-rose-600/80 hover:bg-rose-500 rounded text-white" title="Löschen">
+                            <i class="fa-solid fa-trash text-[9px]"></i>
+                        </button>
+                    </div>
+                `;
+                savedSongsList.appendChild(item);
+            });
+        }
+
+        window.playSavedSong = function(id) {
+            const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            const song = savedSongs.find(s => s.id === id);
+            if (song) {
+                if (song.scale && audioEngine.scales[song.scale]) {
+                    scaleSelect.value = song.scale;
+                    updateScaleUI();
+                }
+                playSequence(song.data);
+            }
+        };
+
+        window.exportSavedSong = function(id) {
+            const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            const song = savedSongs.find(s => s.id === id);
+            if (song) {
+                const exportData = {
+                    title: song.title,
+                    scale: song.scale || scaleSelect.value,
+                    createdAt: new Date().toISOString(),
+                    notes: song.data
+                };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `${song.title.replace(/\s+/g, '_')}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            }
+        };
+
+        window.deleteSavedSong = function(id) {
+            let savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            savedSongs = savedSongs.filter(s => s.id !== id);
+            localStorage.setItem('handpan_songs_v2', JSON.stringify(savedSongs));
+            renderSavedSongs();
+        };
+
+        // Init App UI
+        updateScaleUI();
+        renderSavedSongs();
+    </script>
+</body>
+</html>

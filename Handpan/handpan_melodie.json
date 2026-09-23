@@ -1,0 +1,219 @@
+{
+  "title": "Je m'en fus cueillir la rose",
+  "scale": "g_major",
+  "createdAt": "2026-09-23T20:35:00.000Z",
+  "notes": [
+    {
+      "note": "G4",
+      "delay": 0
+    },
+    {
+      "note": "G4",
+      "delay": 500
+    },
+    {
+      "note": "A4",
+      "delay": 1000
+    },
+    {
+      "note": "B4",
+      "delay": 1500
+    },
+    {
+      "note": "B4",
+      "delay": 2000
+    },
+    {
+      "note": "C5",
+      "delay": 2500
+    },
+    {
+      "note": "D5",
+      "delay": 3000
+    },
+    {
+      "note": "B4",
+      "delay": 4000
+    },
+    {
+      "note": "G4",
+      "delay": 4500
+    },
+    {
+      "note": "A4",
+      "delay": 5000
+    },
+    {
+      "note": "B4",
+      "delay": 5500
+    },
+    {
+      "note": "A4",
+      "delay": 6000
+    },
+    {
+      "note": "G4",
+      "delay": 8000
+    },
+    {
+      "note": "A4",
+      "delay": 8500
+    },
+    {
+      "note": "B4",
+      "delay": 9000
+    },
+    {
+      "note": "A4",
+      "delay": 9500
+    },
+    {
+      "note": "G4",
+      "delay": 10000
+    },
+    {
+      "note": "G4",
+      "delay": 12000
+    },
+    {
+      "note": "A4",
+      "delay": 12500
+    },
+    {
+      "note": "B4",
+      "delay": 13000
+    },
+    {
+      "note": "B4",
+      "delay": 13500
+    },
+    {
+      "note": "C5",
+      "delay": 14000
+    },
+    {
+      "note": "D5",
+      "delay": 14500
+    },
+    {
+      "note": "B4",
+      "delay": 15500
+    },
+    {
+      "note": "G4",
+      "delay": 16000
+    },
+    {
+      "note": "A4",
+      "delay": 16500
+    },
+    {
+      "note": "B4",
+      "delay": 17000
+    },
+    {
+      "note": "A4",
+      "delay": 17500
+    },
+    {
+      "note": "G4",
+      "delay": 18000
+    },
+    {
+      "note": "D5",
+      "delay": 19500
+    },
+    {
+      "note": "B4",
+      "delay": 20000
+    },
+    {
+      "note": "C5",
+      "delay": 20250
+    },
+    {
+      "note": "D5",
+      "delay": 20500
+    },
+    {
+      "note": "G4",
+      "delay": 21000
+    },
+    {
+      "note": "A4",
+      "delay": 21500
+    },
+    {
+      "note": "B4",
+      "delay": 21750
+    },
+    {
+      "note": "C5",
+      "delay": 22000
+    },
+    {
+      "note": "D5",
+      "delay": 22375
+    },
+    {
+      "note": "C5",
+      "delay": 22750
+    },
+    {
+      "note": "B4",
+      "delay": 23000
+    },
+    {
+      "note": "A4",
+      "delay": 23250
+    },
+    {
+      "note": "G4",
+      "delay": 23500
+    },
+    {
+      "note": "G4",
+      "delay": 24000
+    },
+    {
+      "note": "B4",
+      "delay": 24500
+    },
+    {
+      "note": "A4",
+      "delay": 24750
+    },
+    {
+      "note": "G4",
+      "delay": 25000
+    },
+    {
+      "note": "F#4",
+      "delay": 25250
+    },
+    {
+      "note": "E4",
+      "delay": 25500
+    },
+    {
+      "note": "F#4",
+      "delay": 25750
+    },
+    {
+      "note": "G4",
+      "delay": 26000
+    },
+    {
+      "note": "A4",
+      "delay": 26500
+    },
+    {
+      "note": "B4",
+      "delay": 26750
+    },
+    {
+      "note": "G4",
+      "delay": 27000
+    }
+  ]
+}

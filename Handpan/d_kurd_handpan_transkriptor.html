@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D-Kurd Handpan Noten Konverter & Transkriptor</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            amber: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+            },
+            copper: {
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090d16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Sheet Canvas Wrapper */
+    .sheet-viewport {
+      background-color: #0b0f19;
+      background-image: radial-gradient(#1e293b 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    /* Handpan Visualizer 2D Field */
+    .handpan-body {
+      background: radial-gradient(circle at 35% 35%, #451a03 0%, #1c0a00 65%, #0f0500 100%);
+      box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.6);
+      border: 3px solid #7c2d12;
+    }
+
+    .handpan-field {
+      transition: all 0.15s ease-out;
+      background: radial-gradient(circle at 30% 30%, #7c2d12 0%, #451a03 70%, #290e02 100%);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.15), 0 4px 8px rgba(0,0,0,0.5);
+    }
+    .handpan-field:hover {
+      transform: scale(1.06);
+      border-color: #fb923c;
+      box-shadow: inset 0 2px 6px rgba(255,255,255,0.3), 0 0 12px rgba(249,115,22,0.4);
+    }
+    .handpan-field.active {
+      background: radial-gradient(circle at 30% 30%, #f97316 0%, #ea580c 60%, #9a3412 100%) !important;
+      border-color: #fef08a !important;
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.9), inset 0 0 8px #ffffff !important;
+      transform: scale(1.12);
+    }
+
+    .handpan-ding {
+      background: radial-gradient(circle at 35% 35%, #9a3412 0%, #451a03 75%, #1c0a00 100%);
+      border: 2px solid #ea580c;
+    }
+
+    /* Note Canvas Marker */
+    .canvas-marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease;
+    }
+    .canvas-marker.active {
+      animation: markerPulse 0.8s infinite alternate;
+      z-index: 40 !important;
+    }
+    @keyframes markerPulse {
+      0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.8); }
+      100% { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 0 8px rgba(249, 115, 22, 0); }
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 selection:bg-copper-600 selection:text-white">
+
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-copper-600 to-amber-700 flex items-center justify-center text-slate-950 shadow-lg shadow-copper-600/20 font-black">
+        <i class="fa-solid fa-drum text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base md:text-lg leading-tight text-slate-100 flex items-center gap-2">
+          <span>D-Kurd Handpan Konverter</span>
+          <span class="text-[10px] font-mono uppercase bg-copper-950 text-copper-400 border border-copper-800/80 px-2 py-0.5 rounded-full">D3 | 8+1</span>
+        </h1>
+        <p class="text-xs text-slate-400">PDF &amp; Bild-Notenblätter direkt für D-Moll Kurd transkribieren</p>
+      </div>
+    </div>
+
+    <!-- Main Action Buttons -->
+    <div class="flex items-center gap-2">
+      <label class="cursor-pointer bg-copper-600 hover:bg-copper-500 text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-all flex items-center gap-2 shadow-md shadow-copper-600/20">
+        <i class="fa-solid fa-file-arrow-up"></i>
+        <span>PDF / Bild laden</span>
+        <input type="file" id="fileInput" accept="image/*,application/pdf" class="hidden">
+      </label>
+
+      <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs px-3 py-2 rounded-lg transition-all border border-slate-700 flex items-center gap-2" title="Existierende JSON-Datei importieren">
+        <i class="fa-solid fa-file-import text-amber-400"></i>
+        <span class="hidden sm:inline">JSON Import</span>
+        <input type="file" id="jsonImportInput" accept=".json" class="hidden">
+      </label>
+
+      <button id="loadDemoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs px-3 py-2 rounded-lg transition-all border border-slate-700 flex items-center gap-1.5">
+        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+        <span>Beispiel</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+
+    <!-- LEFT COLUMN: Sheet Music Canvas & Controls (7 Cols) -->
+    <section class="lg:col-span-7 border-r border-slate-800/80 flex flex-col bg-slate-900/40 relative min-h-[480px]">
+      
+      <!-- Canvas Toolbar -->
+      <div class="p-2.5 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-2 text-xs">
+        
+        <!-- Key Auto-Transposition Selector -->
+        <div class="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+          <i class="fa-solid fa-key text-amber-400"></i>
+          <span class="text-slate-400 font-medium">Original-Tonart:</span>
+          <select id="originalKeySelect" class="bg-transparent text-copper-400 font-bold outline-none cursor-pointer">
+            <option value="G_MAJOR">G-Dur / E-Moll (+0)</option>
+            <option value="C_MAJOR">C-Dur / A-Moll (+0)</option>
+            <option value="F_MAJOR">F-Dur / D-Moll (+0)</option>
+            <option value="D_MAJOR">D-Dur (+2 Transp.)</option>
+            <option value="A_MAJOR">A-Dur (-2 Transp.)</option>
+          </select>
+        </div>
+
+        <!-- Zoom & View controls -->
+        <div class="flex items-center gap-1.5">
+          <button id="zoomOut" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition-colors" title="Verkleinern"><i class="fa-solid fa-minus"></i></button>
+          <span id="zoomVal" class="font-mono text-slate-400 px-1 min-w-[42px] text-center">100%</span>
+          <button id="zoomIn" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition-colors" title="Vergrößern"><i class="fa-solid fa-plus"></i></button>
+          <button id="rotateBtn" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition-colors ml-1" title="Notenblatt drehen"><i class="fa-solid fa-rotate-right"></i></button>
+          <button id="resetViewBtn" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 transition-colors" title="Ansicht zurücksetzen"><i class="fa-solid fa-arrows-to-dot"></i></button>
+          
+          <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+          <button id="clearAllNotesBtn" class="bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/60 text-rose-300 px-2.5 py-1 rounded transition-colors flex items-center gap-1" title="Alle Notenmarker auf dem Blatt löschen">
+            <i class="fa-solid fa-trash-can"></i>
+            <span class="hidden sm:inline">Löschen</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="sheetViewport" class="sheet-viewport flex-1 overflow-auto p-4 flex items-center justify-center relative">
+        
+        <!-- Empty State Box -->
+        <div id="emptyState" class="text-center p-8 max-w-sm rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur">
+          <div class="w-14 h-14 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto mb-3 text-copper-400 text-2xl shadow-inner">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <h3 class="text-slate-200 font-semibold mb-1 text-sm">Kein Notenblatt geladen</h3>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">Lade ein PDF oder Foto hoch. Du kannst danach direkt auf die Notenköpfe klicken, um D-Kurd Töne zuzuordnen.</p>
+          <button id="emptyDemoBtn" class="text-xs bg-copper-600/20 hover:bg-copper-600/30 text-copper-400 border border-copper-700/50 px-3 py-1.5 rounded-lg transition-all font-medium">
+            <i class="fa-solid fa-play mr-1"></i> Demoblatt laden
+          </button>
+        </div>
+
+        <!-- Canvas Container Wrapper -->
+        <div id="sheetWrapper" class="relative hidden shadow-2xl rounded border border-slate-700/80 bg-white inline-block">
+          <canvas id="sheetCanvas" class="block cursor-crosshair"></canvas>
+          <div id="markerOverlay" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+
+      </div>
+
+      <!-- Quick Note Inspector Bar (Appears when clicking a marker) -->
+      <div id="quickInspector" class="p-2.5 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-medium flex items-center gap-1">
+            <i class="fa-solid fa-crosshairs text-copper-400"></i> Aktive Note:
+          </span>
+          <span id="activeMarkerIndex" class="font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold">#--</span>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1">
+            <label class="text-slate-400 text-[11px]">Note:</label>
+            <select id="inspectorNoteSelect" class="bg-slate-900 border border-slate-700 text-copper-400 font-bold font-mono text-xs rounded px-2 py-1 outline-none">
+              <option value="D3">D3 (Ding)</option>
+              <option value="A3">A3</option>
+              <option value="Bb3">Bb3</option>
+              <option value="C4">C4</option>
+              <option value="D4">D4</option>
+              <option value="E4">E4</option>
+              <option value="F4">F4</option>
+              <option value="G4">G4</option>
+              <option value="A4">A4</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <label class="text-slate-400 text-[11px]">Silbe/Text:</label>
+            <input type="text" id="inspectorLyricInput" placeholder="z.B. Je" class="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 outline-none focus:border-copper-500">
+          </div>
+
+          <div class="flex items-center gap-1">
+            <label class="text-slate-400 text-[11px]">Zeit (ms):</label>
+            <input type="number" id="inspectorDelayInput" step="50" min="0" class="w-16 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono outline-none">
+          </div>
+
+          <button id="deleteActiveMarkerBtn" class="text-rose-400 hover:text-rose-300 p-1 ml-1" title="Diese Note löschen">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: 2D Handpan, Player & JSON Editor (5 Cols) -->
+    <section class="lg:col-span-5 flex flex-col bg-slate-950 overflow-y-auto border-t lg:border-t-0 border-slate-800">
+      
+      <!-- Metadata & Player Controls -->
+      <div class="p-4 border-b border-slate-800 bg-slate-900/60 sticky top-0 z-30 backdrop-blur">
+        
+        <!-- Metadata Row -->
+        <div class="grid grid-cols-3 gap-2 mb-3">
+          <div class="col-span-2">
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Songtitel</label>
+            <input type="text" id="songTitle" value="Je m'en vais cueillir la rose" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-xs text-slate-200 focus:border-copper-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Skala</label>
+            <input type="text" id="songScale" value="d_kurd" readonly class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-copper-400 font-mono font-bold text-center outline-none cursor-default">
+          </div>
+        </div>
+
+        <!-- Player Control Bar -->
+        <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-inner">
+          <div class="flex items-center gap-1.5">
+            <button id="playBtn" class="w-10 h-10 rounded-lg bg-copper-600 hover:bg-copper-500 text-white flex items-center justify-center transition-all shadow-md shadow-copper-600/30">
+              <i class="fa-solid fa-play text-sm"></i>
+            </button>
+            <button id="pauseBtn" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all">
+              <i class="fa-solid fa-pause text-sm"></i>
+            </button>
+            <button id="stopBtn" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition-all">
+              <i class="fa-solid fa-square text-xs"></i>
+            </button>
+            <button id="loopBtn" class="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 flex items-center justify-center transition-all" title="Schleife umschalten">
+              <i class="fa-solid fa-repeat text-xs"></i>
+            </button>
+          </div>
+
+          <div class="flex-1 min-w-[140px] max-w-[180px]">
+            <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+              <span>Tempo (BPM)</span>
+              <span id="bpmVal" class="font-mono text-copper-400 font-bold">120</span>
+            </div>
+            <input type="range" id="bpmSlider" min="50" max="200" value="120" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-copper-500">
+          </div>
+        </div>
+
+      </div>
+
+      <div class="p-4 space-y-4">
+        
+        <!-- Interactive 2D Handpan Layout -->
+        <div class="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-4 flex flex-col items-center justify-center relative overflow-hidden">
+          <div class="w-full flex items-center justify-between mb-2 text-xs">
+            <span class="font-semibold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-drum text-copper-400"></i> D-Kurd Handpan Layout
+            </span>
+            <span class="text-[10px] text-slate-500">Klicken = Sound &amp; Anfügen</span>
+          </div>
+
+          <!-- Handpan Circle Body -->
+          <div class="handpan-body relative w-64 h-64 md:w-72 md:h-72 rounded-full flex items-center justify-center my-2 select-none shadow-2xl">
+            
+            <!-- Central Ding (D3) -->
+            <button data-note="D3" class="handpan-field handpan-ding absolute w-16 h-16 rounded-full flex flex-col items-center justify-center text-white font-bold font-mono text-xs cursor-pointer z-20">
+              <span class="text-[10px] opacity-75">DING</span>
+              <span>D3</span>
+            </button>
+
+            <!-- 8 Tone Fields Arranged in Circle (A3 to A4) -->
+            <!-- 1. A3 (Bottom Center) -->
+            <button data-note="A3" class="handpan-field absolute bottom-3 w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="bottom: 12px; left: calc(50% - 28px);">A3</button>
+            
+            <!-- 2. Bb3 (Bottom Left) -->
+            <button data-note="Bb3" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="bottom: 40px; left: 24px;">Bb3</button>
+
+            <!-- 3. C4 (Middle Left) -->
+            <button data-note="C4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="top: calc(50% - 28px); left: 10px;">C4</button>
+
+            <!-- 4. D4 (Top Left) -->
+            <button data-note="D4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="top: 36px; left: 28px;">D4</button>
+
+            <!-- 5. E4 (Top Center) -->
+            <button data-note="E4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="top: 10px; left: calc(50% - 28px);">E4</button>
+
+            <!-- 6. F4 (Top Right) -->
+            <button data-note="F4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="top: 36px; right: 28px;">F4</button>
+
+            <!-- 7. G4 (Middle Right) -->
+            <button data-note="G4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="top: calc(50% - 28px); right: 10px;">G4</button>
+
+            <!-- 8. A4 (Bottom Right) -->
+            <button data-note="A4" class="handpan-field absolute w-13 h-13 md:w-14 md:h-14 rounded-full flex items-center justify-center text-copper-200 font-bold font-mono text-xs border border-copper-700/60" style="bottom: 40px; right: 24px;">A4</button>
+
+          </div>
+        </div>
+
+        <!-- Sequence Table Container -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-list-ol text-copper-400"></i> Notensequenz (<span id="noteCountText">0</span>)
+            </span>
+            <button id="addManualNoteBtn" class="text-[11px] text-copper-400 hover:text-copper-300 flex items-center gap-1 transition-colors">
+              <i class="fa-solid fa-plus"></i> Note anfügen
+            </button>
+          </div>
+
+          <div id="sequenceList" class="max-h-[180px] overflow-y-auto space-y-1.5 pr-1 text-xs">
+            <!-- Dynamic Note Rows injected here -->
+          </div>
+        </div>
+
+        <!-- JSON Output & Export Box -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-code text-copper-400"></i> Handpan JSON Vorschau
+            </span>
+            <div class="flex items-center gap-2">
+              <button id="copyJsonBtn" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-copy"></i> Kopieren
+              </button>
+              <button id="downloadJsonBtn" class="text-[11px] bg-copper-600 hover:bg-copper-500 text-white px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-medium shadow-sm">
+                <i class="fa-solid fa-download"></i> .json Speichern
+              </button>
+            </div>
+          </div>
+
+          <pre id="jsonPreview" class="bg-slate-950 border border-slate-800 rounded-lg p-3 text-[11px] font-mono text-amber-300 overflow-x-auto max-h-[160px] select-all leading-relaxed"></pre>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 border border-slate-700 text-slate-100 px-4 py-2.5 rounded-xl shadow-2xl text-xs flex items-center gap-2.5 translate-y-24 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+    <span id="toastMsg">Nachricht</span>
+  </div>
+
+  <script>
+    // PDF.js worker set
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    // Application State
+    const state = {
+      title: "Je m'en vais cueillir la rose",
+      scale: "d_kurd",
+      bpm: 120,
+      loop: false,
+      zoom: 1.0,
+      rotation: 0,
+      originalKey: "G_MAJOR",
+      notes: [], // Array of { id, note, delay, lyric, x, y }
+      activeNoteIndex: -1,
+      pdfDoc: null,
+      imageElement: null,
+      isPlaying: false,
+      playbackIndex: -1,
+      audioCtx: null,
+      activeTimeouts: []
+    };
+
+    // Frequencies for D-Kurd Handpan notes (Hz)
+    const HANDPAN_FREQS = {
+      'D3': 146.83, // DING
+      'A3': 220.00,
+      'Bb3': 233.08,
+      'C4': 261.63,
+      'D4': 293.66,
+      'E4': 329.63,
+      'F4': 349.23,
+      'G4': 392.00,
+      'A4': 440.00
+    };
+
+    // Auto-transposition Mapping relative to D-Kurd Handpan
+    const KEY_TRANSPOSE_MAP = {
+      'G_MAJOR': { 'G4':'F4', 'A4':'G4', 'B4':'A4', 'C5':'A4', 'D5':'A4', 'E4':'D4', 'F#4':'E4', 'G3':'D3' },
+      'C_MAJOR': { 'C4':'C4', 'D4':'D4', 'E4':'E4', 'F4':'F4', 'G4':'G4', 'A4':'A4', 'B4':'A4', 'C5':'A4' },
+      'F_MAJOR': { 'F4':'F4', 'G4':'G4', 'A4':'A4', 'Bb4':'Bb3', 'C5':'C4', 'D5':'D4' }
+    };
+
+    // DOM Element References
+    const elements = {
+      fileInput: document.getElementById('fileInput'),
+      jsonImportInput: document.getElementById('jsonImportInput'),
+      loadDemoBtn: document.getElementById('loadDemoBtn'),
+      emptyDemoBtn: document.getElementById('emptyDemoBtn'),
+      emptyState: document.getElementById('emptyState'),
+      sheetWrapper: document.getElementById('sheetWrapper'),
+      sheetCanvas: document.getElementById('sheetCanvas'),
+      markerOverlay: document.getElementById('markerOverlay'),
+      zoomIn: document.getElementById('zoomIn'),
+      zoomOut: document.getElementById('zoomOut'),
+      zoomVal: document.getElementById('zoomVal'),
+      rotateBtn: document.getElementById('rotateBtn'),
+      resetViewBtn: document.getElementById('resetViewBtn'),
+      clearAllNotesBtn: document.getElementById('clearAllNotesBtn'),
+      originalKeySelect: document.getElementById('originalKeySelect'),
+
+      // Quick Inspector
+      quickInspector: document.getElementById('quickInspector'),
+      activeMarkerIndex: document.getElementById('activeMarkerIndex'),
+      inspectorNoteSelect: document.getElementById('inspectorNoteSelect'),
+      inspectorLyricInput: document.getElementById('inspectorLyricInput'),
+      inspectorDelayInput: document.getElementById('inspectorDelayInput'),
+      deleteActiveMarkerBtn: document.getElementById('deleteActiveMarkerBtn'),
+
+      // Right Column
+      songTitle: document.getElementById('songTitle'),
+      songScale: document.getElementById('songScale'),
+      bpmSlider: document.getElementById('bpmSlider'),
+      bpmVal: document.getElementById('bpmVal'),
+      playBtn: document.getElementById('playBtn'),
+      pauseBtn: document.getElementById('pauseBtn'),
+      stopBtn: document.getElementById('stopBtn'),
+      loopBtn: document.getElementById('loopBtn'),
+      sequenceList: document.getElementById('sequenceList'),
+      noteCountText: document.getElementById('noteCountText'),
+      jsonPreview: document.getElementById('jsonPreview'),
+      copyJsonBtn: document.getElementById('copyJsonBtn'),
+      downloadJsonBtn: document.getElementById('downloadJsonBtn'),
+      addManualNoteBtn: document.getElementById('addManualNoteBtn'),
+
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toastMsg'),
+      toastIcon: document.getElementById('toastIcon')
+    };
+
+    function initAudio() {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+      }
+    }
+
+    // Realistic Handpan Physical Modeling Synthesizer
+    function playHandpanSound(noteName) {
+      initAudio();
+      const freq = HANDPAN_FREQS[noteName] || 293.66;
+      const ctx = state.audioCtx;
+      const now = ctx.currentTime;
+
+      // Master gain for note
+      const masterGain = ctx.createGain();
+      masterGain.gain.setValueAtTime(0.001, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.7, now + 0.015); // Fast attack
+      masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 2.2); // Warm long decay
+
+      // Fundamental tone (Sine)
+      const fundOsc = ctx.createOscillator();
+      fundOsc.type = 'sine';
+      fundOsc.frequency.setValueAtTime(freq, now);
+
+      // Octave harmonic (Handpan Ding/Tonefield ring)
+      const octaveOsc = ctx.createOscillator();
+      octaveOsc.type = 'sine';
+      octaveOsc.frequency.setValueAtTime(freq * 2, now);
+      const octaveGain = ctx.createGain();
+      octaveGain.gain.setValueAtTime(0.25, now);
+      octaveGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+      // Fifth harmonic
+      const fifthOsc = ctx.createOscillator();
+      fifthOsc.type = 'sine';
+      fifthOsc.frequency.setValueAtTime(freq * 3, now);
+      const fifthGain = ctx.createGain();
+      fifthGain.gain.setValueAtTime(0.12, now);
+      fifthGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+      // Connect nodes
+      fundOsc.connect(masterGain);
+      octaveOsc.connect(octaveGain);
+      octaveGain.connect(masterGain);
+      fifthOsc.connect(fifthGain);
+      fifthGain.connect(masterGain);
+
+      masterGain.connect(ctx.destination);
+
+      fundOsc.start(now);
+      octaveOsc.start(now);
+      fifthOsc.start(now);
+
+      fundOsc.stop(now + 2.3);
+      octaveOsc.stop(now + 0.9);
+      fifthOsc.stop(now + 0.5);
+
+      // Highlight Handpan 2D UI Button
+      triggerHandpanVisualFeedback(noteName);
+    }
+
+    function triggerHandpanVisualFeedback(noteName) {
+      const btn = document.querySelector(`.handpan-field[data-note="${noteName}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 300);
+      }
+    }
+
+    function initApp() {
+      setupEventListeners();
+      updateJsonOutput();
+      loadDemoSheet();
+    }
+
+    function setupEventListeners() {
+      // File Handlers
+      elements.fileInput.addEventListener('change', handleFileUpload);
+      elements.jsonImportInput.addEventListener('change', handleJsonImport);
+      elements.loadDemoBtn.addEventListener('click', loadDemoSheet);
+      elements.emptyDemoBtn.addEventListener('click', loadDemoSheet);
+
+      // Canvas Clicks
+      elements.sheetCanvas.addEventListener('click', handleCanvasClick);
+
+      // Zoom & View
+      elements.zoomIn.addEventListener('click', () => adjustZoom(0.15));
+      elements.zoomOut.addEventListener('click', () => adjustZoom(-0.15));
+      elements.rotateBtn.addEventListener('click', () => {
+        state.rotation = (state.rotation + 90) % 360;
+        renderSheetView();
+      });
+      elements.resetViewBtn.addEventListener('click', () => {
+        state.zoom = 1.0;
+        state.rotation = 0;
+        elements.zoomVal.textContent = '100%';
+        renderSheetView();
+      });
+      elements.clearAllNotesBtn.addEventListener('click', clearAllNotes);
+
+      // Song Inputs
+      elements.songTitle.addEventListener('input', (e) => {
+        state.title = e.target.value;
+        updateJsonOutput();
+      });
+
+      elements.bpmSlider.addEventListener('input', (e) => {
+        state.bpm = parseInt(e.target.value);
+        elements.bpmVal.textContent = state.bpm;
+        recalculateTimingByBpm();
+        updateJsonOutput();
+      });
+
+      // Handpan 2D Pad Clicks
+      document.querySelectorAll('.handpan-field').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const note = btn.getAttribute('data-note');
+          playHandpanSound(note);
+          
+          // Calculate auto delay
+          const lastDelay = state.notes.length > 0 ? state.notes[state.notes.length - 1].delay + 250 : 0;
+          addNote(note, lastDelay, "", null, null);
+        });
+      });
+
+      // Inspector bindings
+      elements.inspectorNoteSelect.addEventListener('change', (e) => {
+        if (state.activeNoteIndex >= 0 && state.notes[state.activeNoteIndex]) {
+          state.notes[state.activeNoteIndex].note = e.target.value;
+          playHandpanSound(e.target.value);
+          updateMarkersOverlay();
+          renderSequenceList();
+          updateJsonOutput();
+        }
+      });
+
+      elements.inspectorLyricInput.addEventListener('input', (e) => {
+        if (state.activeNoteIndex >= 0 && state.notes[state.activeNoteIndex]) {
+          state.notes[state.activeNoteIndex].lyric = e.target.value;
+          renderSequenceList();
+          updateJsonOutput();
+        }
+      });
+
+      elements.inspectorDelayInput.addEventListener('change', (e) => {
+        if (state.activeNoteIndex >= 0 && state.notes[state.activeNoteIndex]) {
+          state.notes[state.activeNoteIndex].delay = parseInt(e.target.value) || 0;
+          state.notes.sort((a, b) => a.delay - b.delay);
+          updateMarkersOverlay();
+          renderSequenceList();
+          updateJsonOutput();
+        }
+      });
+
+      elements.deleteActiveMarkerBtn.addEventListener('click', () => {
+        if (state.activeNoteIndex >= 0 && state.notes[state.activeNoteIndex]) {
+          removeNote(state.notes[state.activeNoteIndex].id);
+        }
+      });
+
+      // Player Buttons
+      elements.playBtn.addEventListener('click', startPlayback);
+      elements.pauseBtn.addEventListener('click', stopPlayback);
+      elements.stopBtn.addEventListener('click', stopPlayback);
+      elements.loopBtn.addEventListener('click', () => {
+        state.loop = !state.loop;
+        elements.loopBtn.classList.toggle('text-copper-400', state.loop);
+        elements.loopBtn.classList.toggle('border-copper-600', state.loop);
+        showToast(state.loop ? "Schleife aktiviert" : "Schleife deaktiviert");
+      });
+
+      // Export Buttons
+      elements.copyJsonBtn.addEventListener('click', copyJsonToClipboard);
+      elements.downloadJsonBtn.addEventListener('click', downloadJsonFile);
+      elements.addManualNoteBtn.addEventListener('click', () => {
+        const lastDelay = state.notes.length > 0 ? state.notes[state.notes.length - 1].delay + 250 : 0;
+        addNote('D4', lastDelay, "", null, null);
+      });
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      state.title = file.name.replace(/\.[^/.]+$/, "");
+      elements.songTitle.value = state.title;
+
+      if (file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const typedarray = new Uint8Array(ev.target.result);
+          pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+            state.pdfDoc = pdf;
+            state.imageElement = null;
+            renderSheetView();
+            showToast("PDF Notenblatt geladen!", "success");
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const img = new Image();
+          img.onload = function() {
+            state.imageElement = img;
+            state.pdfDoc = null;
+            renderSheetView();
+            showToast("Bild geladen!", "success");
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderSheetView() {
+      if (state.pdfDoc) {
+        state.pdfDoc.getPage(1).then(page => {
+          const viewport = page.getViewport({ scale: 1.5 * state.zoom, rotation: state.rotation });
+          const canvas = elements.sheetCanvas;
+          const ctx = canvas.getContext('2d');
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+            elements.emptyState.classList.add('hidden');
+            elements.sheetWrapper.classList.remove('hidden');
+            updateMarkersOverlay();
+          });
+        });
+      } else if (state.imageElement) {
+        const canvas = elements.sheetCanvas;
+        const ctx = canvas.getContext('2d');
+
+        const width = state.imageElement.width * state.zoom;
+        const height = state.imageElement.height * state.zoom;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.save();
+        ctx.translate(width / 2, height / 2);
+        ctx.rotate((state.rotation * Math.PI) / 180);
+        ctx.drawImage(state.imageElement, -width / 2, -height / 2, width, height);
+        ctx.restore();
+
+        elements.emptyState.classList.add('hidden');
+        elements.sheetWrapper.classList.remove('hidden');
+        updateMarkersOverlay();
+      }
+    }
+
+    function loadDemoSheet() {
+      // SVG Demonstration Sheet for Nivernais Mazurka "Je m'en vais cueillir la rose"
+      const svgString = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="850" height="340" viewBox="0 0 850 340" style="background:#ffffff;">
+        <text x="25" y="32" font-family="sans-serif" font-size="20" font-weight="bold" fill="#0f172a">Je m'en vais cueillir la rose</text>
+        <text x="25" y="52" font-family="sans-serif" font-size="12" fill="#475569">Traditionnel Nivernais – Mazurka (Transkription für D-Moll Kurd Handpan)</text>
+
+        <!-- Stave Line System 1 -->
+        <g stroke="#334155" stroke-width="1.5">
+          <line x1="30" y1="100" x2="820" y2="100"/>
+          <line x1="30" y1="115" x2="820" y2="115"/>
+          <line x1="30" y1="130" x2="820" y2="130"/>
+          <line x1="30" y1="145" x2="820" y2="145"/>
+          <line x1="30" y1="160" x2="820" y2="160"/>
+
+          <line x1="30" y1="100" x2="30" y2="160"/>
+          <line x1="180" y1="100" x2="180" y2="160"/>
+          <line x1="360" y1="100" x2="360" y2="160"/>
+          <line x1="540" y1="100" x2="540" y2="160"/>
+          <line x1="720" y1="100" x2="720" y2="160"/>
+          <line x1="820" y1="100" x2="820" y2="160" stroke-width="3"/>
+        </g>
+
+        <!-- Clef & Time Sig -->
+        <text x="40" y="152" font-family="serif" font-size="52" fill="#0f172a">🎼</text>
+        <text x="85" y="125" font-family="sans-serif" font-size="18" font-weight="bold" fill="#0f172a">3</text>
+        <text x="85" y="150" font-family="sans-serif" font-size="18" font-weight="bold" fill="#0f172a">8</text>
+
+        <!-- Notes Row 1 -->
+        <g fill="#0f172a">
+          <!-- D4 -->
+          <ellipse cx="120" cy="160" rx="6" ry="4.5" transform="rotate(-20 120 160)"/>
+          <line x1="125" y1="160" x2="125" y2="120" stroke="#0f172a" stroke-width="2"/>
+          <text x="112" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">D4</text>
+          <text x="112" y="195" font-family="sans-serif" font-size="11" fill="#475569">Je</text>
+
+          <!-- E4 -->
+          <ellipse cx="150" cy="152.5" rx="6" ry="4.5" transform="rotate(-20 150 152.5)"/>
+          <line x1="155" y1="152.5" x2="155" y2="112.5" stroke="#0f172a" stroke-width="2"/>
+          <text x="142" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">E4</text>
+          <text x="142" y="195" font-family="sans-serif" font-size="11" fill="#475569">m'en</text>
+
+          <!-- F4 -->
+          <ellipse cx="210" cy="145" rx="6" ry="4.5" transform="rotate(-20 210 145)"/>
+          <line x1="215" y1="145" x2="215" y2="105" stroke="#0f172a" stroke-width="2"/>
+          <text x="202" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">F4</text>
+          <text x="202" y="195" font-family="sans-serif" font-size="11" fill="#475569">vais</text>
+
+          <!-- D4 -->
+          <ellipse cx="260" cy="160" rx="6" ry="4.5" transform="rotate(-20 260 160)"/>
+          <line x1="265" y1="160" x2="265" y2="120" stroke="#0f172a" stroke-width="2"/>
+          <text x="252" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">D4</text>
+          <text x="252" y="195" font-family="sans-serif" font-size="11" fill="#475569">cueil-</text>
+
+          <!-- E4 -->
+          <ellipse cx="310" cy="152.5" rx="6" ry="4.5" transform="rotate(-20 310 152.5)"/>
+          <line x1="315" y1="152.5" x2="315" y2="112.5" stroke="#0f172a" stroke-width="2"/>
+          <text x="302" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">E4</text>
+          <text x="302" y="195" font-family="sans-serif" font-size="11" fill="#475569">-lir</text>
+
+          <!-- F4 -->
+          <ellipse cx="390" cy="145" rx="6" ry="4.5" transform="rotate(-20 390 145)"/>
+          <line x1="395" y1="145" x2="395" y2="105" stroke="#0f172a" stroke-width="2"/>
+          <text x="382" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">F4</text>
+          <text x="382" y="195" font-family="sans-serif" font-size="11" fill="#475569">la</text>
+
+          <!-- G4 -->
+          <ellipse cx="440" cy="137.5" rx="6" ry="4.5" transform="rotate(-20 440 137.5)"/>
+          <line x1="445" y1="137.5" x2="445" y2="97.5" stroke="#0f172a" stroke-width="2"/>
+          <text x="432" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">G4</text>
+          <text x="432" y="195" font-family="sans-serif" font-size="11" fill="#475569">ro-</text>
+
+          <!-- A4 -->
+          <ellipse cx="490" cy="130" rx="6" ry="4.5" transform="rotate(-20 490 130)"/>
+          <line x1="495" y1="130" x2="495" y2="90" stroke="#0f172a" stroke-width="2"/>
+          <text x="482" y="180" font-family="sans-serif" font-size="11" fill="#0284c7" font-weight="bold">A4</text>
+          <text x="482" y="195" font-family="sans-serif" font-size="11" fill="#475569">-se</text>
+        </g>
+
+        <!-- Lyrics preview at bottom -->
+        <text x="30" y="270" font-family="sans-serif" font-size="13" font-style="italic" fill="#334155">Je m'en vais cueillir la rose, jolie rose du rosier...</text>
+      </svg>
+      `;
+
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = function() {
+        state.imageElement = img;
+        state.pdfDoc = null;
+        renderSheetView();
+        
+        // Populate default transcribed notes for D-Kurd
+        state.notes = [
+          { id: 1, note: "D4", delay: 0, lyric: "Je", x: 120, y: 160 },
+          { id: 2, note: "E4", delay: 250, lyric: "m'en", x: 150, y: 152 },
+          { id: 3, note: "F4", delay: 500, lyric: "vais", x: 210, y: 145 },
+          { id: 4, note: "D4", delay: 750, lyric: "cueil-", x: 260, y: 160 },
+          { id: 5, note: "E4", delay: 1000, lyric: "-lir", x: 310, y: 152 },
+          { id: 6, note: "F4", delay: 1250, lyric: "la", x: 390, y: 145 },
+          { id: 7, note: "G4", delay: 1500, lyric: "ro-", x: 440, y: 137 },
+          { id: 8, note: "A4", delay: 1750, lyric: "-se", x: 490, y: 130 }
+        ];
+
+        updateMarkersOverlay();
+        renderSequenceList();
+        updateJsonOutput();
+        showToast("Beispiel-Notenblatt geladen", "info");
+      };
+      img.src = url;
+    }
+
+    function handleCanvasClick(e) {
+      const rect = elements.sheetCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / state.zoom;
+      const y = (e.clientY - rect.top) / state.zoom;
+
+      // Estimate Note based on vertical Y position
+      const availableNotes = ['D3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4', 'G4', 'A4'];
+      const defaultNote = availableNotes[state.notes.length % availableNotes.length];
+
+      const lastDelay = state.notes.length > 0 ? state.notes[state.notes.length - 1].delay + 250 : 0;
+
+      addNote(defaultNote, lastDelay, "", Math.round(x), Math.round(y));
+      playHandpanSound(defaultNote);
+    }
+
+    function addNote(noteName, delayMs, lyric = "", x = null, y = null) {
+      const newNote = {
+        id: Date.now() + Math.random(),
+        note: noteName,
+        delay: delayMs,
+        lyric: lyric,
+        x: x,
+        y: y
+      };
+
+      state.notes.push(newNote);
+      state.notes.sort((a, b) => a.delay - b.delay);
+
+      // Select newly created note
+      state.activeNoteIndex = state.notes.findIndex(n => n.id === newNote.id);
+
+      updateMarkersOverlay();
+      renderSequenceList();
+      updateJsonOutput();
+    }
+
+    function removeNote(id) {
+      state.notes = state.notes.filter(n => n.id !== id);
+      state.activeNoteIndex = -1;
+      updateMarkersOverlay();
+      renderSequenceList();
+      updateJsonOutput();
+      showToast("Note entfernt");
+    }
+
+    function clearAllNotes() {
+      state.notes = [];
+      state.activeNoteIndex = -1;
+      updateMarkersOverlay();
+      renderSequenceList();
+      updateJsonOutput();
+      showToast("Alle Noten gelöscht", "info");
+    }
+
+    function updateMarkersOverlay() {
+      elements.markerOverlay.innerHTML = '';
+
+      state.notes.forEach((n, idx) => {
+        if (n.x !== null && n.y !== null) {
+          const marker = document.createElement('div');
+          const isSelected = state.activeNoteIndex === idx;
+          const isPlayingNow = state.playbackIndex === idx;
+
+          marker.className = `canvas-marker pointer-events-auto w-6 h-6 rounded-full font-bold text-[10px] flex items-center justify-center shadow-lg cursor-pointer border-2 transition-all ${
+            isPlayingNow ? 'bg-copper-500 border-amber-300 text-white active' :
+            isSelected ? 'bg-amber-500 border-white text-slate-950 scale-125 z-30' :
+            'bg-slate-900/90 border-copper-500 text-copper-300 hover:scale-110'
+          }`;
+
+          marker.style.left = `${n.x * state.zoom}px`;
+          marker.style.top = `${n.y * state.zoom}px`;
+          marker.textContent = idx + 1;
+          marker.title = `${n.note} (${n.delay}ms) - ${n.lyric || 'Kein Text'}`;
+
+          marker.addEventListener('click', (e) => {
+            e.stopPropagation();
+            state.activeNoteIndex = idx;
+            playHandpanSound(n.note);
+            updateMarkersOverlay();
+            renderSequenceList();
+            populateInspector(n, idx);
+          });
+
+          elements.markerOverlay.appendChild(marker);
+        }
+      });
+
+      elements.noteCountText.textContent = state.notes.length;
+
+      // Populate inspector if active
+      if (state.activeNoteIndex >= 0 && state.notes[state.activeNoteIndex]) {
+        populateInspector(state.notes[state.activeNoteIndex], state.activeNoteIndex);
+      }
+    }
+
+    function populateInspector(noteObj, index) {
+      elements.activeMarkerIndex.textContent = `#${index + 1}`;
+      elements.inspectorNoteSelect.value = noteObj.note;
+      elements.inspectorLyricInput.value = noteObj.lyric || "";
+      elements.inspectorDelayInput.value = noteObj.delay;
+    }
+
+    function renderSequenceList() {
+      elements.sequenceList.innerHTML = '';
+
+      if (state.notes.length === 0) {
+        elements.sequenceList.innerHTML = `
+          <div class="text-center py-6 text-slate-500 text-xs">
+            Noch keine Noten vorhanden. Klicke auf das Notenblatt oder ein Handpan-Feld.
+          </div>
+        `;
+        return;
+      }
+
+      state.notes.forEach((item, index) => {
+        const row = document.createElement('div');
+        const isSelected = state.activeNoteIndex === index;
+        const isPlayingNow = state.playbackIndex === index;
+
+        row.className = `flex items-center justify-between p-1.5 rounded-lg border text-xs transition-all ${
+          isPlayingNow ? 'bg-copper-950/80 border-copper-500 text-white' :
+          isSelected ? 'bg-slate-800 border-amber-500/80 text-amber-300' :
+          'bg-slate-950 border-slate-800/80 hover:border-slate-700 text-slate-300'
+        }`;
+
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-4 rounded-full bg-slate-800 font-mono text-[9px] flex items-center justify-center font-bold text-slate-400">${index + 1}</span>
+            
+            <select class="note-select bg-slate-900 border border-slate-700 text-copper-400 font-bold font-mono text-xs rounded px-1 py-0.5 outline-none">
+              ${Object.keys(HANDPAN_FREQS).map(n => `<option value="${n}" ${n === item.note ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+
+            <input type="text" value="${item.lyric || ''}" placeholder="Text..." class="lyric-input w-20 bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded px-1.5 py-0.5 outline-none focus:border-copper-500">
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-0.5 font-mono text-[11px] text-slate-400">
+              <input type="number" step="50" min="0" value="${item.delay}" class="delay-input w-14 bg-slate-900 border border-slate-800 text-slate-200 text-right text-xs rounded px-1 py-0.5 outline-none focus:border-copper-500">
+              <span class="text-[9px]">ms</span>
+            </div>
+
+            <button class="remove-btn text-slate-500 hover:text-rose-400 px-1 transition-colors">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        `;
+
+        // Event listeners for inline editing
+        row.addEventListener('click', () => {
+          state.activeNoteIndex = index;
+          updateMarkersOverlay();
+          renderSequenceList();
+        });
+
+        const noteSelect = row.querySelector('.note-select');
+        noteSelect.addEventListener('change', (e) => {
+          item.note = e.target.value;
+          playHandpanSound(item.note);
+          updateMarkersOverlay();
+          updateJsonOutput();
+        });
+
+        const lyricInput = row.querySelector('.lyric-input');
+        lyricInput.addEventListener('input', (e) => {
+          item.lyric = e.target.value;
+          updateJsonOutput();
+        });
+
+        const delayInput = row.querySelector('.delay-input');
+        delayInput.addEventListener('change', (e) => {
+          item.delay = parseInt(e.target.value) || 0;
+          state.notes.sort((a, b) => a.delay - b.delay);
+          updateMarkersOverlay();
+          renderSequenceList();
+          updateJsonOutput();
+        });
+
+        const removeBtn = row.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeNote(item.id);
+        });
+
+        elements.sequenceList.appendChild(row);
+      });
+    }
+
+    function recalculateTimingByBpm() {
+      const stepMs = Math.round((60 / state.bpm) * 500); // 8th note spacing
+      state.notes.forEach((n, idx) => {
+        n.delay = idx * stepMs;
+      });
+      renderSequenceList();
+      updateMarkersOverlay();
+    }
+
+    function generateJsonObject() {
+      return {
+        title: state.title || "Handpan Melody",
+        scale: "d_kurd",
+        bpm: state.bpm,
+        createdAt: new Date().toISOString(),
+        notes: state.notes.map(n => ({
+          note: n.note,
+          delay: n.delay,
+          ...(n.lyric ? { lyric: n.lyric } : {})
+        }))
+      };
+    }
+
+    function updateJsonOutput() {
+      const jsonObj = generateJsonObject();
+      elements.jsonPreview.textContent = JSON.stringify(jsonObj, null, 2);
+    }
+
+    function copyJsonToClipboard() {
+      const jsonText = JSON.stringify(generateJsonObject(), null, 2);
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonText).then(() => {
+          showToast("JSON in Zwischenablage kopiert!", "success");
+        });
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = jsonText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast("JSON kopiert!", "success");
+      }
+    }
+
+    function downloadJsonFile() {
+      const jsonObj = generateJsonObject();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonObj, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const filename = (state.title || "handpan_d_kurd").toLowerCase().replace(/[^a-z0-9]/g, "_") + ".json";
+
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      showToast(`Datei '${filename}' gespeichert`, "success");
+    }
+
+    function handleJsonImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (imported.notes && Array.isArray(imported.notes)) {
+            state.title = imported.title || file.name.replace('.json', '');
+            elements.songTitle.value = state.title;
+            state.bpm = imported.bpm || 120;
+            elements.bpmSlider.value = state.bpm;
+            elements.bpmVal.textContent = state.bpm;
+
+            state.notes = imported.notes.map((n, idx) => ({
+              id: Date.now() + idx,
+              note: n.note || 'D3',
+              delay: n.delay || 0,
+              lyric: n.lyric || '',
+              x: null,
+              y: null
+            }));
+
+            updateMarkersOverlay();
+            renderSequenceList();
+            updateJsonOutput();
+            showToast("JSON-Datei erfolgreich geladen!", "success");
+          }
+        } catch (err) {
+          showToast("Ungültiges JSON-Format", "warning");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function startPlayback() {
+      if (state.notes.length === 0) {
+        showToast("Keine Noten zum Abspielen vorhanden", "warning");
+        return;
+      }
+
+      stopPlayback();
+      state.isPlaying = true;
+      initAudio();
+
+      elements.playBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-500');
+
+      state.notes.forEach((n, idx) => {
+        const timeoutId = setTimeout(() => {
+          if (!state.isPlaying) return;
+
+          state.playbackIndex = idx;
+          playHandpanSound(n.note);
+          updateMarkersOverlay();
+          renderSequenceList();
+
+          if (idx === state.notes.length - 1) {
+            setTimeout(() => {
+              if (state.loop && state.isPlaying) {
+                startPlayback();
+              } else {
+                stopPlayback();
+              }
+            }, 800);
+          }
+        }, n.delay);
+
+        state.activeTimeouts.push(timeoutId);
+      });
+    }
+
+    function stopPlayback() {
+      state.isPlaying = false;
+      state.playbackIndex = -1;
+      
+      state.activeTimeouts.forEach(t => clearTimeout(t));
+      state.activeTimeouts = [];
+
+      elements.playBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+      updateMarkersOverlay();
+      renderSequenceList();
+    }
+
+    function adjustZoom(delta) {
+      state.zoom = Math.max(0.4, Math.min(2.5, state.zoom + delta));
+      elements.zoomVal.textContent = `${Math.round(state.zoom * 100)}%`;
+      renderSheetView();
+    }
+
+    function showToast(message, type = "info") {
+      elements.toastMsg.textContent = message;
+      
+      if (type === "success") {
+        elements.toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-sm";
+      } else if (type === "warning") {
+        elements.toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-sm";
+      } else {
+        elements.toastIcon.className = "fa-solid fa-circle-info text-copper-400 text-sm";
+      }
+
+      elements.toast.classList.remove('translate-y-24', 'opacity-0');
+      
+      setTimeout(() => {
+        elements.toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3000);
+    }
+
+    // Launch App
+    window.onload = initApp;
+  </script>
+</body>
+</html>

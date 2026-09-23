@@ -1,0 +1,66 @@
+{
+  "title": "Over The Rainbow (Handpan D-Kurd Arrangement)",
+  "artist": "Israel Kamakawiwoʻole",
+  "scale": "d_kurd",
+  "bpm": 95,
+  "createdAt": "2026-09-23T23:28:00.000Z",
+  "notes": [
+    { "note": "D3", "delay": 0, "lyric": "Intro - Ding" },
+    { "note": "A3", "delay": 632 },
+    { "note": "F4", "delay": 1263, "lyric": "Some-" },
+    { "note": "E4", "delay": 1895, "lyric": "-where" },
+    { "note": "D4", "delay": 2526, "lyric": "o-" },
+    { "note": "C4", "delay": 3158, "lyric": "-ver" },
+    { "note": "D4", "delay": 3789, "lyric": "the" },
+    { "note": "E4", "delay": 4421, "lyric": "rain-" },
+    { "note": "F4", "delay": 5053, "lyric": "-bow," },
+
+    { "note": "D3", "delay": 6316 },
+    { "note": "A3", "delay": 6947 },
+    { "note": "F4", "delay": 7579, "lyric": "way" },
+    { "note": "G4", "delay": 8211, "lyric": "up" },
+    { "note": "A4", "delay": 8842, "lyric": "high." },
+
+    { "note": "Bb3", "delay": 10105, "lyric": "And" },
+    { "note": "C4", "delay": 10737, "lyric": "the" },
+    { "note": "D4", "delay": 11368, "lyric": "dreams" },
+    { "note": "D4", "delay": 12000, "lyric": "that" },
+    { "note": "C4", "delay": 12632, "lyric": "you" },
+    { "note": "Bb3", "delay": 13263, "lyric": "dreamed" },
+    { "note": "A3", "delay": 13895, "lyric": "of" },
+
+    { "note": "F4", "delay": 15158, "lyric": "once" },
+    { "note": "G4", "delay": 15789, "lyric": "in" },
+    { "note": "A4", "delay": 16421, "lyric": "a" },
+    { "note": "G4", "delay": 17053, "lyric": "lul-" },
+    { "note": "F4", "delay": 17684, "lyric": "-la-" },
+    { "note": "E4", "delay": 18316, "lyric": "-by..." },
+
+    { "note": "D3", "delay": 19579, "lyric": "Some-" },
+    { "note": "A3", "delay": 20211 },
+    { "note": "F4", "delay": 20842, "lyric": "-where" },
+    { "note": "E4", "delay": 21474, "lyric": "o-" },
+    { "note": "D4", "delay": 22105, "lyric": "-ver" },
+    { "note": "C4", "delay": 22737, "lyric": "the" },
+    { "note": "D4", "delay": 23368, "lyric": "rain-" },
+    { "note": "E4", "delay": 24000, "lyric": "-bow," },
+
+    { "note": "F4", "delay": 24632, "lyric": "blue" },
+    { "note": "G4", "delay": 25263, "lyric": "birds" },
+    { "note": "A4", "delay": 25895, "lyric": "fly." },
+
+    { "note": "D3", "delay": 27158, "lyric": "And" },
+    { "note": "Bb3", "delay": 27789, "lyric": "the" },
+    { "note": "C4", "delay": 28421, "lyric": "dreams" },
+    { "note": "D4", "delay": 29053, "lyric": "that" },
+    { "note": "C4", "delay": 29684, "lyric": "you" },
+    { "note": "Bb3", "delay": 30316, "lyric": "dare" },
+    { "note": "A3", "delay": 30947, "lyric": "to," },
+
+    { "note": "C4", "delay": 32211, "lyric": "why," },
+    { "note": "D4", "delay": 32842, "lyric": "oh" },
+    { "note": "E4", "delay": 33474, "lyric": "why" },
+    { "note": "F4", "delay": 34105, "lyric": "can't" },
+    { "note": "D3", "delay": 34737, "lyric": "I?" }
+  ]
+}

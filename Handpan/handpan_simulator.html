@@ -17,7 +17,7 @@
             -webkit-user-select: none;
         }
 
-        /* Dynamic Themes */
+        /* Dynamic Theme Definitions */
         .theme-bronze {
             --bg-gradient: radial-gradient(circle at center, #2d1e18 0%, #150d0a 100%);
             --pan-gradient: radial-gradient(circle at center, #8c5a3c 0%, #4a2e1d 60%, #2a180e 100%);
@@ -87,9 +87,33 @@
             border-color: #f59e0b !important;
         }
 
+        .handpan-note.simon-highlight {
+            animation: pulse-simon 0.4s ease-in-out;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 30px #38bdf8, inset 0 0 15px #38bdf8 !important;
+        }
+
+        .handpan-note.wrong-highlight {
+            animation: shake-error 0.4s ease-in-out;
+            border-color: #f43f5e !important;
+            box-shadow: 0 0 30px #f43f5e, inset 0 0 15px #f43f5e !important;
+        }
+
         @keyframes pulse-guide {
             0% { box-shadow: 0 0 10px #f59e0b, inset 0 0 5px #f59e0b; transform: scale(1); }
             100% { box-shadow: 0 0 28px #f59e0b, inset 0 0 15px #f59e0b; transform: scale(1.07); }
+        }
+
+        @keyframes pulse-simon {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake-error {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
         }
 
         @keyframes ripple {
@@ -102,7 +126,7 @@
             border-radius: 50%;
             border: 2px solid var(--note-active);
             pointer-events: none;
-            animation: ripple 0.9s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            animation: ripple 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
         }
 
         .glass-panel {
@@ -129,7 +153,7 @@
                 <h1 class="text-xl font-bold tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-amber-400 to-amber-100">
                     Handpan Studio
                 </h1>
-                <p class="text-xs text-slate-400">Warmer V1-Klang & V2-Features</p>
+                <p class="text-xs text-slate-400">Interaktive Handpan Simulation & Gehörbildung</p>
             </div>
         </div>
 
@@ -213,20 +237,64 @@
             </div>
         </div>
 
+        <!-- Sidebar Control Center -->
         <div class="w-full lg:w-96 flex flex-col gap-4">
             
-            <!-- Learning Mode Panel -->
+            <!-- Nachspiel-Übung / Gehörbildung (Memory Game) -->
+            <div class="glass-panel p-4 rounded-2xl shadow-xl border border-sky-500/30">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-base font-semibold flex items-center gap-2 text-sky-400">
+                        <i class="fa-solid fa-brain"></i> Nachspiel-Übung
+                    </h2>
+                    <span id="simonLevelBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">Bereit</span>
+                </div>
+
+                <p class="text-[11px] text-slate-300 mb-3">
+                    Die App spielt Töne vor. Spiele sie exakt in der gleichen Reihenfolge nach – mit jedem Schritt kommt eine Note hinzu!
+                </p>
+
+                <!-- Source Selection for Practice Mode -->
+                <div class="mb-3">
+                    <label class="text-xs text-slate-400 block mb-1">Quelle der Übung:</label>
+                    <select id="simonSourceSelect" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+                        <option value="random">Zufälliges Spiel (Simon Says)</option>
+                        <!-- Saved melodies will be added here dynamically -->
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between text-xs bg-black/30 p-2 rounded-xl mb-3 border border-white/5">
+                    <div>
+                        <span class="text-slate-400">Eingabe:</span>
+                        <span id="simonProgressText" class="font-mono font-bold text-sky-300 ml-1">0 / 0</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400">Highscore:</span>
+                        <span id="simonHighscore" class="font-mono font-bold text-amber-400 ml-1">0</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="startSimonBtn" class="flex-1 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-500 hover:to-sky-400 text-slate-950 font-bold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
+                        <i class="fa-solid fa-play text-[10px]"></i> Übung Starten
+                    </button>
+                    <button id="stopSimonBtn" class="hidden flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
+                        <i class="fa-solid fa-stop text-[10px]"></i> Beenden
+                    </button>
+                </div>
+            </div>
+
+            <!-- Learning Mode Panel (Guided Songs) -->
             <div class="glass-panel p-4 rounded-2xl shadow-xl">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-base font-semibold flex items-center gap-2 text-amber-300">
-                        <i class="fa-solid fa-graduation-cap"></i> Lernmodus & Lieder
+                        <i class="fa-solid fa-graduation-cap"></i> Automatische Lieder
                     </h2>
                     <span id="lessonStatus" class="text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300">Bereit</span>
                 </div>
 
                 <div class="space-y-3">
                     <div>
-                        <label class="text-xs text-slate-400 block mb-1">Übung wählen</label>
+                        <label class="text-xs text-slate-400 block mb-1">Song / Rhythmus wählen</label>
                         <select id="songSelect" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
                             <option value="basic_1">1. Anfänger: Grundrhythmus</option>
                             <option value="arpeggio">2. Kurd Arpeggio Entspannung</option>
@@ -245,7 +313,7 @@
 
                     <div class="flex gap-2">
                         <button id="startLessonBtn" class="flex-1 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-slate-950 font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
-                            <i class="fa-solid fa-play text-[10px]"></i> Übung Starten
+                            <i class="fa-solid fa-play text-[10px]"></i> Song Abspielen
                         </button>
                         <button id="stopLessonBtn" class="hidden flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md">
                             <i class="fa-solid fa-stop text-[10px]"></i> Stoppen
@@ -312,7 +380,7 @@
     </footer>
 
     <script>
-        // --- Web Audio Synthesizer Engine (Version 1 Warm & Resonant Sound) ---
+        // --- Web Audio Synthesizer Engine (Authentischer V1 Klang) ---
         class HandpanAudioEngine {
             constructor() {
                 this.ctx = null;
@@ -341,23 +409,22 @@
 
                 // Master Gain
                 this.masterGain = this.ctx.createGain();
-                this.masterGain.gain.value = 0.75;
+                this.masterGain.gain.value = 0.8;
 
-                // Warm, rich metallic reverb impulse (Version 1 characteristic)
+                // Reverb Effect Node (V1 Raumgefühl)
                 this.reverbNode = this.ctx.createConvolver();
-                this.reverbNode.buffer = this.createImpulseResponse(3.5, 3.8); // Longer, warmer decay
+                this.reverbNode.buffer = this.createImpulseResponse(2.5, 2.0);
 
                 const reverbGain = this.ctx.createGain();
-                reverbGain.gain.value = 0.55; // Rich ambient wet signal
+                reverbGain.gain.value = 0.35;
 
-                // Signal routing
+                // Simple Direct Reverb Routing (No Delay Chain)
                 this.masterGain.connect(this.ctx.destination);
                 this.masterGain.connect(this.reverbNode);
                 this.reverbNode.connect(reverbGain);
                 reverbGain.connect(this.ctx.destination);
             }
 
-            // Warm Handpan Reverb Impulse Generator
             createImpulseResponse(duration, decay) {
                 const sampleRate = this.ctx.sampleRate;
                 const length = sampleRate * duration;
@@ -367,10 +434,8 @@
 
                 for (let i = 0; i < length; i++) {
                     const n = length - i;
-                    // Exponential warm decay envelope
-                    const envelope = Math.pow(n / length, decay);
-                    left[i] = (Math.random() * 2 - 1) * envelope;
-                    right[i] = (Math.random() * 2 - 1) * envelope;
+                    left[i] = (Math.random() * 2 - 1) * Math.pow(n / length, decay);
+                    right[i] = (Math.random() * 2 - 1) * Math.pow(n / length, decay);
                 }
                 return impulse;
             }
@@ -379,6 +444,7 @@
                 return this.scales[this.currentScale][noteName] || 261.63;
             }
 
+            // Warm, authentic V1 Handpan Tone
             playNote(noteName) {
                 this.init();
                 if (this.ctx.state === 'suspended') {
@@ -386,45 +452,48 @@
                 }
 
                 const freq = this.getNoteFrequency(noteName);
+                if (!freq) return;
+
                 const now = this.ctx.currentTime;
 
-                // Fundamental Sine Wave (Deep, warm core)
+                // Main Fundamental Sine Wave
                 const osc1 = this.ctx.createOscillator();
                 const gain1 = this.ctx.createGain();
                 osc1.type = 'sine';
                 osc1.frequency.setValueAtTime(freq, now);
 
-                // Octave Harmonic (Gives metal resonance)
+                // Warm Metallic Harmonics (Octave)
                 const osc2 = this.ctx.createOscillator();
                 const gain2 = this.ctx.createGain();
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(freq * 2.0, now);
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(freq * 2.01, now);
 
-                // Fifth Overtone (Metallic sparkle & warmth)
+                // Fifth Overtone
                 const osc3 = this.ctx.createOscillator();
                 const gain3 = this.ctx.createGain();
-                osc3.type = 'triangle';
-                osc3.frequency.setValueAtTime(freq * 3.0, now);
+                osc3.type = 'sine';
+                osc3.frequency.setValueAtTime(freq * 3.02, now);
 
-                const isDing = noteName === 'D3';
-                // Version 1 long, rich sustain values
-                const decay1 = isDing ? 4.2 : 3.2; 
-                const decay2 = isDing ? 2.5 : 1.8;
+                // Envelope Parameters
+                const attack = 0.008;
+                const decay1 = noteName === 'D3' ? 3.5 : 2.5;
+                const decay2 = 1.2;
 
-                // Envelopes for smooth physical slap + long acoustic decay
+                // Envelope Fundamental
                 gain1.gain.setValueAtTime(0, now);
-                gain1.gain.linearRampToValueAtTime(0.85, now + 0.008);
+                gain1.gain.linearRampToValueAtTime(0.7, now + attack);
                 gain1.gain.exponentialRampToValueAtTime(0.0001, now + decay1);
 
+                // Envelope Harmonics
                 gain2.gain.setValueAtTime(0, now);
-                gain2.gain.linearRampToValueAtTime(0.25, now + 0.006);
+                gain2.gain.linearRampToValueAtTime(0.2, now + attack);
                 gain2.gain.exponentialRampToValueAtTime(0.0001, now + decay2);
 
                 gain3.gain.setValueAtTime(0, now);
-                gain3.gain.linearRampToValueAtTime(0.12, now + 0.005);
+                gain3.gain.linearRampToValueAtTime(0.1, now + attack);
                 gain3.gain.exponentialRampToValueAtTime(0.0001, now + decay2);
 
-                // Connect nodes
+                // Connect
                 osc1.connect(gain1);
                 osc2.connect(gain2);
                 osc3.connect(gain3);
@@ -433,6 +502,7 @@
                 gain2.connect(this.masterGain);
                 gain3.connect(this.masterGain);
 
+                // Start & Stop
                 osc1.start(now);
                 osc2.start(now);
                 osc3.start(now);
@@ -440,6 +510,28 @@
                 osc1.stop(now + decay1 + 0.1);
                 osc2.stop(now + decay2 + 0.1);
                 osc3.stop(now + decay2 + 0.1);
+            }
+
+            playErrorSound() {
+                this.init();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, now); // Low A
+                osc.frequency.exponentialRampToValueAtTime(55, now + 0.3);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 0.3);
             }
         }
 
@@ -454,7 +546,15 @@
         let isPlayingLesson = false;
         let lessonTimeouts = [];
 
-        // Preset Lessons Definition
+        // --- Simon Says / Practice Game State ---
+        let isSimonActive = false;
+        let isSimonPlaying = false; // Is app playing pattern
+        let simonSequence = [];
+        let fullSongSourceNotes = []; // Holds notes if playing from a saved song
+        let simonPlayerStep = 0;
+        let simonHighscore = 0;
+
+        // Preset Lessons
         const lessons = {
             basic_1: [
                 { note: 'D3', delay: 0 },
@@ -514,6 +614,14 @@
         const recordTimer = document.getElementById('recordTimer');
         const savedSongsList = document.getElementById('savedSongsList');
 
+        // Simon Elements
+        const simonSourceSelect = document.getElementById('simonSourceSelect');
+        const startSimonBtn = document.getElementById('startSimonBtn');
+        const stopSimonBtn = document.getElementById('stopSimonBtn');
+        const simonLevelBadge = document.getElementById('simonLevelBadge');
+        const simonProgressText = document.getElementById('simonProgressText');
+        const simonHighscoreText = document.getElementById('simonHighscore');
+
         function updateScaleUI() {
             const scaleKey = scaleSelect.value;
             audioEngine.currentScale = scaleKey;
@@ -529,7 +637,7 @@
 
         scaleSelect.addEventListener('change', updateScaleUI);
 
-        function triggerNote(noteName, indexOverride = null) {
+        function triggerNote(noteName, indexOverride = null, isUserInteraction = true) {
             audioEngine.playNote(noteName);
 
             let btn = null;
@@ -545,9 +653,15 @@
                 createRipple(btn);
             }
 
+            // Recorder handling
             if (isRecording) {
                 const timeOffset = Date.now() - recordStartTime;
                 recordedNotes.push({ note: noteName, delay: timeOffset });
+            }
+
+            // Handle Simon Says User Input
+            if (isSimonActive && isUserInteraction && !isSimonPlaying) {
+                handleSimonUserInput(noteName, btn);
             }
         }
 
@@ -569,18 +683,18 @@
             ripple.style.top = `${y}px`;
 
             rippleContainer.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 900);
+            setTimeout(() => ripple.remove(), 800);
         }
 
         // Attach Note Handlers
         noteButtons.forEach(btn => {
             btn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
-                triggerNote(btn.getAttribute('data-note'));
+                triggerNote(btn.getAttribute('data-note'), null, true);
             });
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                triggerNote(btn.getAttribute('data-note'));
+                triggerNote(btn.getAttribute('data-note'), null, true);
             });
         });
 
@@ -589,10 +703,11 @@
             const idx = keyMap[e.key];
             if (idx !== undefined) {
                 const btn = document.querySelector(`[data-index="${idx}"]`);
-                if (btn) triggerNote(btn.getAttribute('data-note'), idx);
+                if (btn) triggerNote(btn.getAttribute('data-note'), idx, true);
             }
         });
 
+        // Theme Switcher
         const themes = ['bronze', 'cosmic', 'forest'];
         const themeNames = { bronze: 'Bronze', cosmic: 'Cosmic', forest: 'Forest' };
 
@@ -605,7 +720,7 @@
             themeLabel.textContent = themeNames[nextTheme];
         });
 
-        // Fullscreen Toggle
+        // Fullscreen
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});
@@ -614,12 +729,189 @@
             }
         });
 
+        // --- Simon Says / Practice Game Implementation ---
+        startSimonBtn.addEventListener('click', startSimonGame);
+        stopSimonBtn.addEventListener('click', stopSimonGame);
+
+        function updateSimonSourceDropdown() {
+            const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+            
+            // Retain "random" option
+            simonSourceSelect.innerHTML = `<option value="random">Zufälliges Spiel (Simon Says)</option>`;
+            
+            savedSongs.forEach(song => {
+                const opt = document.createElement('option');
+                opt.value = `song_${song.id}`;
+                opt.textContent = `Melodie: ${song.title}`;
+                simonSourceSelect.appendChild(opt);
+            });
+        }
+
+        function startSimonGame() {
+            if (isPlayingLesson) stopLesson();
+
+            isSimonActive = true;
+            simonSequence = [];
+            fullSongSourceNotes = [];
+            simonPlayerStep = 0;
+
+            const selectedSource = simonSourceSelect.value;
+
+            if (selectedSource !== 'random') {
+                const songId = parseInt(selectedSource.replace('song_', ''));
+                const savedSongs = JSON.parse(localStorage.getItem('handpan_songs_v2') || '[]');
+                const song = savedSongs.find(s => s.id === songId);
+                
+                if (song && song.data && song.data.length > 0) {
+                    // Extract note list from saved melody
+                    fullSongSourceNotes = song.data.map(item => item.note);
+                    
+                    // Automatically switch to song scale if provided
+                    if (song.scale && audioEngine.scales[song.scale]) {
+                        scaleSelect.value = song.scale;
+                        updateScaleUI();
+                    }
+                } else {
+                    alert("Diese Melodie enthält keine Noten.");
+                    stopSimonGame();
+                    return;
+                }
+            }
+
+            startSimonBtn.classList.add('hidden');
+            stopSimonBtn.classList.remove('hidden');
+
+            nextSimonLevel();
+        }
+
+        function stopSimonGame() {
+            isSimonActive = false;
+            isSimonPlaying = false;
+            simonSequence = [];
+            fullSongSourceNotes = [];
+            simonPlayerStep = 0;
+
+            startSimonBtn.classList.remove('hidden');
+            stopSimonBtn.classList.add('hidden');
+
+            simonLevelBadge.textContent = 'Bereit';
+            simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30';
+            simonProgressText.textContent = '0 / 0';
+        }
+
+        function nextSimonLevel() {
+            simonPlayerStep = 0;
+            isSimonPlaying = true;
+
+            const isRandom = simonSourceSelect.value === 'random';
+
+            if (isRandom) {
+                // Add a random note from the active scale
+                const availableNotes = Object.keys(audioEngine.scales[audioEngine.currentScale]);
+                const randomNote = availableNotes[Math.floor(Math.random() * availableNotes.length)];
+                simonSequence.push(randomNote);
+            } else {
+                // Take the next note from the saved melody
+                const currentLevelIndex = simonSequence.length;
+                if (currentLevelIndex < fullSongSourceNotes.length) {
+                    simonSequence.push(fullSongSourceNotes[currentLevelIndex]);
+                } else {
+                    // Completed full melody!
+                    simonLevelBadge.textContent = 'Geschafft! 🎉';
+                    simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30';
+                    setTimeout(() => {
+                        alert("Großartig! Du hast die komplette Melodie erfolgreich nachgespielt!");
+                        stopSimonGame();
+                    }, 500);
+                    return;
+                }
+            }
+
+            const currentLevel = simonSequence.length;
+            simonLevelBadge.textContent = `Level ${currentLevel}`;
+            simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30';
+            simonProgressText.textContent = `0 / ${currentLevel}`;
+
+            // Playback pattern to user
+            playSimonSequence();
+        }
+
+        function playSimonSequence() {
+            isSimonPlaying = true;
+            let delay = 600;
+
+            simonSequence.forEach((note, idx) => {
+                setTimeout(() => {
+                    if (!isSimonActive) return;
+
+                    const btn = document.querySelector(`[data-note="${note}"]`);
+                    if (btn) {
+                        btn.classList.add('simon-highlight');
+                        setTimeout(() => btn.classList.remove('simon-highlight'), 350);
+                    }
+
+                    audioEngine.playNote(note);
+
+                    if (idx === simonSequence.length - 1) {
+                        setTimeout(() => {
+                            isSimonPlaying = false;
+                            simonLevelBadge.textContent = 'Du bist dran!';
+                            simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-sky-500 text-slate-950 font-bold';
+                        }, 400);
+                    }
+                }, idx * delay + 500);
+            });
+        }
+
+        function handleSimonUserInput(noteName, btnElement) {
+            const expectedNote = simonSequence[simonPlayerStep];
+
+            if (noteName === expectedNote) {
+                simonPlayerStep++;
+                simonProgressText.textContent = `${simonPlayerStep} / ${simonSequence.length}`;
+
+                // Level Completed
+                if (simonPlayerStep === simonSequence.length) {
+                    // Update Highscore
+                    if (simonSequence.length > simonHighscore) {
+                        simonHighscore = simonSequence.length;
+                        simonHighscoreText.textContent = simonHighscore;
+                    }
+
+                    simonLevelBadge.textContent = 'Richtig! Richtig!';
+                    simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30';
+
+                    setTimeout(() => {
+                        if (isSimonActive) nextSimonLevel();
+                    }, 1000);
+                }
+            } else {
+                // Wrong Note Played
+                if (btnElement) {
+                    btnElement.classList.add('wrong-highlight');
+                    setTimeout(() => btnElement.classList.remove('wrong-highlight'), 400);
+                }
+
+                audioEngine.playErrorSound();
+
+                simonLevelBadge.textContent = 'Falsch!';
+                simonLevelBadge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30';
+
+                setTimeout(() => {
+                    alert(`Falsche Note! Du hast Level ${simonSequence.length} erreicht.`);
+                    stopSimonGame();
+                }, 400);
+            }
+        }
+
+        // --- Guided Songs Logic ---
         bpmSlider.addEventListener('input', (e) => {
             bpmValue.textContent = `${e.target.value} BPM`;
         });
 
-        // Lesson Mode Engine
         startLessonBtn.addEventListener('click', () => {
+            if (isSimonActive) stopSimonGame();
+
             const songKey = songSelect.value;
             const songData = lessons[songKey];
             if (!songData) return;
@@ -646,7 +938,7 @@
                 const playTimeout = setTimeout(() => {
                     const btn = document.querySelector(`[data-note="${item.note}"]`);
                     if (btn) btn.classList.remove('guide-highlight');
-                    triggerNote(item.note);
+                    triggerNote(item.note, null, false);
                 }, calculatedDelay);
 
                 lessonTimeouts.push(prepTimeout, playTimeout);
@@ -671,8 +963,10 @@
             lessonStatus.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300';
         }
 
-        // Recorder Engine
+        // --- Recorder System ---
         recordBtn.addEventListener('click', () => {
+            if (isSimonActive) stopSimonGame();
+
             isRecording = true;
             recordedNotes = [];
             recordStartTime = Date.now();
@@ -728,7 +1022,7 @@
 
         function playSequence(sequence) {
             sequence.forEach(item => {
-                setTimeout(() => triggerNote(item.note), item.delay);
+                setTimeout(() => triggerNote(item.note, null, false), item.delay);
             });
         }
 
@@ -777,16 +1071,21 @@
                         exportFileBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-700/50');
 
                         saveImportedToStorage(imported.title || file.name.replace('.json', ''), recordedNotes);
+                        
+                        alert("Melodie erfolgreich geladen!");
+                    } else {
+                        alert("Ungültiges Melodien-Dateiformat.");
                     }
                 } catch (err) {
-                    console.error("Fehler beim Laden der Datei", err);
+                    alert("Fehler beim Lesen der JSON-Datei.");
                 }
             };
             reader.readAsText(file);
         });
 
         function saveRecordingToStorage() {
-            const songName = `Melodie ${new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+            const songName = prompt("Name für diese Melodie im Browser-Speicher:", `Melodie ${new Date().toLocaleTimeString()}`);
+            if (!songName) return;
             saveImportedToStorage(songName, recordedNotes);
         }
 
@@ -801,6 +1100,7 @@
             });
             localStorage.setItem('handpan_songs_v2', JSON.stringify(savedSongs));
             renderSavedSongs();
+            updateSimonSourceDropdown();
         }
 
         function renderSavedSongs() {
@@ -873,11 +1173,13 @@
             savedSongs = savedSongs.filter(s => s.id !== id);
             localStorage.setItem('handpan_songs_v2', JSON.stringify(savedSongs));
             renderSavedSongs();
+            updateSimonSourceDropdown();
         };
 
-        // Init App UI
+        // Init App
         updateScaleUI();
         renderSavedSongs();
+        updateSimonSourceDropdown();
     </script>
 </body>
 </html>

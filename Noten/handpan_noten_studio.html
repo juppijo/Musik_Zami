@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Instrument Noten Studio - handpan_noten_editor.html</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        studio: {
+                            base: '#0f172a',
+                            panel: '#1e293b',
+                            accent: '#f59e0b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        .sheet-line {
+            stroke: #475569;
+            stroke-width: 1.5;
+        }
+        
+        .note-head {
+            transition: fill 0.15s ease-out, filter 0.15s ease-out, stroke 0.15s ease-out;
+        }
+        
+        .note-head.active {
+            fill: #f59e0b !important;
+            stroke: #f59e0b !important;
+            filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9));
+        }
+
+        .handpan-pad {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .handpan-pad.active {
+            fill: #f59e0b !important;
+            filter: drop-shadow(0 0 14px rgba(245, 158, 11, 1));
+            transform: scale(1.06);
+            transform-origin: center;
+        }
+
+        #svg-sheet-container {
+            user-select: none;
+            touch-action: pan-x pan-y;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col overflow-x-hidden antialiased">
+
+    <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-2.5 sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-amber-600 to-amber-400 p-2.5 rounded-xl shadow-lg shadow-amber-900/30">
+                <i class="fa-solid fa-music text-slate-950 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    Multi-Instrument Studio
+                    <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-normal">Reverb & Sheet Engine</span>
+                </h1>
+                <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <span id="song-subtitle">Hey Jude (Handpan D-Kurd Arrangement)</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="font-mono text-amber-400/80 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800" title="Programm / Dateiname">
+                        <i class="fa-regular fa-file-code mr-1"></i>handpan_noten_editor.html
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Player & Instrument Selectors -->
+        <div class="flex flex-wrap items-center gap-2 bg-slate-950/80 p-1.5 rounded-xl border border-slate-800">
+            <!-- Instrument Selection -->
+            <div class="flex items-center gap-1.5 px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg">
+                <i class="fa-solid fa-guitar text-amber-400 text-xs"></i>
+                <label for="instrument-select" class="text-xs text-slate-300 font-medium">Instrument:</label>
+                <select id="instrument-select" class="bg-slate-950 border border-slate-700 text-amber-400 text-xs rounded font-semibold px-2 py-0.5 focus:outline-none focus:border-amber-500">
+                    <option value="handpan" selected>🛸 Handpan</option>
+                    <option value="piano">🎹 Klavier (Piano)</option>
+                    <option value="guitar">🎸 Akustik-Gitarre</option>
+                    <option value="ukulele">🪕 Ukulele</option>
+                    <option value="organ">🏛️ Orgel (Organ)</option>
+                </select>
+            </div>
+
+            <div class="h-5 w-px bg-slate-800 hidden sm:block"></div>
+
+            <button id="btn-play" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-1.5 rounded-lg flex items-center gap-2 transition shadow-md shadow-amber-500/20 text-sm">
+                <i class="fa-solid fa-play"></i> <span id="play-text">Abspielen</span>
+            </button>
+            <button id="btn-stop" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg transition text-sm" title="Stoppen">
+                <i class="fa-solid fa-square"></i>
+            </button>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <!-- Tonlänge Ein/Aus Schalter -->
+            <button id="btn-toggle-note-length" class="bg-slate-900 border border-slate-700 hover:bg-slate-800 text-amber-400 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition" title="Tonlänge berücksichtigen oder feste/kurze Töne nutzen">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Tonlänge: <strong id="note-length-status" class="text-emerald-400">AN</strong></span>
+            </button>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <!-- Tempo / BPM -->
+            <div class="flex items-center gap-1.5 px-1">
+                <i class="fa-solid fa-gauge-high text-slate-400 text-xs"></i>
+                <label for="bpm-input" class="text-xs text-slate-400 font-medium">BPM:</label>
+                <input type="number" id="bpm-input" value="75" min="40" max="240" class="w-14 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5 text-center text-xs font-semibold text-amber-400 focus:outline-none focus:border-amber-500">
+            </div>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <!-- Reverb / Hall Slider -->
+            <div class="flex items-center gap-2 px-2 py-1 bg-slate-900 border border-slate-700 rounded-lg">
+                <i class="fa-solid fa-water text-cyan-400 text-xs" title="Halleffekt"></i>
+                <label for="reverb-slider" class="text-xs text-slate-300 font-medium">Hall:</label>
+                <input type="range" id="reverb-slider" min="0" max="100" value="40" class="w-20 accent-amber-500 bg-slate-950 h-1.5 rounded-lg appearance-none cursor-pointer">
+                <span id="reverb-val-text" class="text-xs font-mono font-semibold text-cyan-400 w-8 text-right">40%</span>
+            </div>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <!-- Mute Toggle -->
+            <button id="btn-mute" class="text-slate-400 hover:text-slate-200 px-2 py-1 transition" title="Ton an/aus">
+                <i class="fa-solid fa-volume-high text-base"></i>
+            </button>
+        </div>
+
+        <!-- Action Tools -->
+        <div class="flex items-center gap-2">
+            <!-- Transpose Dropdown -->
+            <div class="relative group">
+                <button class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-xs font-medium transition">
+                    <i class="fa-solid fa-sliders text-amber-400"></i> Transponieren
+                    <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                </button>
+                <div class="absolute right-0 top-full mt-2 w-60 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-3 hidden group-hover:block z-50">
+                    <div class="text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">D-Kurd Tonleiter</div>
+                    <button id="btn-snap-dkurd" class="w-full text-left bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-lg text-xs font-medium mb-3 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-bullseye"></i> In D-Kurd einpassen
+                    </button>
+                    <div class="text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">Halbtöne Verschieben</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-transpose-down" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-minus"></i> 1 Halbton
+                        </button>
+                        <button id="btn-transpose-up" class="bg-slate-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded text-xs font-semibold flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-plus"></i> 1 Halbton
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <!-- Import / Export -->
+            <input type="file" id="file-input" accept=".json" class="hidden">
+            <button id="btn-import" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-xs font-medium transition" title="JSON Laden">
+                <i class="fa-solid fa-file-import text-blue-400"></i> <span class="hidden sm:inline">Laden</span>
+            </button>
+            <button id="btn-export" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-xs font-medium transition" title="JSON Speichern">
+                <i class="fa-solid fa-file-export text-emerald-400"></i> <span class="hidden sm:inline">Speichern</span>
+            </button>
+
+            <div class="h-5 w-px bg-slate-800"></div>
+
+            <button id="btn-fullscreen" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 rounded-lg border border-slate-700 transition" title="Vollbild umschalten">
+                <i class="fa-solid fa-expand text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+        
+        <!-- LEFT PANEL: Multi-Line & Zoomable Music Sheet View (7 Columns) -->
+        <section class="lg:col-span-7 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col bg-slate-950 overflow-hidden relative">
+            
+            <!-- Toolbar View Mode & Zoom -->
+            <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Ansicht:</span>
+                    <div class="inline-flex rounded-lg bg-slate-950 p-1 border border-slate-800">
+                        <button id="view-sheet-btn" class="px-3 py-1 text-xs font-medium rounded-md bg-amber-500 text-slate-950 shadow">
+                            <i class="fa-solid fa-lines-leaning mr-1"></i> Notenblatt
+                        </button>
+                        <button id="view-handpan-btn" class="px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200">
+                            <i class="fa-solid fa-circle-dot mr-1"></i> Handpan Layout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Zoom Controls -->
+                <div id="zoom-controls" class="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold px-1">Zoom:</span>
+                    <button id="btn-zoom-out" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center justify-center text-xs transition" title="Verkleinern (-)">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span id="zoom-level-text" class="text-xs font-mono font-semibold text-amber-400 w-11 text-center">100%</span>
+                    <button id="btn-zoom-in" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded flex items-center justify-center text-xs transition" title="Vergrößern (+)">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button id="btn-zoom-reset" class="px-2 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition" title="Zoom zurücksetzen">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Music Sheet Container -->
+            <div id="sheet-wrapper" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                
+                <!-- Header Info -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-900/60 p-4 rounded-xl border border-slate-800/80 shadow-md flex justify-between items-center">
+                    <div>
+                        <h2 id="sheet-title" class="text-lg font-bold text-amber-400">Hey Jude (Handpan D-Kurd)</h2>
+                        <p id="sheet-artist" class="text-xs text-slate-400">The Beatles • Rhythmisches Notensystem</p>
+                    </div>
+                    <div class="text-right border-l border-slate-800 pl-4">
+                        <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Skala</span>
+                        <span id="sheet-scale" class="text-xs font-semibold text-amber-300 uppercase">D-Kurd</span>
+                    </div>
+                </div>
+
+                <!-- Rhythmic Legend Bar -->
+                <div class="bg-slate-900/60 border border-slate-800/80 p-2.5 rounded-xl flex flex-wrap items-center justify-around gap-2 text-[11px] text-slate-400">
+                    <span class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 20 20"><ellipse cx="10" cy="10" rx="7" ry="5" fill="none" stroke="#e5e7eb" stroke-width="2.5"/></svg> Ganze (1/1)</span>
+                    <span class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 20 20"><ellipse cx="8" cy="12" rx="5" ry="3.8" fill="none" stroke="#e5e7eb" stroke-width="2"/><line x1="13" y1="12" x2="13" y2="2" stroke="#e5e7eb" stroke-width="1.8"/></svg> Halbe (1/2)</span>
+                    <span class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 20 20"><ellipse cx="8" cy="12" rx="5" ry="3.8" fill="#e5e7eb"/><line x1="13" y1="12" x2="13" y2="2" stroke="#e5e7eb" stroke-width="1.8"/></svg> Viertel (1/4)</span>
+                    <span class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 20 20"><ellipse cx="8" cy="12" rx="5" ry="3.8" fill="#e5e7eb"/><line x1="13" y1="12" x2="13" y2="2" stroke="#e5e7eb" stroke-width="1.8"/><path d="M13 2 Q17 6 18 10" fill="none" stroke="#e5e7eb" stroke-width="2"/></svg> Achtel (1/8)</span>
+                    <span class="flex items-center gap-1.5"><svg width="14" height="14" viewBox="0 0 20 20"><ellipse cx="8" cy="12" rx="5" ry="3.8" fill="#e5e7eb"/><line x1="13" y1="12" x2="13" y2="2" stroke="#e5e7eb" stroke-width="1.8"/><path d="M13 2 Q17 5 18 8" fill="none" stroke="#e5e7eb" stroke-width="1.8"/><path d="M13 6 Q17 9 18 12" fill="none" stroke="#e5e7eb" stroke-width="1.8"/></svg> 16-tel (1/16)</span>
+                </div>
+
+                <!-- SVG Sheet Canvas -->
+                <div id="svg-sheet-container" class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 min-h-[420px] shadow-2xl relative overflow-x-hidden overflow-y-auto">
+                    <svg id="music-sheet-svg" class="w-full transition-all duration-200" style="transform-origin: top left;">
+                        <!-- Multi-line Systems Rendered dynamically -->
+                    </svg>
+                </div>
+
+                <!-- Handpan Diagram Mode -->
+                <div id="handpan-visualizer-container" class="hidden flex-col items-center justify-center p-6 bg-slate-900/90 border border-slate-800 rounded-xl shadow-2xl relative min-h-[420px]">
+                    <h3 class="text-xs font-semibold text-slate-400 mb-3">Virtuelle D-Kurd Handpan</h3>
+                    <div class="relative w-full max-w-[320px] aspect-square flex items-center justify-center">
+                        <svg id="handpan-svg" viewBox="0 0 300 300" class="w-full h-full drop-shadow-2xl">
+                            <circle cx="150" cy="150" r="140" fill="#2d3748" stroke="#1a202c" stroke-width="4"/>
+                            <circle cx="150" cy="150" r="130" fill="url(#steel-gradient)" stroke="#4a5568" stroke-width="2"/>
+                            
+                            <defs>
+                                <radialGradient id="steel-gradient" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="#4a5568"/>
+                                    <stop offset="70%" stop-color="#2d3748"/>
+                                    <stop offset="100%" stop-color="#1a202c"/>
+                                </radialGradient>
+                                <radialGradient id="ding-gradient" cx="50%" cy="50%" r="50%">
+                                    <stop offset="0%" stop-color="#d4a373"/>
+                                    <stop offset="100%" stop-color="#8c5e34"/>
+                                </radialGradient>
+                            </defs>
+
+                            <!-- Central D3 Ding -->
+                            <g class="handpan-note-group" data-note="D3">
+                                <circle id="pad-D3" class="handpan-pad cursor-pointer" cx="150" cy="150" r="32" fill="url(#ding-gradient)" stroke="#b47b48" stroke-width="2"/>
+                                <text x="150" y="154" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold" pointer-events="none">D3 (Ding)</text>
+                            </g>
+
+                            <!-- Tone Fields -->
+                            <g class="handpan-note-group" data-note="A3"><ellipse id="pad-A3" class="handpan-pad cursor-pointer" cx="150" cy="240" rx="22" ry="18" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="150" y="244" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">A3</text></g>
+                            <g class="handpan-note-group" data-note="Bb3"><ellipse id="pad-Bb3" class="handpan-pad cursor-pointer" cx="85" cy="210" rx="22" ry="18" transform="rotate(30, 85, 210)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="85" y="214" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">Bb3</text></g>
+                            <g class="handpan-note-group" data-note="C4"><ellipse id="pad-C4" class="handpan-pad cursor-pointer" cx="70" cy="135" rx="22" ry="18" transform="rotate(-20, 70, 135)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="70" y="139" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">C4</text></g>
+                            <g class="handpan-note-group" data-note="D4"><ellipse id="pad-D4" class="handpan-pad cursor-pointer" cx="100" cy="70" rx="22" ry="18" transform="rotate(-50, 100, 70)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="100" y="74" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">D4</text></g>
+                            <g class="handpan-note-group" data-note="E4"><ellipse id="pad-E4" class="handpan-pad cursor-pointer" cx="165" cy="60" rx="22" ry="18" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="165" y="64" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">E4</text></g>
+                            <g class="handpan-note-group" data-note="F4"><ellipse id="pad-F4" class="handpan-pad cursor-pointer" cx="225" cy="85" rx="22" ry="18" transform="rotate(40, 225, 85)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="225" y="89" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">F4</text></g>
+                            <g class="handpan-note-group" data-note="G4"><ellipse id="pad-G4" class="handpan-pad cursor-pointer" cx="240" cy="155" rx="22" ry="18" transform="rotate(10, 240, 155)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="240" y="159" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">G4</text></g>
+                            <g class="handpan-note-group" data-note="A4"><ellipse id="pad-A4" class="handpan-pad cursor-pointer" cx="215" cy="220" rx="22" ry="18" transform="rotate(-30, 215, 220)" fill="#3a4a5e" stroke="#64748b" stroke-width="2"/><text x="215" y="224" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="bold" pointer-events="none">A4</text></g>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 flex flex-wrap gap-3 justify-between items-center">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-magnifying-glass-plus text-amber-400"></i> Mausrad + STRG zum Zoomen.</span>
+                    <span class="text-[11px] text-slate-500">Halleffekt-Mix oben stufenlos anpassbar.</span>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: JSON Live Editor (5 Columns) -->
+        <section class="lg:col-span-5 flex flex-col bg-slate-900 overflow-hidden">
+            
+            <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-code text-amber-400 text-sm"></i>
+                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">JSON Live Editor</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button id="btn-format-json" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1 transition">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Formatieren
+                    </button>
+                    <button id="btn-reset-json" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1 transition">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="json-error-banner" class="hidden bg-rose-950/90 border-b border-rose-800 px-4 py-2 text-xs text-rose-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-400"></i>
+                    <span id="json-error-msg">Syntax Fehler</span>
+                </div>
+            </div>
+
+            <!-- Editor Input -->
+            <div class="flex-1 relative flex overflow-hidden">
+                <div id="line-numbers" class="w-10 bg-slate-950/80 border-r border-slate-800/60 py-3 text-right pr-2 text-slate-600 font-mono text-xs select-none overflow-hidden">
+                    1
+                </div>
+                <textarea id="json-editor" spellcheck="false" class="flex-1 bg-slate-950 text-emerald-400 p-3 font-mono text-xs leading-relaxed focus:outline-none resize-none overflow-auto border-none" placeholder="JSON hier einfügen..."></textarea>
+            </div>
+
+            <!-- Status Footer -->
+            <div class="bg-slate-950 px-4 py-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                <div id="json-status" class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Valid JSON
+                </div>
+                <div id="json-stats">
+                    0 Noten
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-amber-500 text-slate-950 font-semibold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toast-message">Erfolgreich</span>
+    </div>
+
+    <script>
+        const INITIAL_SONG_DATA = {
+            "title": "Hey Jude (Handpan D-Kurd Arrangement)",
+            "artist": "The Beatles",
+            "scale": "d_kurd",
+            "bpm": 75,
+            "createdAt": "2026-09-23T23:47:00.000Z",
+            "notes": [
+                { "note": "A4", "delay": 0, "lyric": "Hey" },
+                { "note": "F4", "delay": 800, "lyric": "Jude," },
+                { "note": "F4", "delay": 1600, "lyric": "don't" },
+                { "note": "G4", "delay": 2000, "lyric": "make" },
+                { "note": "A4", "delay": 2400, "lyric": "it" },
+                { "note": "D4", "delay": 2800, "lyric": "bad." },
+
+                { "note": "D3", "delay": 3600, "lyric": "Take" },
+                { "note": "E4", "delay": 4000, "lyric": "a" },
+                { "note": "F4", "delay": 4400, "lyric": "sad" },
+                { "note": "G4", "delay": 4800, "lyric": "song" },
+                { "note": "E4", "delay": 5200, "lyric": "and" },
+                { "note": "F4", "delay": 5600, "lyric": "make" },
+                { "note": "E4", "delay": 6000, "lyric": "it" },
+                { "note": "C4", "delay": 6200, "lyric": "bet-" },
+                { "note": "D4", "delay": 6400, "lyric": "-ter." },
+
+                { "note": "Bb3", "delay": 7200, "lyric": "Re-" },
+                { "note": "D4", "delay": 7600, "lyric": "-mem-" },
+                { "note": "D4", "delay": 8000, "lyric": "-ber" },
+                { "note": "A4", "delay": 8400, "lyric": "to" },
+                { "note": "G4", "delay": 8800, "lyric": "let" },
+                { "note": "F4", "delay": 9200, "lyric": "her" },
+                { "note": "G4", "delay": 9600, "lyric": "in-" },
+                { "note": "E4", "delay": 10000, "lyric": "-to" },
+                { "note": "F4", "delay": 10400, "lyric": "your" },
+                { "note": "G4", "delay": 10800, "lyric": "heart," },
+
+                { "note": "A4", "delay": 11600, "lyric": "Then" },
+                { "note": "G4", "delay": 12000, "lyric": "you" },
+                { "note": "F4", "delay": 12400, "lyric": "can" },
+                { "note": "E4", "delay": 12800, "lyric": "start" },
+                { "note": "D4", "delay": 13200, "lyric": "to" },
+                { "note": "C4", "delay": 13600, "lyric": "make" },
+                { "note": "D4", "delay": 14000, "lyric": "it" },
+                { "note": "D3", "delay": 14400, "lyric": "bet-" },
+                { "note": "D3", "delay": 14800, "lyric": "-ter." },
+
+                { "note": "A4", "delay": 16000, "lyric": "Na," },
+                { "note": "A4", "delay": 16400, "lyric": "na" },
+                { "note": "A4", "delay": 16800, "lyric": "na" },
+                { "note": "G4", "delay": 17200, "lyric": "na" },
+                { "note": "F4", "delay": 17600, "lyric": "na" },
+                { "note": "G4", "delay": 18000, "lyric": "na" },
+                { "note": "A4", "delay": 18400, "lyric": "na," },
+                { "note": "D3", "delay": 19200, "lyric": "Hey" },
+                { "note": "D4", "delay": 19600, "lyric": "Jude!" }
+            ]
+        };
+
+        const D_KURD_SCALE = ["D3", "A3", "Bb3", "C4", "D4", "E4", "F4", "G4", "A4"];
+        const CHROMATIC_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const NOTE_FREQUENCIES = {
+            "C3": 130.81, "C#3": 138.59, "Db3": 138.59, "D3": 146.83, "D#3": 155.56, "Eb3": 155.56, "E3": 164.81, "F3": 174.61, "F#3": 185.00, "Gb3": 185.00, "G3": 196.00, "G#3": 207.65, "Ab3": 207.65, "A3": 220.00, "A#3": 233.08, "Bb3": 233.08, "B3": 246.94,
+            "C4": 261.63, "C#4": 277.18, "Db4": 277.18, "D4": 293.66, "D#4": 311.13, "Eb4": 311.13, "E4": 329.63, "F4": 349.23, "F#4": 369.99, "Gb4": 369.99, "G4": 392.00, "G#4": 415.30, "Ab4": 415.30, "A4": 440.00, "A#4": 466.16, "Bb4": 466.16, "B4": 493.88,
+            "C5": 523.25, "C#5": 554.37, "Db5": 554.37, "D5": 587.33, "D#5": 622.25, "Eb5": 622.25, "E5": 659.25, "F5": 698.46
+        };
+
+        // App States
+        let currentSong = JSON.parse(JSON.stringify(INITIAL_SONG_DATA));
+        let audioCtx = null;
+        let isPlaying = false;
+        let isMuted = false;
+        let useNoteLength = true; // Steuert die Tonlängen-Funktion
+        let activePlaybackTimeouts = [];
+        let activeNoteIndex = -1;
+        let zoomScale = 1.0;
+
+        // Web Audio Nodes
+        let dryGainNode = null;
+        let wetGainNode = null;
+        let convolverNode = null;
+        let masterBus = null;
+
+        // DOM References
+        const jsonEditor = document.getElementById('json-editor');
+        const lineNumbers = document.getElementById('line-numbers');
+        const jsonErrorBanner = document.getElementById('json-error-banner');
+        const jsonErrorMsg = document.getElementById('json-error-msg');
+        const jsonStatus = document.getElementById('json-status');
+        const jsonStats = document.getElementById('json-stats');
+        const btnPlay = document.getElementById('btn-play');
+        const playText = document.getElementById('play-text');
+        const btnStop = document.getElementById('btn-stop');
+        const bpmInput = document.getElementById('bpm-input');
+        const btnMute = document.getElementById('btn-mute');
+        const btnToggleNoteLength = document.getElementById('btn-toggle-note-length');
+        const noteLengthStatus = document.getElementById('note-length-status');
+        const instrumentSelect = document.getElementById('instrument-select');
+        const musicSheetSvg = document.getElementById('music-sheet-svg');
+        const svgContainer = document.getElementById('svg-sheet-container');
+        const zoomLevelText = document.getElementById('zoom-level-text');
+        const reverbSlider = document.getElementById('reverb-slider');
+        const reverbValText = document.getElementById('reverb-val-text');
+
+        function buildImpulseResponse(duration = 2.5, decay = 2.0) {
+            if (!audioCtx) return null;
+            const sampleRate = audioCtx.sampleRate;
+            const length = sampleRate * duration;
+            const impulse = audioCtx.createBuffer(2, length, sampleRate);
+            const left = impulse.getChannelData(0);
+            const right = impulse.getChannelData(1);
+
+            for (let i = 0; i < length; i++) {
+                const n = i;
+                left[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+                right[i] = (Math.random() * 2 - 1) * Math.pow(1 - n / length, decay);
+            }
+            return impulse;
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+
+                masterBus = audioCtx.createGain();
+                dryGainNode = audioCtx.createGain();
+                wetGainNode = audioCtx.createGain();
+                convolverNode = audioCtx.createConvolver();
+
+                convolverNode.buffer = buildImpulseResponse(2.5, 2.2);
+
+                updateReverbMix(parseFloat(reverbSlider.value) / 100);
+
+                dryGainNode.connect(masterBus);
+                convolverNode.connect(wetGainNode);
+                wetGainNode.connect(masterBus);
+                masterBus.connect(audioCtx.destination);
+            }
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function updateReverbMix(mixRatio) {
+            if (!dryGainNode || !wetGainNode) return;
+            const dryVal = Math.cos(mixRatio * 0.5 * Math.PI);
+            const wetVal = Math.sin(mixRatio * 0.5 * Math.PI);
+
+            dryGainNode.gain.setValueAtTime(dryVal, audioCtx ? audioCtx.currentTime : 0);
+            wetGainNode.gain.setValueAtTime(wetVal * 1.2, audioCtx ? audioCtx.currentTime : 0);
+        }
+
+        function connectToAudioBus(sourceNode) {
+            sourceNode.connect(dryGainNode);
+            sourceNode.connect(convolverNode);
+        }
+
+        function playNoteSound(noteName, durationSeconds = 1.5) {
+            if (isMuted) return;
+            initAudio();
+
+            // Falls Tonlängen deaktiviert sind, feste Handpan-Anschlagslänge
+            const playDuration = useNoteLength ? durationSeconds : 2.1;
+
+            const freq = NOTE_FREQUENCIES[noteName] || 440;
+            const now = audioCtx.currentTime;
+            const instrument = instrumentSelect.value;
+
+            if (instrument === 'handpan') {
+                // Handpan-Sound mit Obertönen (Grundton, Oktave, Quint)
+                const oscPrimary = audioCtx.createOscillator();
+                const gainPrimary = audioCtx.createGain();
+                oscPrimary.type = 'sine';
+                oscPrimary.frequency.setValueAtTime(freq, now);
+
+                const oscOctave = audioCtx.createOscillator();
+                const gainOctave = audioCtx.createGain();
+                oscOctave.type = 'sine';
+                oscOctave.frequency.setValueAtTime(freq * 2, now);
+
+                const oscFifth = audioCtx.createOscillator();
+                const gainFifth = audioCtx.createGain();
+                oscFifth.type = 'sine';
+                oscFifth.frequency.setValueAtTime(freq * 3, now);
+
+                gainPrimary.gain.setValueAtTime(0.001, now);
+                gainPrimary.gain.exponentialRampToValueAtTime(0.75, now + 0.012);
+                gainPrimary.gain.exponentialRampToValueAtTime(0.0001, now + playDuration);
+
+                gainOctave.gain.setValueAtTime(0.001, now);
+                gainOctave.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+                gainOctave.gain.exponentialRampToValueAtTime(0.0001, now + (playDuration * 0.6));
+
+                gainFifth.gain.setValueAtTime(0.001, now);
+                gainFifth.gain.exponentialRampToValueAtTime(0.1, now + 0.01);
+                gainFifth.gain.exponentialRampToValueAtTime(0.0001, now + (playDuration * 0.4));
+
+                const noteGain = audioCtx.createGain();
+                noteGain.gain.setValueAtTime(0.8, now);
+
+                oscPrimary.connect(gainPrimary);
+                oscOctave.connect(gainOctave);
+                oscFifth.connect(gainFifth);
+
+                gainPrimary.connect(noteGain);
+                gainOctave.connect(noteGain);
+                gainFifth.connect(noteGain);
+                
+                connectToAudioBus(noteGain);
+
+                oscPrimary.start(now);
+                oscOctave.start(now);
+                oscFifth.start(now);
+
+                oscPrimary.stop(now + playDuration);
+                oscOctave.stop(now + playDuration);
+                oscFifth.stop(now + playDuration);
+
+            } else if (instrument === 'piano') {
+                const osc = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc.type = 'triangle';
+                osc2.type = 'sine';
+
+                osc.frequency.setValueAtTime(freq, now);
+                osc2.frequency.setValueAtTime(freq * 1.001, now);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(freq * 4, now);
+                filter.frequency.exponentialRampToValueAtTime(freq * 0.8, now + playDuration);
+
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.8, now + 0.008);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + playDuration);
+
+                osc.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                
+                connectToAudioBus(gain);
+
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + playDuration);
+                osc2.stop(now + playDuration);
+
+            } else if (instrument === 'guitar') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, now);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(freq * 3.5, now);
+                filter.frequency.exponentialRampToValueAtTime(freq * 0.5, now + 0.8);
+
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.7, now + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + playDuration);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                
+                connectToAudioBus(gain);
+
+                osc.start(now);
+                osc.stop(now + playDuration);
+
+            } else if (instrument === 'ukulele') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now);
+
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(freq * 2.2, now);
+                filter.Q.setValueAtTime(1.2, now);
+
+                gain.gain.setValueAtTime(0.001, now);
+                gain.gain.linearRampToValueAtTime(0.9, now + 0.005);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + Math.min(1.0, playDuration));
+
+                osc.connect(filter);
+                filter.connect(gain);
+                
+                connectToAudioBus(gain);
+
+                osc.start(now);
+                osc.stop(now + Math.min(1.0, playDuration));
+
+            } else if (instrument === 'organ') {
+                const ranks = [0.5, 1, 2, 3];
+                const gains = [0.3, 0.5, 0.2, 0.1];
+
+                const noteGain = audioCtx.createGain();
+                noteGain.gain.setValueAtTime(0.001, now);
+                noteGain.gain.linearRampToValueAtTime(0.6, now + 0.08);
+                noteGain.gain.exponentialRampToValueAtTime(0.0001, now + playDuration);
+
+                ranks.forEach((mult, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const rankGain = audioCtx.createGain();
+                    osc.type = (i % 2 === 0) ? 'sine' : 'square';
+                    osc.frequency.setValueAtTime(freq * mult, now);
+
+                    rankGain.gain.setValueAtTime(gains[i], now);
+                    osc.connect(rankGain);
+                    rankGain.connect(noteGain);
+
+                    osc.start(now);
+                    osc.stop(now + playDuration);
+                });
+
+                connectToAudioBus(noteGain);
+            }
+        }
+
+        function getNoteRhythmInfo(notes, index, bpm) {
+            const beatMs = (60 / bpm) * 1000;
+            const item = notes[index];
+            let durationMs = beatMs;
+
+            if (item.durationMs && item.durationMs > 0) {
+                durationMs = item.durationMs;
+            } else if (item.duration && typeof item.duration === 'number') {
+                durationMs = item.duration * beatMs;
+            } else if (index < notes.length - 1) {
+                const nextDelay = notes[index + 1].delay || 0;
+                const currDelay = item.delay || 0;
+                const gap = nextDelay - currDelay;
+                if (gap > 0) {
+                    durationMs = gap;
+                }
+            } else {
+                durationMs = beatMs * 2;
+            }
+
+            const quarterRatio = durationMs / beatMs;
+
+            let type = 'quarter';
+            let dotted = false;
+
+            if (quarterRatio >= 3.5) {
+                type = 'whole';
+            } else if (quarterRatio >= 2.6) {
+                type = 'half';
+                dotted = true;
+            } else if (quarterRatio >= 1.75) {
+                type = 'half';
+            } else if (quarterRatio >= 1.25) {
+                type = 'quarter';
+                dotted = true;
+            } else if (quarterRatio >= 0.75) {
+                type = 'quarter';
+            } else if (quarterRatio >= 0.38) {
+                type = 'eighth';
+            } else {
+                type = 'sixteenth';
+            }
+
+            return { type, dotted, durationMs };
+        }
+
+        function renderMusicSheet() {
+            if (!currentSong || !currentSong.notes) return;
+
+            const notes = currentSong.notes;
+            const bpm = currentSong.bpm || 75;
+            const svg = musicSheetSvg;
+            svg.innerHTML = '';
+
+            const containerWidth = svgContainer.clientWidth || 650;
+            const paddingLeft = 60;
+            const paddingRight = 30;
+            const noteSpacingX = 54;
+            const usableWidth = Math.max(300, containerWidth - paddingLeft - paddingRight);
+            
+            const notesPerSystem = Math.max(3, Math.floor(usableWidth / noteSpacingX));
+            const totalSystems = Math.ceil(notes.length / notesPerSystem);
+
+            const lineSpacing = 9;
+            const systemHeight = 125;
+            const totalHeight = Math.max(380, totalSystems * systemHeight + 60);
+
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', totalHeight * zoomScale);
+            svg.setAttribute('viewBox', `0 0 ${containerWidth} ${totalHeight}`);
+
+            const pitchOffsets = {
+                'F5': 0, 'E5': lineSpacing * 0.5, 'D5': lineSpacing * 1, 'C5': lineSpacing * 1.5,
+                'B4': lineSpacing * 2, 'A4': lineSpacing * 2.5, 'G4': lineSpacing * 3, 'F4': lineSpacing * 3.5,
+                'E4': lineSpacing * 4, 'D4': lineSpacing * 4.5, 'C4': lineSpacing * 5, 'B3': lineSpacing * 5.5,
+                'Bb3': lineSpacing * 5.5, 'A3': lineSpacing * 6, 'G3': lineSpacing * 6.5, 'F3': lineSpacing * 7, 'D3': lineSpacing * 8
+            };
+
+            for (let sys = 0; sys < totalSystems; sys++) {
+                const systemStartY = 45 + (sys * systemHeight);
+                const systemWidth = containerWidth - 30;
+
+                const sysGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                sysGroup.setAttribute('id', `staff-system-${sys}`);
+
+                for (let i = 0; i < 5; i++) {
+                    const y = systemStartY + (i * lineSpacing);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', '20');
+                    line.setAttribute('y1', y);
+                    line.setAttribute('x2', systemWidth);
+                    line.setAttribute('y2', y);
+                    line.setAttribute('class', 'sheet-line');
+                    sysGroup.appendChild(line);
+                }
+
+                const clef = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                clef.setAttribute('x', '22');
+                clef.setAttribute('y', systemStartY + lineSpacing * 3.5);
+                clef.setAttribute('font-size', '30');
+                clef.setAttribute('fill', '#d4a373');
+                clef.setAttribute('font-family', 'serif');
+                clef.textContent = '🎼';
+                sysGroup.appendChild(clef);
+
+                const startBar = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                startBar.setAttribute('x1', '20');
+                startBar.setAttribute('y1', systemStartY);
+                startBar.setAttribute('x2', '20');
+                startBar.setAttribute('y2', systemStartY + lineSpacing * 4);
+                startBar.setAttribute('stroke', '#6b7280');
+                startBar.setAttribute('stroke-width', '2');
+                sysGroup.appendChild(startBar);
+
+                const endBar = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                endBar.setAttribute('x1', systemWidth);
+                endBar.setAttribute('y1', systemStartY);
+                endBar.setAttribute('x2', systemWidth);
+                endBar.setAttribute('y2', systemStartY + lineSpacing * 4);
+                endBar.setAttribute('stroke', '#6b7280');
+                endBar.setAttribute('stroke-width', sys === totalSystems - 1 ? '3' : '1.5');
+                sysGroup.appendChild(endBar);
+
+                const sysTag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                sysTag.setAttribute('x', '20');
+                sysTag.setAttribute('y', systemStartY - 8);
+                sysTag.setAttribute('fill', '#6b7280');
+                sysTag.setAttribute('font-size', '9');
+                sysTag.setAttribute('font-weight', 'bold');
+                sysTag.textContent = `Zeile ${sys + 1}`;
+                sysGroup.appendChild(sysTag);
+
+                const startIndex = sys * notesPerSystem;
+                const endIndex = Math.min(notes.length, startIndex + notesPerSystem);
+
+                for (let idx = startIndex; idx < endIndex; idx++) {
+                    const item = notes[idx];
+                    const notePosInSys = idx - startIndex;
+                    const x = paddingLeft + (notePosInSys * (usableWidth / notesPerSystem)) + 15;
+                    const rawNote = item.note || 'C4';
+                    
+                    let yOffset = pitchOffsets[rawNote];
+                    if (yOffset === undefined) yOffset = lineSpacing * 2;
+                    const pitchY = systemStartY + yOffset;
+
+                    const rhythm = getNoteRhythmInfo(notes, idx, bpm);
+
+                    const noteGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    noteGroup.setAttribute('id', `note-group-${idx}`);
+                    noteGroup.setAttribute('class', 'cursor-pointer');
+                    noteGroup.onclick = () => playSingleNote(idx);
+
+                    if (rawNote === 'C4' || rawNote === 'D3' || rawNote === 'A3' || rawNote === 'Bb3') {
+                        const ledgerY = (rawNote === 'C4') ? systemStartY + lineSpacing * 5 : pitchY;
+                        const ledger = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        ledger.setAttribute('x1', x - 9);
+                        ledger.setAttribute('y1', ledgerY);
+                        ledger.setAttribute('x2', x + 9);
+                        ledger.setAttribute('y2', ledgerY);
+                        ledger.setAttribute('stroke', '#6b7280');
+                        ledger.setAttribute('stroke-width', '1.5');
+                        noteGroup.appendChild(ledger);
+                    }
+
+                    if (rawNote.includes('b') || rawNote.includes('Bb')) {
+                        const flatText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        flatText.setAttribute('x', x - 13);
+                        flatText.setAttribute('y', pitchY + 4);
+                        flatText.setAttribute('fill', '#f59e0b');
+                        flatText.setAttribute('font-size', '13');
+                        flatText.setAttribute('font-weight', 'bold');
+                        flatText.textContent = '♭';
+                        noteGroup.appendChild(flatText);
+                    }
+
+                    const isHollow = (rhythm.type === 'whole' || rhythm.type === 'half');
+                    const isActive = (idx === activeNoteIndex);
+
+                    const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                    ellipse.setAttribute('cx', x);
+                    ellipse.setAttribute('cy', pitchY);
+                    ellipse.setAttribute('rx', rhythm.type === 'whole' ? '6.5' : '5.8');
+                    ellipse.setAttribute('ry', rhythm.type === 'whole' ? '4.8' : '4.2');
+                    ellipse.setAttribute('transform', `rotate(-20 ${x} ${pitchY})`);
+                    
+                    if (isHollow) {
+                        ellipse.setAttribute('fill', isActive ? '#f59e0b' : '#0f172a');
+                        ellipse.setAttribute('stroke', isActive ? '#f59e0b' : '#e5e7eb');
+                        ellipse.setAttribute('stroke-width', '2');
+                    } else {
+                        ellipse.setAttribute('fill', isActive ? '#f59e0b' : '#e5e7eb');
+                        ellipse.setAttribute('stroke', isActive ? '#f59e0b' : 'none');
+                    }
+
+                    ellipse.setAttribute('id', `note-head-${idx}`);
+                    ellipse.setAttribute('class', `note-head ${isActive ? 'active' : ''}`);
+                    noteGroup.appendChild(ellipse);
+
+                    if (rhythm.type !== 'whole') {
+                        const isStemUp = pitchY >= systemStartY + lineSpacing * 2;
+                        const stemX = isStemUp ? x + 5.2 : x - 5.2;
+                        const stemY1 = pitchY;
+                        const stemY2 = isStemUp ? pitchY - 25 : pitchY + 25;
+
+                        const stem = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        stem.setAttribute('x1', stemX);
+                        stem.setAttribute('y1', stemY1);
+                        stem.setAttribute('x2', stemX);
+                        stem.setAttribute('y2', stemY2);
+                        stem.setAttribute('stroke', isActive ? '#f59e0b' : '#d1d5db');
+                        stem.setAttribute('stroke-width', '1.5');
+                        noteGroup.appendChild(stem);
+
+                        if (rhythm.type === 'eighth' || rhythm.type === 'sixteenth') {
+                            const flagCount = rhythm.type === 'sixteenth' ? 2 : 1;
+                            for (let f = 0; f < flagCount; f++) {
+                                const flagY = isStemUp ? stemY2 + (f * 6) : stemY2 - (f * 6);
+                                const flagPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                                const d = isStemUp 
+                                    ? `M${stemX} ${flagY} Q${stemX + 6} ${flagY + 6} ${stemX + 7} ${flagY + 12}`
+                                    : `M${stemX} ${flagY} Q${stemX + 6} ${flagY - 6} ${stemX + 7} ${flagY - 12}`;
+                                flagPath.setAttribute('d', d);
+                                flagPath.setAttribute('fill', 'none');
+                                flagPath.setAttribute('stroke', isActive ? '#f59e0b' : '#d1d5db');
+                                flagPath.setAttribute('stroke-width', '1.8');
+                                noteGroup.appendChild(flagPath);
+                            }
+                        }
+                    }
+
+                    if (rhythm.dotted) {
+                        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        dot.setAttribute('cx', x + 10);
+                        dot.setAttribute('cy', pitchY - 2);
+                        dot.setAttribute('r', '2');
+                        dot.setAttribute('fill', isActive ? '#f59e0b' : '#e5e7eb');
+                        noteGroup.appendChild(dot);
+                    }
+
+                    const noteLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    noteLabel.setAttribute('x', x);
+                    noteLabel.setAttribute('y', systemStartY - 10);
+                    noteLabel.setAttribute('text-anchor', 'middle');
+                    noteLabel.setAttribute('fill', '#9ca3af');
+                    noteLabel.setAttribute('font-size', '9.5');
+                    noteLabel.setAttribute('font-family', 'monospace');
+                    noteLabel.textContent = rawNote;
+                    noteGroup.appendChild(noteLabel);
+
+                    if (item.lyric) {
+                        const lyricText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        lyricText.setAttribute('x', x);
+                        lyricText.setAttribute('y', systemStartY + lineSpacing * 8.5);
+                        lyricText.setAttribute('text-anchor', 'middle');
+                        lyricText.setAttribute('fill', '#f3f4f6');
+                        lyricText.setAttribute('font-size', '10.5');
+                        lyricText.setAttribute('font-weight', '500');
+                        lyricText.textContent = item.lyric;
+                        noteGroup.appendChild(lyricText);
+                    }
+
+                    sysGroup.appendChild(noteGroup);
+                }
+
+                svg.appendChild(sysGroup);
+            }
+        }
+
+        function setZoom(newScale) {
+            zoomScale = Math.max(0.6, Math.min(2.2, newScale));
+            zoomLevelText.textContent = `${Math.round(zoomScale * 100)}%`;
+            renderMusicSheet();
+        }
+
+        function updateEditorFromSong() {
+            jsonEditor.value = JSON.stringify(currentSong, null, 2);
+            updateLineNumbers();
+            validateAndSyncJSON();
+            document.getElementById('sheet-title').textContent = currentSong.title || 'Ohne Titel';
+            document.getElementById('sheet-artist').textContent = currentSong.artist || 'Unbekannt';
+            document.getElementById('song-subtitle').textContent = currentSong.title || 'Multi-Instrument Notation';
+            document.getElementById('sheet-scale').textContent = currentSong.scale || 'D-Kurd';
+            if (currentSong.bpm) {
+                bpmInput.value = currentSong.bpm;
+            }
+        }
+
+        function updateLineNumbers() {
+            const lines = jsonEditor.value.split('\n').length;
+            let lineNumsHtml = '';
+            for (let i = 1; i <= lines; i++) {
+                lineNumsHtml += `${i}<br>`;
+            }
+            lineNumbers.innerHTML = lineNumsHtml;
+        }
+
+        function validateAndSyncJSON() {
+            try {
+                const parsed = JSON.parse(jsonEditor.value);
+                jsonErrorBanner.classList.add('hidden');
+                jsonStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Valid JSON';
+                
+                currentSong = parsed;
+                const count = parsed.notes ? parsed.notes.length : 0;
+                jsonStats.textContent = `${count} Noten`;
+                
+                renderMusicSheet();
+                return true;
+            } catch (err) {
+                jsonErrorBanner.classList.remove('hidden');
+                jsonErrorMsg.textContent = 'JSON Fehler: ' + err.message;
+                jsonStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Syntax Fehler';
+                return false;
+            }
+        }
+
+        function playSong() {
+            if (isPlaying) {
+                pauseSong();
+                return;
+            }
+
+            if (!validateAndSyncJSON()) {
+                showToast('Bitte korrigieren Sie die JSON-Syntax.', 'error');
+                return;
+            }
+
+            initAudio();
+            isPlaying = true;
+            btnPlay.classList.replace('bg-amber-500', 'bg-amber-600');
+            playText.textContent = 'Pause';
+            
+            const bpm = parseInt(bpmInput.value) || 75;
+            const bpmFactor = 75 / bpm;
+
+            const notes = currentSong.notes;
+            activePlaybackTimeouts = [];
+
+            notes.forEach((item, index) => {
+                const delayMs = (item.delay || 0) * bpmFactor;
+                const rhythm = getNoteRhythmInfo(notes, index, bpm);
+                const soundDurationSec = (rhythm.durationMs / 1000) * 1.2;
+
+                const timeoutId = setTimeout(() => {
+                    highlightNote(index, item.note);
+                    playNoteSound(item.note, soundDurationSec);
+
+                    if (index === notes.length - 1) {
+                        setTimeout(() => stopSong(), rhythm.durationMs + 500);
+                    }
+                }, delayMs);
+
+                activePlaybackTimeouts.push(timeoutId);
+            });
+        }
+
+        function pauseSong() {
+            isPlaying = false;
+            activePlaybackTimeouts.forEach(clearTimeout);
+            activePlaybackTimeouts = [];
+            btnPlay.classList.replace('bg-amber-600', 'bg-amber-500');
+            playText.textContent = 'Fortsetzen';
+        }
+
+        function stopSong() {
+            pauseSong();
+            playText.textContent = 'Abspielen';
+            highlightNote(-1, null);
+        }
+
+        function highlightNote(index, noteName) {
+            activeNoteIndex = index;
+            renderMusicSheet();
+
+            document.querySelectorAll('.handpan-pad').forEach(pad => pad.classList.remove('active'));
+            if (noteName) {
+                const padEl = document.getElementById(`pad-${noteName}`);
+                if (padEl) {
+                    padEl.classList.add('active');
+                    setTimeout(() => padEl.classList.remove('active'), 350);
+                }
+            }
+        }
+
+        function playSingleNote(index) {
+            if (!currentSong.notes || !currentSong.notes[index]) return;
+            const bpm = parseInt(bpmInput.value) || 75;
+            const noteObj = currentSong.notes[index];
+            const rhythm = getNoteRhythmInfo(currentSong.notes, index, bpm);
+            
+            highlightNote(index, noteObj.note);
+            playNoteSound(noteObj.note, (rhythm.durationMs / 1000) * 1.2);
+        }
+
+        function transposeNote(noteStr, semitones) {
+            const match = noteStr.match(/^([A-Ga-g][#b]?)([\d])$/);
+            if (!match) return noteStr;
+
+            let [_, pitch, octaveStr] = match;
+            let octave = parseInt(octaveStr);
+
+            const flatToSharpMap = { 'Bb': 'A#', 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#' };
+            if (flatToSharpMap[pitch]) pitch = flatToSharpMap[pitch];
+
+            let index = CHROMATIC_NOTES.indexOf(pitch);
+            if (index === -1) return noteStr;
+
+            index += semitones;
+
+            while (index >= 12) {
+                index -= 12;
+                octave += 1;
+            }
+            while (index < 0) {
+                index += 12;
+                octave -= 1;
+            }
+
+            let newPitch = CHROMATIC_NOTES[index];
+            if (newPitch === 'A#') newPitch = 'Bb';
+
+            return `${newPitch}${octave}`;
+        }
+
+        function transposeSong(semitones) {
+            if (!currentSong.notes) return;
+            currentSong.notes.forEach(item => {
+                item.note = transposeNote(item.note, semitones);
+            });
+            updateEditorFromSong();
+            showToast(`Um ${semitones > 0 ? '+' + semitones : semitones} Halbton transponiert.`);
+        }
+
+        function snapToDKurdScale() {
+            if (!currentSong.notes) return;
+
+            currentSong.notes.forEach(item => {
+                const note = item.note;
+                if (!D_KURD_SCALE.includes(note)) {
+                    const targetFreq = NOTE_FREQUENCIES[note] || 220;
+                    let closestNote = D_KURD_SCALE[0];
+                    let minDiff = Math.abs(targetFreq - NOTE_FREQUENCIES[closestNote]);
+
+                    D_KURD_SCALE.forEach(kurdNote => {
+                        const diff = Math.abs(targetFreq - NOTE_FREQUENCIES[kurdNote]);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            closestNote = kurdNote;
+                        }
+                    });
+
+                    item.note = closestNote;
+                }
+            });
+
+            currentSong.scale = "d_kurd";
+            updateEditorFromSong();
+            showToast('In D-Kurd Tonleiter eingepasst!');
+        }
+
+        function exportJsonFile() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonEditor.value);
+            const downloadAnchor = document.createElement('a');
+            const fileName = (currentSong.title || 'handpan_song').toLowerCase().replace(/[^a-z0-9]/g, '_') + '.json';
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", fileName);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast(`'${fileName}' gespeichert.`);
+        }
+
+        function importJsonFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    currentSong = JSON.parse(evt.target.result);
+                    updateEditorFromSong();
+                    showToast('Noten-JSON geladen!');
+                } catch (err) {
+                    showToast('Fehlerhafte JSON-Datei!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    showToast('Vollbildmodus nicht verfügbar.', 'error');
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+            if (type === 'error') {
+                toast.classList.replace('bg-amber-500', 'bg-rose-500');
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-lg';
+            } else {
+                toast.classList.replace('bg-rose-500', 'bg-amber-500');
+                toastIcon.className = 'fa-solid fa-circle-check text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        window.onload = function() {
+            updateEditorFromSong();
+
+            window.addEventListener('resize', () => {
+                renderMusicSheet();
+            });
+
+            // Reverb Slider Event
+            reverbSlider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                reverbValText.textContent = `${val}%`;
+                initAudio();
+                updateReverbMix(val / 100);
+            });
+
+            // Tonlänge Umschalter Event
+            btnToggleNoteLength.onclick = () => {
+                useNoteLength = !useNoteLength;
+                if (useNoteLength) {
+                    noteLengthStatus.textContent = 'AN';
+                    noteLengthStatus.className = 'text-emerald-400';
+                    showToast('Tonlängen-Dynamik aktiviert');
+                } else {
+                    noteLengthStatus.textContent = 'AUS';
+                    noteLengthStatus.className = 'text-rose-400';
+                    showToast('Kurze Standard-Tonlänge aktiviert');
+                }
+            };
+
+            svgContainer.addEventListener('wheel', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        setZoom(zoomScale + 0.1);
+                    } else {
+                        setZoom(zoomScale - 0.1);
+                    }
+                }
+            }, { passive: false });
+
+            document.getElementById('btn-zoom-in').onclick = () => setZoom(zoomScale + 0.15);
+            document.getElementById('btn-zoom-out').onclick = () => setZoom(zoomScale - 0.15);
+            document.getElementById('btn-zoom-reset').onclick = () => setZoom(1.0);
+
+            jsonEditor.addEventListener('input', () => {
+                updateLineNumbers();
+                validateAndSyncJSON();
+            });
+
+            jsonEditor.addEventListener('scroll', () => {
+                lineNumbers.scrollTop = jsonEditor.scrollTop;
+            });
+
+            btnPlay.onclick = playSong;
+            btnStop.onclick = stopSong;
+
+            btnMute.onclick = () => {
+                isMuted = !isMuted;
+                btnMute.innerHTML = isMuted 
+                    ? '<i class="fa-solid fa-volume-xmark text-base text-rose-400"></i>' 
+                    : '<i class="fa-solid fa-volume-high text-base"></i>';
+            };
+
+            document.getElementById('btn-format-json').onclick = () => {
+                if (validateAndSyncJSON()) {
+                    updateEditorFromSong();
+                    showToast('JSON formatiert');
+                }
+            };
+
+            document.getElementById('btn-reset-json').onclick = () => {
+                currentSong = JSON.parse(JSON.stringify(INITIAL_SONG_DATA));
+                updateEditorFromSong();
+                showToast('Song zurückgesetzt');
+            };
+
+            document.getElementById('btn-transpose-up').onclick = () => transposeSong(1);
+            document.getElementById('btn-transpose-down').onclick = () => transposeSong(-1);
+            document.getElementById('btn-snap-dkurd').onclick = snapToDKurdScale;
+
+            document.getElementById('btn-export').onclick = exportJsonFile;
+            const fileInput = document.getElementById('file-input');
+            document.getElementById('btn-import').onclick = () => fileInput.click();
+            fileInput.onchange = importJsonFile;
+
+            document.getElementById('btn-fullscreen').onclick = toggleFullscreen;
+
+            // View Mode Switcher
+            const viewSheetBtn = document.getElementById('view-sheet-btn');
+            const viewHandpanBtn = document.getElementById('view-handpan-btn');
+            const handpanContainer = document.getElementById('handpan-visualizer-container');
+            const zoomControls = document.getElementById('zoom-controls');
+
+            viewSheetBtn.onclick = () => {
+                viewSheetBtn.className = 'px-3 py-1 text-xs font-medium rounded-md bg-amber-500 text-slate-950 shadow';
+                viewHandpanBtn.className = 'px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200';
+                svgContainer.classList.remove('hidden');
+                zoomControls.classList.remove('hidden');
+                handpanContainer.classList.add('hidden');
+                handpanContainer.classList.remove('flex');
+            };
+
+            viewHandpanBtn.onclick = () => {
+                viewHandpanBtn.className = 'px-3 py-1 text-xs font-medium rounded-md bg-amber-500 text-slate-950 shadow';
+                viewSheetBtn.className = 'px-3 py-1 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200';
+                svgContainer.classList.add('hidden');
+                zoomControls.classList.add('hidden');
+                handpanContainer.classList.remove('hidden');
+                handpanContainer.classList.add('flex');
+            };
+
+            document.querySelectorAll('.handpan-note-group').forEach(group => {
+                group.onclick = () => {
+                    const note = group.getAttribute('data-note');
+                    playNoteSound(note, 1.5);
+                    const pad = group.querySelector('.handpan-pad');
+                    if (pad) {
+                        pad.classList.add('active');
+                        setTimeout(() => pad.classList.remove('active'), 300);
+                    }
+                };
+            });
+        };
+    </script>
+</body>
+</html>

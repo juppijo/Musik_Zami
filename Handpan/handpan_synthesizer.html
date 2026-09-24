@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aetherial Handpan Synthesizer</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    /* Standardisierung der Abmessungen zur Schutze vor Layout-Shift */
+    * {
+        box-sizing: border-box;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Root Layout Guard */
+    html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    /* THEME 1: KUPFER CLASSIC (DEFAULT) */
+    :root {
+        --bg-gradient: radial-gradient(circle at center, #1c1510 0%, #080605 100%);
+        --panel-bg: rgba(28, 20, 15, 0.82);
+        --panel-border: rgba(184, 115, 51, 0.35);
+        --text-accent: #f59e0b;
+        --text-main: #f3f4f6;
+        --handpan-body: radial-gradient(circle at 35% 35%, #8f6239 0%, #4a2f1b 45%, #23160c 80%, #120b05 100%);
+        --handpan-border: rgba(212, 160, 23, 0.45);
+        --tonefield-bg: radial-gradient(circle at 35% 35%, #7a502c 0%, #3a2211 70%, #1c1007 100%);
+        --tonefield-active: radial-gradient(circle at 50% 50%, #cca052 0%, #613e1c 70%, #29170a 100%);
+        --tonefield-border: rgba(245, 158, 11, 0.45);
+        --glow-color: rgba(245, 158, 11, 0.65);
+        --slider-track: #2a1f18;
+        --slider-thumb: radial-gradient(circle, #f59e0b 0%, #8c531d 100%);
+    }
+    
+    /* THEME 2: CYBERPUNK NEON */
+    body.theme-cyberpunk {
+        --bg-gradient: radial-gradient(circle at center, #0a0e1a 0%, #030408 100%);
+        --panel-bg: rgba(10, 18, 32, 0.85);
+        --panel-border: rgba(0, 240, 255, 0.35);
+        --text-accent: #00f0ff;
+        --text-main: #e0f7fc;
+        --handpan-body: radial-gradient(circle at 35% 35%, #102a45 0%, #081628 50%, #040a14 85%, #010308 100%);
+        --handpan-border: rgba(0, 240, 255, 0.6);
+        --tonefield-bg: radial-gradient(circle at 35% 35%, #123859 0%, #0a1f33 70%, #05101c 100%);
+        --tonefield-active: radial-gradient(circle at 50% 50%, #00f0ff 0%, #0077aa 70%, #002244 100%);
+        --tonefield-border: rgba(0, 240, 255, 0.7);
+        --glow-color: rgba(0, 240, 255, 0.8);
+        --slider-track: #091b2a;
+        --slider-thumb: radial-gradient(circle, #00f0ff 0%, #006688 100%);
+    }
+    
+    /* THEME 3: ZEN BAMBUS */
+    body.theme-zen {
+        --bg-gradient: radial-gradient(circle at center, #141c14 0%, #060906 100%);
+        --panel-bg: rgba(20, 30, 20, 0.85);
+        --panel-border: rgba(132, 204, 22, 0.35);
+        --text-accent: #84cc16;
+        --text-main: #ecfdf5;
+        --handpan-body: radial-gradient(circle at 35% 35%, #3d5236 0%, #21301c 50%, #111a0e 85%, #080d07 100%);
+        --handpan-border: rgba(132, 204, 22, 0.45);
+        --tonefield-bg: radial-gradient(circle at 35% 35%, #34472d 0%, #1c2818 70%, #0e140c 100%);
+        --tonefield-active: radial-gradient(circle at 50% 50%, #a3e635 0%, #4d7c0f 70%, #1a2e05 100%);
+        --tonefield-border: rgba(132, 204, 22, 0.65);
+        --glow-color: rgba(132, 204, 22, 0.75);
+        --slider-track: #172415;
+        --slider-thumb: radial-gradient(circle, #84cc16 0%, #3f6212 100%);
+    }
+    
+    /* THEME 4: DEEP SPACE */
+    body.theme-space {
+        --bg-gradient: radial-gradient(circle at center, #1a1030 0%, #06030d 100%);
+        --panel-bg: rgba(25, 16, 48, 0.85);
+        --panel-border: rgba(192, 132, 252, 0.35);
+        --text-accent: #c084fc;
+        --text-main: #f3e8ff;
+        --handpan-body: radial-gradient(circle at 35% 35%, #4c2882 0%, #271347 50%, #120824 85%, #06020f 100%);
+        --handpan-border: rgba(192, 132, 252, 0.55);
+        --tonefield-bg: radial-gradient(circle at 35% 35%, #3b1d69 0%, #1e0d38 70%, #0f051f 100%);
+        --tonefield-active: radial-gradient(circle at 50% 50%, #e879f9 0%, #9333ea 70%, #3b0764 100%);
+        --tonefield-border: rgba(232, 121, 249, 0.7);
+        --glow-color: rgba(192, 132, 252, 0.8);
+        --slider-track: #1b1033;
+        --slider-thumb: radial-gradient(circle, #c084fc 0%, #6b21a8 100%);
+    }
+    
+    /* THEME 5: MINIMAL MODERN */
+    body.theme-minimal {
+        --bg-gradient: radial-gradient(circle at center, #222222 0%, #0a0a0a 100%);
+        --panel-bg: rgba(35, 35, 35, 0.85);
+        --panel-border: rgba(255, 255, 255, 0.25);
+        --text-accent: #e5e5e5;
+        --text-main: #ffffff;
+        --handpan-body: radial-gradient(circle at 35% 35%, #525252 0%, #262626 50%, #171717 85%, #0a0a0a 100%);
+        --handpan-border: rgba(255, 255, 255, 0.35);
+        --tonefield-bg: radial-gradient(circle at 35% 35%, #404040 0%, #1f1f1f 70%, #0d0d0d 100%);
+        --tonefield-active: radial-gradient(circle at 50% 50%, #ffffff 0%, #737373 70%, #262626 100%);
+        --tonefield-border: rgba(255, 255, 255, 0.8);
+        --glow-color: rgba(255, 255, 255, 0.75);
+        --slider-track: #1f1f1f;
+        --slider-thumb: radial-gradient(circle, #ffffff 0%, #525252 100%);
+    }
+    
+    body {
+        background: var(--bg-gradient);
+        color: var(--text-main);
+        touch-action: manipulation;
+        user-select: none;
+        /* Nahtlose Farb-Transformation ohne Größenänderungen */
+        transition: background 0.4s ease, color 0.4s ease;
+    }
+    
+    .glass-panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--panel-border);
+        transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+    
+    .accent-text {
+        color: var(--text-accent);
+        transition: color 0.4s ease;
+    }
+    
+    /* Handpan Skulptur & Tonfelder */
+    .handpan-body {
+        background: var(--handpan-body);
+        box-shadow: 
+            0 20px 50px rgba(0, 0, 0, 0.85),
+            inset 0 2px 6px rgba(255, 255, 255, 0.2),
+            inset 0 -10px 25px rgba(0, 0, 0, 0.9);
+        border: 1px solid var(--handpan-border);
+        transition: background 0.4s ease, border-color 0.4s ease;
+    }
+    
+    .tonefield {
+        background: var(--tonefield-bg);
+        border: 1px solid var(--tonefield-border);
+        box-shadow: 
+            inset 0 2px 5px rgba(255, 255, 255, 0.2),
+            inset 0 -4px 10px rgba(0, 0, 0, 0.8),
+            0 4px 12px rgba(0,0,0,0.5);
+        transition: transform 0.1s ease-out, background 0.3s ease, border-color 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .tonefield:hover {
+        filter: brightness(1.15);
+        transform: scale(1.04);
+        border-color: var(--text-accent);
+    }
+    
+    .tonefield:active, .tonefield.active {
+        transform: scale(0.94);
+        background: var(--tonefield-active);
+        border-color: var(--text-main);
+        box-shadow: 0 0 25px var(--glow-color), inset 0 0 12px var(--glow-color);
+    }
+    
+    /* Ripple Waves Effect */
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--glow-color) 0%, rgba(255,255,255,0) 70%);
+        animation: ripple-anim 0.7s ease-out forwards;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple-anim {
+        0% { width: 0px; height: 0px; opacity: 1; }
+        100% { width: 260px; height: 260px; opacity: 0; }
+    }
+    
+    /* Sliders Styling */
+    input[type=range] {
+        -webkit-appearance: none;
+        background: var(--slider-track);
+        height: 6px;
+        border-radius: 3px;
+        border: 1px solid var(--panel-border);
+        outline: none;
+    }
+    
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 16px;
+        width: 16px;
+        border-radius: 50%;
+        background: var(--slider-thumb);
+        border: 1px solid var(--text-main);
+        cursor: pointer;
+        box-shadow: 0 0 6px rgba(0,0,0,0.8);
+        transition: transform 0.1s;
+    }
+    
+    input[type=range]::-webkit-slider-thumb:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Tabs styling */
+    .tab-btn.active {
+        border-bottom: 2px solid var(--text-accent);
+        color: var(--text-accent);
+        font-weight: 600;
+    }
+    
+    .style-btn.active {
+        border-color: var(--text-accent);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 10px var(--glow-color);
+    }
+  </style>
+</head>
+<body class="h-full w-full flex flex-col justify-between items-center p-3 sm:p-5 relative overflow-y-auto">
+
+  <!-- Audio Visualizer Background Canvas -->
+  <canvas id="visualizerCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-40"></canvas>
+
+  <!-- HEADER & TOP CONTROL BAR -->
+  <header class="w-full max-w-7xl flex flex-col md:flex-row justify-between items-center z-10 gap-3 shrink-0 mb-2">
+    <!-- Logo & Title -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center accent-text shadow-lg shrink-0">
+        <i class="fa-solid fa-compact-disc text-xl animate-spin-slow"></i>
+      </div>
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-wide accent-text leading-none">
+          Aetherial Handpan
+        </h1>
+        <p class="text-[11px] text-gray-400 mt-1">Synthesizer & Audio Lab</p>
+      </div>
+    </div>
+
+    <!-- CENTERED STYLES / THEMES BAR (Perfekt Ausbalanciert) -->
+    <div class="flex items-center justify-center gap-1 sm:gap-1.5 glass-panel p-1.5 rounded-2xl shadow-xl border">
+      <span class="text-[11px] font-semibold opacity-70 px-2 flex items-center gap-1.5 shrink-0">
+        <i class="fa-solid fa-palette accent-text"></i> Style:
+      </span>
+      <button onclick="setTheme('classic')" id="style-classic" class="style-btn active text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 hover:bg-white/10">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-600 shrink-0"></span>
+        <span class="hidden sm:inline">Kupfer</span>
+      </button>
+      <button onclick="setTheme('cyberpunk')" id="style-cyberpunk" class="style-btn text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 hover:bg-white/10">
+        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shrink-0"></span>
+        <span class="hidden sm:inline">Cyberpunk</span>
+      </button>
+      <button onclick="setTheme('zen')" id="style-zen" class="style-btn text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 hover:bg-white/10">
+        <span class="w-2.5 h-2.5 rounded-full bg-lime-500 shrink-0"></span>
+        <span class="hidden sm:inline">Zen</span>
+      </button>
+      <button onclick="setTheme('space')" id="style-space" class="style-btn text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 hover:bg-white/10">
+        <span class="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
+        <span class="hidden sm:inline">Space</span>
+      </button>
+      <button onclick="setTheme('minimal')" id="style-minimal" class="style-btn text-xs px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5 hover:bg-white/10">
+        <span class="w-2.5 h-2.5 rounded-full bg-gray-300 shrink-0"></span>
+        <span class="hidden sm:inline">Minimal</span>
+      </button>
+    </div>
+
+    <!-- RIGHT TOP ACTIONS (Import/Export & Fullscreen) -->
+    <div class="flex items-center gap-2 shrink-0">
+      <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importPresetFile(event)">
+
+      <button onclick="document.getElementById('importFileInput').click()" title="Einstellungen laden" class="glass-panel hover:bg-white/10 text-xs px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+        <i class="fa-solid fa-file-import accent-text"></i>
+        <span class="hidden sm:inline">Laden</span>
+      </button>
+
+      <button onclick="exportPresetFile()" title="Einstellungen als JSON speichern" class="glass-panel hover:bg-white/10 text-xs px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+        <i class="fa-solid fa-file-export accent-text"></i>
+        <span class="hidden sm:inline">Speichern</span>
+      </button>
+
+      <button id="fullscreenBtn" title="Vollbild Modus" class="glass-panel hover:bg-white/10 text-xs p-2.5 rounded-xl transition">
+        <i class="fa-solid fa-expand accent-text"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN APPLICATION GRID (Zentrierte Ausrichtung) -->
+  <main class="w-full max-w-7xl my-auto grid grid-cols-1 lg:grid-cols-12 gap-5 z-10 items-center justify-center place-items-center py-2">
+
+    <!-- LEFT PANEL: SYNTHESIZER SOUND REGLER -->
+    <section class="w-full lg:col-span-4 glass-panel p-4 sm:p-5 rounded-2xl flex flex-col gap-4 shadow-2xl order-2 lg:order-1">
+
+      <!-- Tabs -->
+      <div class="flex border-b border-white/10 text-xs gap-4 pb-1">
+        <button id="tabSynthBtn" onclick="switchTab('synth')" class="tab-btn active pb-1">Synthese & Sound</button>
+        <button id="tabFXBtn" onclick="switchTab('fx')" class="tab-btn pb-1 text-gray-400">Filter & Effekte</button>
+      </div>
+
+      <!-- TAB 1: SYNTHESIS & ENVELOPE -->
+      <div id="tabSynth" class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="attack" class="opacity-80">Anschlag (Attack)</label>
+            <span id="attackVal" class="accent-text font-mono">2 ms</span>
+          </div>
+          <input type="range" id="attack" min="0.001" max="0.05" step="0.001" value="0.002">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="decay" class="opacity-80">Ausklang (Decay / Release)</label>
+            <span id="decayVal" class="accent-text font-mono">2.5 s</span>
+          </div>
+          <input type="range" id="decay" min="0.5" max="8.0" step="0.1" value="2.5">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="overtones" class="opacity-80">Obertöne (Harmonics Ratio)</label>
+            <span id="overtonesVal" class="accent-text font-mono">35%</span>
+          </div>
+          <input type="range" id="overtones" min="0" max="1" step="0.01" value="0.35">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="metallic" class="opacity-80">Metall-Resonanz (Partial Ring)</label>
+            <span id="metallicVal" class="accent-text font-mono">0%</span>
+          </div>
+          <input type="range" id="metallic" min="0" max="1" step="0.01" value="0.00">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="transient" class="opacity-80">Anschlag-Rauschen (Transient)</label>
+            <span id="transientVal" class="accent-text font-mono">0%</span>
+          </div>
+          <input type="range" id="transient" min="0" max="1" step="0.01" value="0.0">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="transpose" class="opacity-80">Transponieren (Pitch)</label>
+            <span id="transposeVal" class="accent-text font-mono">0 Semitone</span>
+          </div>
+          <input type="range" id="transpose" min="-12" max="12" step="1" value="0">
+        </div>
+      </div>
+
+      <!-- TAB 2: FILTER & EFFECTS -->
+      <div id="tabFX" class="hidden flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="lpCutoff" class="opacity-80">Lowpass Cutoff (Tiefpass)</label>
+            <span id="lpCutoffVal" class="accent-text font-mono">2800 Hz</span>
+          </div>
+          <input type="range" id="lpCutoff" min="400" max="10000" step="100" value="2800">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="hpCutoff" class="opacity-80">Highpass Cutoff (Hochpass)</label>
+            <span id="hpCutoffVal" class="accent-text font-mono">40 Hz</span>
+          </div>
+          <input type="range" id="hpCutoff" min="20" max="800" step="10" value="40">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="resonance" class="opacity-80">Filter Resonanz (Q)</label>
+            <span id="resonanceVal" class="accent-text font-mono">1.0</span>
+          </div>
+          <input type="range" id="resonance" min="0.1" max="8" step="0.1" value="1.0">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="reverb" class="opacity-80">Reverb / Raumhall</label>
+            <span id="reverbVal" class="accent-text font-mono">60%</span>
+          </div>
+          <input type="range" id="reverb" min="0" max="1" step="0.01" value="0.60">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="delayTime" class="opacity-80">Delay Zeit (Echo)</label>
+            <span id="delayTimeVal" class="accent-text font-mono">0s</span>
+          </div>
+          <input type="range" id="delayTime" min="0.05" max="1.0" step="0.01" value="0.00">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="flex justify-between text-xs">
+            <label for="delayFeedback" class="opacity-80">Delay Feedback</label>
+            <span id="delayFeedbackVal" class="accent-text font-mono">15%</span>
+          </div>
+          <input type="range" id="delayFeedback" min="0" max="0.85" step="0.01" value="0.15">
+        </div>
+      </div>
+
+      <!-- Master Volume -->
+      <div class="pt-2 border-t border-white/10 flex flex-col gap-1">
+        <div class="flex justify-between text-xs">
+          <label for="volume" class="font-semibold">Master Lautstärke</label>
+          <span id="volumeVal" class="accent-text font-mono">80%</span>
+        </div>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.80">
+      </div>
+    </section>
+
+    <!-- CENTER PANEL: ABSOLUT ZENTRIERTE HANDPAN SKULPTUR -->
+    <section class="w-full lg:col-span-5 flex flex-col items-center justify-center relative my-auto order-1 lg:order-2">
+      <div id="handpanContainer" class="handpan-body relative rounded-full w-[290px] h-[290px] sm:w-[420px] sm:h-[420px] md:w-[450px] md:h-[450px] flex items-center justify-center shadow-2xl shrink-0 my-auto">
+
+        <div class="absolute inset-3 rounded-full border border-white/5 pointer-events-none"></div>
+
+        <!-- CENTRAL DING FIELD -->
+        <button data-note-idx="0" class="tonefield absolute w-[80px] h-[80px] sm:w-[115px] sm:h-[115px] rounded-full flex flex-col items-center justify-center z-20">
+          <span class="note-name font-bold text-sm sm:text-lg">D3</span>
+          <span class="key-hint text-[9px] sm:text-[11px] opacity-70 font-mono">[SPACE]</span>
+        </button>
+
+        <!-- Ring Notes -->
+        <div id="ringNotesContainer" class="absolute inset-0"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: PRESETS, SIMULATION & SKALEN -->
+    <section class="w-full lg:col-span-3 glass-panel p-4 sm:p-5 rounded-2xl flex flex-col gap-4 shadow-2xl order-3">
+
+      <!-- Quick Memory Storage Buttons -->
+      <div class="flex flex-col gap-2 border-b border-white/10 pb-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider accent-text flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> Quick Storage
+        </h2>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="quickSavePreset()" class="py-2 px-3 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-xs font-semibold transition text-emerald-300 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-bookmark"></i> Quick Save
+          </button>
+          <button onclick="quickLoadPreset()" class="py-2 px-3 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl text-xs font-semibold transition text-amber-300 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-arrow-rotate-left"></i> Quick Load
+          </button>
+        </div>
+      </div>
+
+      <!-- Scale Selector -->
+      <div class="flex flex-col gap-1">
+        <label for="scaleSelect" class="text-xs font-semibold opacity-80 flex items-center gap-1.5">
+          <i class="fa-solid fa-sliders accent-text"></i> Skala / Stimmung
+        </label>
+        <select id="scaleSelect" class="bg-black/40 text-xs rounded-xl p-2.5 border border-white/10 focus:outline-none focus:border-amber-500 cursor-pointer">
+          <option value="kurd">D-Moll Kurd (Standard)</option>
+          <option value="amara">A-Moll Amara</option>
+          <option value="pygmy">F-Pygmy</option>
+          <option value="celtic">C Celtic Minor</option>
+          <option value="hijaz">D-Hijaz (Orientalisch)</option>
+        </select>
+      </div>
+
+      <!-- Sequencer Auto-Play Mode -->
+      <div class="bg-black/30 rounded-xl p-3 border border-white/10 flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-semibold">Muster-Sequenzer</span>
+          <span id="autoStatus" class="text-[9px] px-2 py-0.5 rounded-full bg-red-950 text-red-400 border border-red-800/40">Inaktiv</span>
+        </div>
+        <p class="text-[10px] opacity-60">Fließende meditative Rhythmen automatisch generieren.</p>
+
+        <div class="flex flex-col gap-2 mt-1">
+          <div class="flex justify-between items-center text-[11px]">
+            <label for="bpm" class="opacity-80">Tempo (BPM)</label>
+            <span id="bpmVal" class="accent-text font-mono">90 BPM</span>
+          </div>
+          <input type="range" id="bpm" min="40" max="180" step="1" value="90">
+
+          <button id="toggleAutoplayBtn" class="mt-1 py-2 px-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play text-xs accent-text"></i> Sequenzer Starten
+          </button>
+        </div>
+      </div>
+
+      <!-- Keyboard Legend -->
+      <div class="flex flex-col gap-1.5 pt-1">
+        <span class="text-xs font-medium opacity-80 flex items-center gap-1.5">
+          <i class="fa-regular fa-keyboard accent-text"></i> Tastatur Belegung:
+        </span>
+        <div class="grid grid-cols-2 gap-1 text-[10px]">
+          <div class="bg-black/30 p-1.5 rounded border border-white/5 flex justify-between">
+            <span class="opacity-60">Ding:</span>
+            <kbd class="px-1 bg-white/10 rounded accent-text font-mono">SPACE</kbd>
+          </div>
+          <div class="bg-black/30 p-1.5 rounded border border-white/5 flex justify-between">
+            <span class="opacity-60">Töne 1-8:</span>
+            <kbd class="px-1 bg-white/10 rounded accent-text font-mono">1 - 8</kbd>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Chords -->
+      <div class="pt-2 border-t border-white/10 flex gap-2">
+        <button id="chordArpBtn" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] accent-text font-medium">
+          ✨ Arpeggio
+        </button>
+        <button id="chordFullBtn" class="flex-1 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] accent-text font-medium">
+          🌊 Akkord Hit
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="w-full max-w-7xl text-center text-[11px] opacity-40 z-10 shrink-0 py-1">
+    Aetherial Handpan Synthesizer &bull; Absolute Precision Web Audio Engine
+  </footer>
+
+  <!-- AUDIO & INTERACTION ENGINE -->
+  <script>
+    let audioCtx = null;
+    let masterGain = null;
+    let lpFilterNode = null;
+    let hpFilterNode = null;
+    let delayNode = null;
+    let delayFeedbackNode = null;
+    let reverbNode = null;
+    let reverbGainNode = null;
+    let analyser = null;
+
+    const SCALES = {
+      kurd: {
+        name: "D-Moll Kurd",
+        notes: [{
+            name: "D3",
+            freq: 146.83
+          },
+          {
+            name: "A3",
+            freq: 220.00
+          },
+          {
+            name: "Bb3",
+            freq: 233.08
+          },
+          {
+            name: "C4",
+            freq: 261.63
+          },
+          {
+            name: "D4",
+            freq: 293.66
+          },
+          {
+            name: "E4",
+            freq: 329.63
+          },
+          {
+            name: "F4",
+            freq: 349.23
+          },
+          {
+            name: "G4",
+            freq: 392.00
+          },
+          {
+            name: "A4",
+            freq: 440.00
+          }
+        ]
+      },
+      amara: {
+        name: "A-Moll Amara",
+        notes: [{
+            name: "A2",
+            freq: 110.00
+          },
+          {
+            name: "E3",
+            freq: 164.81
+          },
+          {
+            name: "G3",
+            freq: 196.00
+          },
+          {
+            name: "A3",
+            freq: 220.00
+          },
+          {
+            name: "B3",
+            freq: 246.94
+          },
+          {
+            name: "C4",
+            freq: 261.63
+          },
+          {
+            name: "D4",
+            freq: 293.66
+          },
+          {
+            name: "E4",
+            freq: 329.63
+          },
+          {
+            name: "G4",
+            freq: 392.00
+          }
+        ]
+      },
+      pygmy: {
+        name: "F-Pygmy",
+        notes: [{
+            name: "F3",
+            freq: 174.61
+          },
+          {
+            name: "G3",
+            freq: 196.00
+          },
+          {
+            name: "Ab3",
+            freq: 207.65
+          },
+          {
+            name: "C4",
+            freq: 261.63
+          },
+          {
+            name: "Eb4",
+            freq: 311.13
+          },
+          {
+            name: "F4",
+            freq: 349.23
+          },
+          {
+            name: "G4",
+            freq: 392.00
+          },
+          {
+            name: "Ab4",
+            freq: 415.30
+          },
+          {
+            name: "C5",
+            freq: 523.25
+          }
+        ]
+      },
+      celtic: {
+        name: "C Celtic Minor",
+        notes: [{
+            name: "C3",
+            freq: 130.81
+          },
+          {
+            name: "G3",
+            freq: 196.00
+          },
+          {
+            name: "Bb3",
+            freq: 233.08
+          },
+          {
+            name: "C4",
+            freq: 261.63
+          },
+          {
+            name: "D4",
+            freq: 293.66
+          },
+          {
+            name: "Eb4",
+            freq: 311.13
+          },
+          {
+            name: "F4",
+            freq: 349.23
+          },
+          {
+            name: "G4",
+            freq: 392.00
+          },
+          {
+            name: "Bb4",
+            freq: 466.16
+          }
+        ]
+      },
+      hijaz: {
+        name: "D-Hijaz",
+        notes: [{
+            name: "D3",
+            freq: 146.83
+          },
+          {
+            name: "A3",
+            freq: 220.00
+          },
+          {
+            name: "Bb3",
+            freq: 233.08
+          },
+          {
+            name: "C#4",
+            freq: 277.18
+          },
+          {
+            name: "D4",
+            freq: 293.66
+          },
+          {
+            name: "E4",
+            freq: 329.63
+          },
+          {
+            name: "F4",
+            freq: 349.23
+          },
+          {
+            name: "G4",
+            freq: 392.00
+          },
+          {
+            name: "A4",
+            freq: 440.00
+          }
+        ]
+      }
+    };
+
+    let currentScale = SCALES.kurd;
+    let currentThemeKey = 'classic';
+
+    function initAudio() {
+      if (audioCtx) return;
+
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = parseFloat(document.getElementById('volume').value);
+
+      lpFilterNode = audioCtx.createBiquadFilter();
+      lpFilterNode.type = 'lowpass';
+      lpFilterNode.frequency.value = parseFloat(document.getElementById('lpCutoff').value);
+      lpFilterNode.Q.value = parseFloat(document.getElementById('resonance').value);
+
+      hpFilterNode = audioCtx.createBiquadFilter();
+      hpFilterNode.type = 'highpass';
+      hpFilterNode.frequency.value = parseFloat(document.getElementById('hpCutoff').value);
+
+      delayNode = audioCtx.createDelay();
+      delayNode.delayTime.value = parseFloat(document.getElementById('delayTime').value);
+      delayFeedbackNode = audioCtx.createGain();
+      delayFeedbackNode.gain.value = parseFloat(document.getElementById('delayFeedback').value);
+
+      delayNode.connect(delayFeedbackNode);
+      delayFeedbackNode.connect(delayNode);
+
+      reverbNode = audioCtx.createConvolver();
+      reverbGainNode = audioCtx.createGain();
+      reverbGainNode.gain.value = parseFloat(document.getElementById('reverb').value);
+      createReverbImpulse();
+
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+
+      hpFilterNode.connect(lpFilterNode);
+      lpFilterNode.connect(masterGain);
+
+      lpFilterNode.connect(delayNode);
+      delayNode.connect(masterGain);
+
+      lpFilterNode.connect(reverbNode);
+      reverbNode.connect(reverbGainNode);
+      reverbGainNode.connect(masterGain);
+
+      masterGain.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function createReverbImpulse() {
+      if (!audioCtx) return;
+      const rate = audioCtx.sampleRate;
+      const length = rate * 3.0;
+      const impulse = audioCtx.createBuffer(2, length, rate);
+      const left = impulse.getChannelData(0);
+      const right = impulse.getChannelData(1);
+
+      for (let i = 0; i < length; i++) {
+        const decay = Math.exp(-i / (rate * 0.45));
+        left[i] = (Math.random() * 2 - 1) * decay;
+        right[i] = (Math.random() * 2 - 1) * decay;
+      }
+      reverbNode.buffer = impulse;
+    }
+
+    function playHandpanNote(freq, isDing = false) {
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+
+      const attackTime = parseFloat(document.getElementById('attack').value);
+      const decayTime = parseFloat(document.getElementById('decay').value) * (isDing ? 1.25 : 1.0);
+      const overtonesAmount = parseFloat(document.getElementById('overtones').value);
+      const metallicAmount = parseFloat(document.getElementById('metallic').value);
+      const transientAmount = parseFloat(document.getElementById('transient').value);
+      const transposeVal = parseInt(document.getElementById('transpose').value);
+
+      const finalFreq = freq * Math.pow(2, transposeVal / 12);
+
+      const voiceGain = audioCtx.createGain();
+
+      // Fundamental Tone
+      const fundOsc = audioCtx.createOscillator();
+      fundOsc.type = 'sine';
+      fundOsc.frequency.setValueAtTime(finalFreq, now);
+
+      // Octave Harmonic
+      const octOsc = audioCtx.createOscillator();
+      octOsc.type = 'sine';
+      octOsc.frequency.setValueAtTime(finalFreq * 2.0, now);
+      const octGain = audioCtx.createGain();
+      octGain.gain.value = 0.4 * overtonesAmount;
+
+      // Fifth Harmonic
+      const fifthOsc = audioCtx.createOscillator();
+      fifthOsc.type = 'triangle';
+      fifthOsc.frequency.setValueAtTime(finalFreq * 2.98, now);
+      const fifthGain = audioCtx.createGain();
+      fifthGain.gain.value = 0.25 * overtonesAmount;
+
+      // Metallic Ring Partial
+      const partialOsc = audioCtx.createOscillator();
+      partialOsc.type = 'sine';
+      partialOsc.frequency.setValueAtTime(finalFreq * 5.12, now);
+      const partialGain = audioCtx.createGain();
+      partialGain.gain.value = 0.3 * metallicAmount;
+
+      // Transient Noise
+      const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.03, audioCtx.sampleRate);
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < noiseData.length; i++) {
+        noiseData[i] = Math.random() * 2 - 1;
+      }
+      const noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      const noiseGain = audioCtx.createGain();
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = isDing ? 1000 : 2200;
+
+      noiseGain.gain.setValueAtTime(0.5 * transientAmount, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(voiceGain);
+
+      fundOsc.connect(voiceGain);
+      octOsc.connect(octGain);
+      octGain.connect(voiceGain);
+      fifthOsc.connect(fifthGain);
+      fifthGain.connect(voiceGain);
+      partialOsc.connect(partialGain);
+      partialGain.connect(voiceGain);
+
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(isDing ? 0.95 : 0.75, now + attackTime);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + decayTime);
+
+      voiceGain.connect(hpFilterNode);
+
+      fundOsc.start(now);
+      octOsc.start(now);
+      fifthOsc.start(now);
+      partialOsc.start(now);
+      noiseSource.start(now);
+
+      const stopTime = now + decayTime + 0.1;
+      fundOsc.stop(stopTime);
+      octOsc.stop(stopTime);
+      fifthOsc.stop(stopTime);
+      partialOsc.stop(stopTime);
+    }
+
+    function renderHandpanUI() {
+      const container = document.getElementById('ringNotesContainer');
+      container.innerHTML = '';
+
+      const notes = currentScale.notes;
+      const dingBtn = document.querySelector('.tonefield[data-note-idx="0"]');
+      dingBtn.querySelector('.note-name').textContent = notes[0].name;
+
+      const ringNotes = notes.slice(1);
+      const totalRingNotes = ringNotes.length;
+
+      ringNotes.forEach((note, index) => {
+        const angle = (index / totalRingNotes) * Math.PI * 2 - (Math.PI / 2);
+
+        const radiusX = 37;
+        const radiusY = 37;
+
+        const posX = 50 + radiusX * Math.cos(angle);
+        const posY = 50 + radiusY * Math.sin(angle);
+
+        const noteBtn = document.createElement('button');
+        noteBtn.className = 'tonefield absolute w-[55px] h-[55px] sm:w-[85px] sm:h-[85px] md:w-[95px] md:h-[95px] rounded-full flex flex-col items-center justify-center';
+        noteBtn.style.left = `calc(${posX}% - 27px)`;
+        noteBtn.style.top = `calc(${posY}% - 27px)`;
+        noteBtn.dataset.noteIdx = index + 1;
+
+        const qwertyKeys = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I'];
+
+        noteBtn.innerHTML = `
+                    <span class="note-name font-bold text-xs sm:text-base">${note.name}</span>
+                    <span class="key-hint text-[8px] sm:text-[10px] opacity-60 font-mono">[${index + 1}/${qwertyKeys[index]}]</span>
+                `;
+
+        container.appendChild(noteBtn);
+      });
+
+      bindToneEvents();
+    }
+
+    function createVisualRipple(element) {
+      const rect = element.getBoundingClientRect();
+      const ripple = document.createElement('div');
+      ripple.className = 'ripple';
+      ripple.style.left = `${rect.width / 2}px`;
+      ripple.style.top = `${rect.height / 2}px`;
+
+      element.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 700);
+    }
+
+    function triggerNote(index) {
+      const notes = currentScale.notes;
+      if (index < 0 || index >= notes.length) return;
+
+      const noteData = notes[index];
+      playHandpanNote(noteData.freq, index === 0);
+
+      let btn = document.querySelector(`[data-note-idx="${index}"]`);
+      if (btn) {
+        btn.classList.add('active');
+        createVisualRipple(btn);
+        setTimeout(() => btn.classList.remove('active'), 180);
+      }
+    }
+
+    function bindToneEvents() {
+      const buttons = document.querySelectorAll('.tonefield');
+      buttons.forEach(btn => {
+        const handleHit = (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.dataset.noteIdx);
+          triggerNote(idx);
+        };
+        btn.onpointerdown = handleHit;
+      });
+    }
+
+    // PRESET MANAGEMENT
+    function exportPresetFile() {
+      const presetData = {
+        version: "1.0",
+        theme: currentThemeKey,
+        scale: document.getElementById('scaleSelect').value,
+        controls: {
+          attack: document.getElementById('attack').value,
+          decay: document.getElementById('decay').value,
+          overtones: document.getElementById('overtones').value,
+          metallic: document.getElementById('metallic').value,
+          transient: document.getElementById('transient').value,
+          transpose: document.getElementById('transpose').value,
+          lpCutoff: document.getElementById('lpCutoff').value,
+          hpCutoff: document.getElementById('hpCutoff').value,
+          resonance: document.getElementById('resonance').value,
+          reverb: document.getElementById('reverb').value,
+          delayTime: document.getElementById('delayTime').value,
+          delayFeedback: document.getElementById('delayFeedback').value,
+          volume: document.getElementById('volume').value,
+          bpm: document.getElementById('bpm').value
+        }
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(presetData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `handpan_preset_${currentThemeKey}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importPresetFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const preset = JSON.parse(e.target.result);
+          applyPresetData(preset);
+        } catch (err) {
+          alert('Fehler beim Lesen der JSON-Datei: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function quickSavePreset() {
+      const presetData = {
+        theme: currentThemeKey,
+        scale: document.getElementById('scaleSelect').value,
+        controls: {
+          attack: document.getElementById('attack').value,
+          decay: document.getElementById('decay').value,
+          overtones: document.getElementById('overtones').value,
+          metallic: document.getElementById('metallic').value,
+          transient: document.getElementById('transient').value,
+          transpose: document.getElementById('transpose').value,
+          lpCutoff: document.getElementById('lpCutoff').value,
+          hpCutoff: document.getElementById('hpCutoff').value,
+          resonance: document.getElementById('resonance').value,
+          reverb: document.getElementById('reverb').value,
+          delayTime: document.getElementById('delayTime').value,
+          delayFeedback: document.getElementById('delayFeedback').value,
+          volume: document.getElementById('volume').value,
+          bpm: document.getElementById('bpm').value
+        }
+      };
+      localStorage.setItem('handpan_quicksave', JSON.stringify(presetData));
+      showToast('Quick Save erfolgreich im Browser gespeichert!');
+    }
+
+    function quickLoadPreset() {
+      const saved = localStorage.getItem('handpan_quicksave');
+      if (!saved) {
+        showToast('Kein Quick Save Speicherstand vorhanden!');
+        return;
+      }
+      applyPresetData(JSON.parse(saved));
+      showToast('Quick Save geladen!');
+    }
+
+    function applyPresetData(preset) {
+      if (preset.theme) setTheme(preset.theme);
+      if (preset.scale) {
+        document.getElementById('scaleSelect').value = preset.scale;
+        currentScale = SCALES[preset.scale] || SCALES.kurd;
+        renderHandpanUI();
+      }
+
+      if (preset.controls) {
+        for (const [key, val] of Object.entries(preset.controls)) {
+          const input = document.getElementById(key);
+          if (input) {
+            input.value = val;
+            input.dispatchEvent(new Event('input'));
+          }
+        }
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 glass-panel px-4 py-2 rounded-xl text-xs accent-text shadow-2xl z-50 border border-amber-500/40';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    // SWAP STYLES (Absolut Formstabil)
+    function setTheme(themeKey) {
+      currentThemeKey = themeKey;
+      document.body.className = 'h-full w-full flex flex-col justify-between items-center p-3 sm:p-5 relative overflow-y-auto';
+      if (themeKey !== 'classic') {
+        document.body.classList.add(`theme-${themeKey}`);
+      }
+
+      document.querySelectorAll('.style-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`style-${themeKey}`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    // SEQUENCER
+    let autoplayTimer = null;
+    let isAutoplay = false;
+
+    function toggleAutoplay() {
+      isAutoplay = !isAutoplay;
+      const btn = document.getElementById('toggleAutoplayBtn');
+      const status = document.getElementById('autoStatus');
+
+      if (isAutoplay) {
+        btn.innerHTML = `<i class="fa-solid fa-pause text-xs accent-text"></i> Sequenzer Stoppen`;
+        status.textContent = 'Aktiv';
+        status.className = 'text-[9px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/40';
+        scheduleNextAutoplayNote();
+      } else {
+        btn.innerHTML = `<i class="fa-solid fa-play text-xs accent-text"></i> Sequenzer Starten`;
+        status.textContent = 'Inaktiv';
+        status.className = 'text-[9px] px-2 py-0.5 rounded-full bg-red-950 text-red-400 border border-red-800/40';
+        clearTimeout(autoplayTimer);
+      }
+    }
+
+    function scheduleNextAutoplayNote() {
+      if (!isAutoplay) return;
+
+      const notesCount = currentScale.notes.length;
+      const rand = Math.random();
+      let noteIndex = 0;
+
+      if (rand < 0.28) {
+        noteIndex = 0;
+      } else {
+        noteIndex = Math.floor(Math.random() * (notesCount - 1)) + 1;
+      }
+
+      triggerNote(noteIndex);
+
+      const bpm = parseInt(document.getElementById('bpm').value);
+      const baseDelay = (60 / bpm) * 1000;
+      const randomDelay = baseDelay + (Math.random() * 100 - 50);
+      autoplayTimer = setTimeout(scheduleNextAutoplayNote, randomDelay);
+    }
+
+    // Keyboard Controls
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        triggerNote(0);
+        return;
+      }
+
+      if (e.key >= '1' && e.key <= '8') {
+        const idx = parseInt(e.key);
+        triggerNote(idx);
+        return;
+      }
+
+      const qwertyMap = {
+        'q': 1,
+        'w': 2,
+        'e': 3,
+        'r': 4,
+        't': 5,
+        'y': 6,
+        'u': 7,
+        'i': 8
+      };
+      const lowerKey = e.key.toLowerCase();
+      if (qwertyMap[lowerKey]) {
+        triggerNote(qwertyMap[lowerKey]);
+      }
+    });
+
+    // Background Audio Visualizer Canvas
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function renderVisualizer() {
+      requestAnimationFrame(renderVisualizer);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!analyser) return;
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyser.getByteFrequencyData(dataArray);
+
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+      }
+      const average = sum / bufferLength;
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(canvas.width, canvas.height) * 0.28 + (average * 0.5);
+
+      const computedAccentColor = getComputedStyle(document.body).getPropertyValue('--glow-color').trim() || 'rgba(245, 158, 11, 0.6)';
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = computedAccentColor;
+      ctx.lineWidth = average * 0.1 + 1;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = computedAccentColor;
+      ctx.stroke();
+    }
+    renderVisualizer();
+
+    // Control Sliders
+    function bindSlider(id, valId, unit, fn) {
+      document.getElementById(id).addEventListener('input', (e) => {
+        const val = e.target.value;
+        document.getElementById(valId).textContent = `${val}${unit}`;
+        if (fn) fn(parseFloat(val));
+      });
+    }
+
+    bindSlider('attack', 'attackVal', ' ms', null);
+    bindSlider('decay', 'decayVal', ' s', null);
+    bindSlider('overtones', 'overtonesVal', '%', null);
+    bindSlider('metallic', 'metallicVal', '%', null);
+    bindSlider('transient', 'transientVal', '%', null);
+    bindSlider('transpose', 'transposeVal', ' Semitone', null);
+
+    bindSlider('lpCutoff', 'lpCutoffVal', ' Hz', (v) => {
+      if (lpFilterNode) lpFilterNode.frequency.value = v;
+    });
+    bindSlider('hpCutoff', 'hpCutoffVal', ' Hz', (v) => {
+      if (hpFilterNode) hpFilterNode.frequency.value = v;
+    });
+    bindSlider('resonance', 'resonanceVal', '', (v) => {
+      if (lpFilterNode) lpFilterNode.Q.value = v;
+    });
+    bindSlider('reverb', 'reverbVal', '%', (v) => {
+      if (reverbGainNode) reverbGainNode.gain.value = v;
+    });
+    bindSlider('delayTime', 'delayTimeVal', ' s', (v) => {
+      if (delayNode) delayNode.delayTime.value = v;
+    });
+    bindSlider('delayFeedback', 'delayFeedbackVal', '%', (v) => {
+      if (delayFeedbackNode) delayFeedbackNode.gain.value = v;
+    });
+    bindSlider('volume', 'volumeVal', '%', (v) => {
+      if (masterGain) masterGain.gain.value = v;
+    });
+    bindSlider('bpm', 'bpmVal', ' BPM', null);
+
+    function switchTab(tab) {
+      if (tab === 'synth') {
+        document.getElementById('tabSynth').classList.remove('hidden');
+        document.getElementById('tabSynth').classList.add('flex');
+        document.getElementById('tabFX').classList.add('hidden');
+        document.getElementById('tabFX').classList.remove('flex');
+        document.getElementById('tabSynthBtn').classList.add('active');
+        document.getElementById('tabFXBtn').classList.remove('active');
+      } else {
+        document.getElementById('tabSynth').classList.add('hidden');
+        document.getElementById('tabSynth').classList.remove('flex');
+        document.getElementById('tabFX').classList.remove('hidden');
+        document.getElementById('tabFX').classList.add('flex');
+        document.getElementById('tabSynthBtn').classList.remove('active');
+        document.getElementById('tabFXBtn').classList.add('active');
+      }
+    }
+
+    document.getElementById('scaleSelect').addEventListener('change', (e) => {
+      currentScale = SCALES[e.target.value];
+      renderHandpanUI();
+    });
+
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    });
+
+    document.getElementById('toggleAutoplayBtn').addEventListener('click', toggleAutoplay);
+
+    document.getElementById('chordArpBtn').addEventListener('click', () => {
+      [0, 1, 3, 5, 8].forEach((noteIdx, i) => {
+        setTimeout(() => triggerNote(noteIdx), i * 160);
+      });
+    });
+
+    document.getElementById('chordFullBtn').addEventListener('click', () => {
+      [0, 2, 4, 6].forEach(noteIdx => triggerNote(noteIdx));
+    });
+
+    window.onload = () => {
+      renderHandpanUI();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "theme": "space",
+  "scale": "kurd",
+  "controls": {
+    "attack": "0.002",
+    "decay": "2.5",
+    "overtones": "0.35",
+    "metallic": "0.38",
+    "transient": "0.47",
+    "transpose": "0",
+    "lpCutoff": "2800",
+    "hpCutoff": "40",
+    "resonance": "1",
+    "reverb": "0.6",
+    "delayTime": "0.05",
+    "delayFeedback": "0.15",
+    "volume": "0.8",
+    "bpm": "87"
+  }
+}

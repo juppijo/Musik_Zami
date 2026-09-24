@@ -1,211 +1,74 @@
 {
-  "title": "Je m'en fus cueillir la rose",
-  "scale": "G Major",
-  "createdAt": "2026-09-23T20:45:46.524Z",
+  "title": "Je m'en vais cueillir la rose (Mazurka)",
+  "origin": "Traditionnel Nivernais",
+  "scale": "d_kurd",
+  "bpm": 120,
+  "createdAt": "2026-09-23T23:34:00.000Z",
   "notes": [
-    {
-      "note": "C5",
-      "delay": 1000
-    },
-    {
-      "note": "A4",
-      "delay": 1500
-    },
-    {
-      "note": "B4",
-      "delay": 2000
-    },
-    {
-      "note": "C5",
-      "delay": 2500
-    },
-    {
-      "note": "D5",
-      "delay": 3000
-    },
-    {
-      "note": "E5",
-      "delay": 3500
-    },
-    {
-      "note": "F#5",
-      "delay": 4000
-    },
-    {
-      "note": "G4",
-      "delay": 4500
-    },
-    {
-      "note": "A4",
-      "delay": 5000
-    },
-    {
-      "note": "B4",
-      "delay": 5500
-    },
-    {
-      "note": "C5",
-      "delay": 6000
-    },
-    {
-      "note": "D5",
-      "delay": 6500
-    },
-    {
-      "note": "E5",
-      "delay": 7000
-    },
-    {
-      "note": "F#5",
-      "delay": 7500
-    },
-    {
-      "note": "G4",
-      "delay": 8000
-    },
-    {
-      "note": "A4",
-      "delay": 8500
-    },
-    {
-      "note": "B4",
-      "delay": 9000
-    },
-    {
-      "note": "C5",
-      "delay": 9500
-    },
-    {
-      "note": "D5",
-      "delay": 10000
-    },
-    {
-      "note": "E5",
-      "delay": 10500
-    },
-    {
-      "note": "F#5",
-      "delay": 11000
-    },
-    {
-      "note": "G4",
-      "delay": 11500
-    },
-    {
-      "note": "A4",
-      "delay": 12000
-    },
-    {
-      "note": "B4",
-      "delay": 12500
-    },
-    {
-      "note": "C5",
-      "delay": 13000
-    },
-    {
-      "note": "D5",
-      "delay": 13500
-    },
-    {
-      "note": "E5",
-      "delay": 14000
-    },
-    {
-      "note": "F#5",
-      "delay": 14500
-    },
-    {
-      "note": "G4",
-      "delay": 15000
-    },
-    {
-      "note": "A4",
-      "delay": 15500
-    },
-    {
-      "note": "B4",
-      "delay": 16000
-    },
-    {
-      "note": "C5",
-      "delay": 16500
-    },
-    {
-      "note": "D5",
-      "delay": 17000
-    },
-    {
-      "note": "E5",
-      "delay": 17500
-    },
-    {
-      "note": "F#5",
-      "delay": 18000
-    },
-    {
-      "note": "G4",
-      "delay": 18500
-    },
-    {
-      "note": "A4",
-      "delay": 19000
-    },
-    {
-      "note": "B4",
-      "delay": 19500
-    },
-    {
-      "note": "C5",
-      "delay": 20000
-    },
-    {
-      "note": "D5",
-      "delay": 20500
-    },
-    {
-      "note": "E5",
-      "delay": 21000
-    },
-    {
-      "note": "F#5",
-      "delay": 21500
-    },
-    {
-      "note": "G4",
-      "delay": 22000
-    },
-    {
-      "note": "A4",
-      "delay": 22500
-    },
-    {
-      "note": "B4",
-      "delay": 23000
-    },
-    {
-      "note": "C5",
-      "delay": 23500
-    },
-    {
-      "note": "D5",
-      "delay": 24000
-    },
-    {
-      "note": "E5",
-      "delay": 24500
-    },
-    {
-      "note": "F#5",
-      "delay": 25000
-    },
-    {
-      "note": "G4",
-      "delay": 25500
-    },
-    {
-      "note": "A4",
-      "delay": 26000
-    }
+    { "note": "D4", "delay": 0, "lyric": "Je" },
+    { "note": "E4", "delay": 250, "lyric": "m'en" },
+
+    { "note": "F4", "delay": 500, "lyric": "vais" },
+    { "note": "D4", "delay": 750, "lyric": "cueil-" },
+    { "note": "E4", "delay": 1000, "lyric": "-lir" },
+
+    { "note": "F4", "delay": 1250, "lyric": "la" },
+    { "note": "G4", "delay": 1500, "lyric": "ro-" },
+    { "note": "A4", "delay": 1750, "lyric": "-se" },
+
+    { "note": "F4", "delay": 2000, "lyric": "jo-" },
+    { "note": "D4", "delay": 2250, "lyric": "-lie" },
+    { "note": "E4", "delay": 2500, "lyric": "ro-" },
+
+    { "note": "F4", "delay": 2750, "lyric": "-se" },
+    { "note": "D4", "delay": 3000, "lyric": "du" },
+    { "note": "E4", "delay": 3250, "lyric": "ro-" },
+
+    { "note": "F4", "delay": 3500, "lyric": "-sier" },
+    { "note": "D4", "delay": 3750, "lyric": "Je" },
+    { "note": "E4", "delay": 4000, "lyric": "m'en" },
+
+    { "note": "F4", "delay": 4250, "lyric": "-sier" },
+    { "note": "G4", "delay": 4500, "lyric": "En" },
+    { "note": "A4", "delay": 4750, "lyric": "che-" },
+
+    { "note": "A4", "delay": 5000, "lyric": "-min" },
+    { "note": "G4", "delay": 5250, "lyric": "j'ai" },
+    { "note": "F4", "delay": 5500, "lyric": "fait" },
+
+    { "note": "E4", "delay": 5750, "lyric": "ren-" },
+    { "note": "D4", "delay": 6000, "lyric": "-con-" },
+    { "note": "C4", "delay": 6250, "lyric": "-tre" },
+
+    { "note": "D4", "delay": 6500, "lyric": "Non" },
+    { "note": "D4", "delay": 6750, "lyric": "non" },
+    { "note": "D4", "delay": 7000, "lyric": "non" },
+
+    { "note": "E4", "delay": 7250, "lyric": "je" },
+    { "note": "F4", "delay": 7500, "lyric": "n'ai" },
+    { "note": "G4", "delay": 7750, "lyric": "pas" },
+
+    { "note": "F4", "delay": 8000, "lyric": "d'a-" },
+    { "note": "E4", "delay": 8250, "lyric": "-mant" },
+    { "note": "D4", "delay": 8500, "lyric": "D'un" },
+
+    { "note": "E4", "delay": 8750, "lyric": "gen-" },
+    { "note": "F4", "delay": 9000, "lyric": "-til" },
+    { "note": "G4", "delay": 9250, "lyric": "hom-" },
+
+    { "note": "A4", "delay": 9500, "lyric": "-me" },
+    { "note": "G4", "delay": 9750, "lyric": "de" },
+    { "note": "F4", "delay": 10000, "lyric": "vil-" },
+
+    { "note": "E4", "delay": 10250, "lyric": "-le" },
+    { "note": "F4", "delay": 10500, "lyric": "qui" },
+    { "note": "G4", "delay": 10750, "lyric": "ne" },
+
+    { "note": "A4", "delay": 11000, "lyric": "pas-" },
+    { "note": "G4", "delay": 11250, "lyric": "-se" },
+    { "note": "F4", "delay": 11500, "lyric": "pas" },
+
+    { "note": "E4", "delay": 11750, "lyric": "sou-" },
+    { "note": "D3", "delay": 12000, "lyric": "-vent" }
   ]
 }

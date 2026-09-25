@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Handpan vs. Tongue Drum Synthesizer</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      gap: 20px;
+    }
+    .btn-container {
+      display: flex;
+      gap: 20px;
+    }
+    .sound-btn {
+      border: 2px solid #94a3b8;
+      color: #e2e8f0;
+      padding: 20px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transition: transform 0.1s, border-color 0.2s;
+    }
+    .handpan {
+      background: radial-gradient(circle, #7c2d12 0%, #431407 100%);
+      border-color: #fb923c;
+    }
+    .tongue-drum {
+      background: radial-gradient(circle, #0284c7 0%, #0f172a 100%);
+      border-color: #38bdf8;
+    }
+    .sinus {
+      background: radial-gradient(circle, #0284c7 0%, #0f572a 100%);
+      border-color: #38fdf8;
+    }
+    .sound-btn:hover {
+      transform: scale(1.05);
+    }
+    .sound-btn:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Instrumenten-Vergleich</h1>
+
+  <div class="btn-container">
+    <button class="sound-btn handpan" onclick="playHandpanNote(261.63)">
+      Handpan Sound (C4)
+    </button>
+
+    <button class="sound-btn tongue-drum" onclick="playTongueDrumNote(261.63)">
+      Tongue Drum Sound (C4)
+    </button>
+    
+    <button class="sound-btn sinus" onclick="playNote(261.63)">
+      Ton Sin Sound (C4)
+    </button>
+  </div>
+
+  <script>
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+    function playNote(frequency) {
+      // AudioContext beim ersten Klick initialisieren (vom Browser gefordert)
+			initAudio();
+
+      const now = audioCtx.currentTime;
+
+      // 2. Oszillator (Tonerzeuger) und Gain (Lautstärke) erstellen
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      // Signalfluss verbinden: Oszillator -> Lautstärke -> Lautsprecher
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      // 3. Frequenz (Tonhöhe) festlegen
+      osc.type = 'sine'; // Sinus-Welle
+      osc.frequency.setValueAtTime(frequency, now);
+
+      // Lautstärke-Verlauf (Envelope): Schnelles Anschlagen und sanftes Ausklingen
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+
+      // 4. Ton starten und nach 1.5 Sekunden stoppen
+      osc.start(now);
+      osc.stop(now + 1.5);
+    }
+
+    // 1. Handpan Sound (Weich, harmonisch gestimmt: 1 : 2 : 3)
+    function playHandpanNote(baseFreq) {
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const osc3 = audioCtx.createOscillator();
+      const knockOsc = audioCtx.createOscillator();
+
+      const gain1 = audioCtx.createGain();
+      const gain2 = audioCtx.createGain();
+      const gain3 = audioCtx.createGain();
+      const knockGain = audioCtx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(baseFreq, now);
+
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(baseFreq * 2.00, now);
+
+      osc3.type = 'sine';
+      osc3.frequency.setValueAtTime(baseFreq * 3.00, now);
+
+      knockOsc.type = 'triangle';
+      knockOsc.frequency.setValueAtTime(baseFreq * 0.5, now);
+      knockOsc.frequency.exponentialRampToValueAtTime(40, now + 0.03);
+
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.7, now + 0.008);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 3.5);
+
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.3, now + 0.005);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+
+      gain3.gain.setValueAtTime(0, now);
+      gain3.gain.linearRampToValueAtTime(0.15, now + 0.005);
+      gain3.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+      knockGain.gain.setValueAtTime(0.5, now);
+      knockGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+      osc1.connect(gain1);
+      osc2.connect(gain2);
+      osc3.connect(gain3);
+      knockOsc.connect(knockGain);
+
+      gain1.connect(audioCtx.destination);
+      gain2.connect(audioCtx.destination);
+      gain3.connect(audioCtx.destination);
+      knockGain.connect(audioCtx.destination);
+
+      osc1.start(now); osc2.start(now); osc3.start(now); knockOsc.start(now);
+      osc1.stop(now + 3.6); osc2.stop(now + 2.1); osc3.stop(now + 1.3); knockOsc.stop(now + 0.04);
+    }
+
+    // 2. Tongue Drum Sound (Glockenartig, metallische Inharmonik)
+    function playTongueDrumNote(baseFreq) {
+      initAudio();
+      const now = audioCtx.currentTime;
+
+      // Pure Sine für die Schwingung der Stahlzunge
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(baseFreq, now);
+
+      // Inharmonischer metallischer Oberton (Faktor 2.75 - charakteristisch für Tongue Drums)
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(baseFreq * 2.75, now);
+
+      // Dreieckswelle für den hellen, glockenartigen Anschlag
+      const osc3 = audioCtx.createOscillator();
+      const gain3 = audioCtx.createGain();
+      osc3.type = 'triangle';
+      osc3.frequency.setValueAtTime(baseFreq * 4.0, now);
+
+      // Envelopes (Glocken-Charakteristik)
+      const attack = 0.005;
+      const decayLong = 2.8;
+      const decayShort = 1.0;
+
+      gain1.gain.setValueAtTime(0, now);
+      gain1.gain.linearRampToValueAtTime(0.75, now + attack);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + decayLong);
+
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.25, now + attack);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, now + decayShort);
+
+      gain3.gain.setValueAtTime(0, now);
+      gain3.gain.linearRampToValueAtTime(0.12, now + attack);
+      gain3.gain.exponentialRampToValueAtTime(0.0001, now + decayShort);
+
+      // Signalfluss
+      osc1.connect(gain1);
+      osc2.connect(gain2);
+      osc3.connect(gain3);
+
+      gain1.connect(audioCtx.destination);
+      gain2.connect(audioCtx.destination);
+      gain3.connect(audioCtx.destination);
+
+      // Start & Stopp
+      osc1.start(now); osc2.start(now); osc3.start(now);
+      osc1.stop(now + decayLong + 0.1);
+      osc2.stop(now + decayShort + 0.1);
+      osc3.stop(now + decayShort + 0.1);
+    }
+  </script>
+
+</body>
+</html>

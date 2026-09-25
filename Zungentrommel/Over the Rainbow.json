@@ -1,0 +1,30 @@
+{
+  "title": "Over the Rainbow",
+  "artist": "Harold Arlen / Judy Garland",
+  "scale": "d_kurd",
+  "bpm": 80,
+  "createdAt": "2026-09-25T16:21:00Z",
+  "notes": [
+    { "note": "C4", "delay": 0 },
+    { "note": "C5", "delay": 1500 },
+    { "note": "B4", "delay": 3000 },
+    { "note": "G4", "delay": 3750 },
+    { "note": "A4", "delay": 4500 },
+    { "note": "B4", "delay": 5250 },
+    { "note": "C5", "delay": 6000 },
+    { "note": "G3", "delay": 7500 },
+    { "note": "A3", "delay": 9000 },
+    { "note": "F4", "delay": 10500 },
+    { "note": "E4", "delay": 12000 },
+    { "note": "C4", "delay": 12750 },
+    { "note": "D4", "delay": 13500 },
+    { "note": "E4", "delay": 14250 },
+    { "note": "F4", "delay": 15000 },
+    { "note": "D4", "delay": 16500 },
+    { "note": "B3", "delay": 18000 },
+    { "note": "C4", "delay": 19500 },
+    { "note": "D4", "delay": 20250 },
+    { "note": "E4", "delay": 21000 },
+    { "note": "C4", "delay": 22500 }
+  ]
+}

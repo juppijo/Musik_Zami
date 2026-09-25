@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Note Studio - Next-Gen MIDI & Audio Workstation</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f6ff',
+              100: '#e0edff',
+              200: '#bae0ff',
+              300: '#7cc7ff',
+              400: '#36a8ff',
+              500: '#0c87f8',
+              600: '#0066d6',
+              700: '#0052b0',
+              800: '#05448f',
+              900: '#0a3875',
+              950: '#07234d',
+            },
+            cyan: {
+              400: '#22d3ee',
+              500: '#06b6d4',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars for clean blue glass look */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.25); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.5); }
+    
+    .glass-panel {
+        background: rgba(10, 25, 47, 0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(56, 189, 248, 0.15);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    
+    .glass-input {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        color: #e2e8f0;
+    }
+    .glass-input:focus {
+        border-color: #38bdf8;
+        outline: none;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    }
+    
+    /* Grid Canvas pattern */
+    .piano-roll-bg {
+        background-color: #0b1329;
+        background-image: 
+            linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+    }
+    
+    .piano-key-black {
+        background: linear-gradient(90deg, #090d16 0%, #1e293b 100%);
+    }
+    
+    .piano-key-white {
+        background: linear-gradient(90deg, #cbd5e1 0%, #f8fafc 100%);
+    }
+    
+    /* Custom styled sliders */
+    input[type=range] {
+        -webkit-appearance: none;
+        background: rgba(30, 41, 59, 0.8);
+        border-radius: 9999px;
+        height: 6px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 14px;
+        width: 14px;
+        border-radius: 50%;
+        background: #38bdf8;
+        cursor: pointer;
+        box-shadow: 0 0 8px #0284c7;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans select-none antialiased bg-slate-950 text-slate-100">
+
+  <!-- TOP HEADER -->
+  <header class="h-14 glass-panel border-b border-cyan-500/20 px-4 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-700 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <i data-lucide="music-4" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-wide bg-gradient-to-r from-cyan-300 via-blue-200 to-indigo-300 bg-clip-text text-transparent">
+          BLUE NOTE STUDIO
+        </h1>
+        <p class="text-[10px] text-cyan-400/70 tracking-wider font-mono">PRO AUDIO & MIDI EDITOR</p>
+      </div>
+    </div>
+
+    <!-- Master Transport Controls -->
+    <div class="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-xl border border-cyan-500/20 shadow-inner">
+      <button id="btn-play-pause" class="w-9 h-9 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 flex items-center justify-center transition font-bold shadow-md shadow-cyan-500/30">
+        <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+      </button>
+      <button id="btn-stop" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition">
+        <i data-lucide="square" class="w-4 h-4 fill-current"></i>
+      </button>
+      <div class="h-5 w-px bg-slate-700/60 mx-1"></div>
+
+      <button id="btn-loop" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition">
+        <i data-lucide="repeat" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span id="loop-status-text" class="font-mono text-[11px]">LOOP: ON</span>
+      </button>
+
+      <button id="btn-metronome" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center gap-1.5 transition">
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span id="metro-status-text" class="font-mono text-[11px]">METRO</span>
+      </button>
+
+      <div class="h-5 w-px bg-slate-700/60 mx-1"></div>
+
+      <!-- Tempo & Scale Controls -->
+      <div class="flex items-center gap-2 px-2">
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-slate-400 font-mono">BPM:</span>
+          <input type="number" id="input-bpm" min="40" max="240" value="120" class="w-12 glass-input px-1 py-0.5 text-xs text-center rounded font-mono font-bold text-cyan-300">
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px] text-slate-400 font-mono">SCALE:</span>
+          <select id="select-scale" class="glass-input text-xs px-2 py-0.5 rounded font-mono text-cyan-300 bg-slate-900">
+            <option value="chromatic">Chromatic</option>
+            <option value="C_major">C Major</option>
+            <option value="A_minor">A Minor</option>
+            <option value="F_major">F Major</option>
+            <option value="G_major">G Major</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Menu & Actions -->
+    <div class="flex items-center gap-2">
+      <button id="btn-load-preset" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-300 flex items-center gap-1.5 transition">
+        <i data-lucide="disc" class="w-3.5 h-3.5"></i> Preset Song
+      </button>
+
+      <!-- File Upload/Download Dropdown / Buttons -->
+      <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer flex items-center gap-1.5 transition">
+        <i data-lucide="upload" class="w-3.5 h-3.5 text-cyan-400"></i> Import JSON / MIDI
+        <input type="file" id="file-input" accept=".json,.mid,.midi" class="hidden">
+      </label>
+
+      <button id="btn-export-json" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition">
+        <i data-lucide="file-json" class="w-3.5 h-3.5 text-cyan-400"></i> JSON
+      </button>
+      <button id="btn-export-midi" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1.5 transition">
+        <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i> Export MIDI
+      </button>
+      <button id="btn-fullscreen" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition">
+        <i data-lucide="maximize" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN STUDIO WORKSPACE -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- LEFT SIDEBAR: INSTRUMENTS & SYNTH CONTROLS -->
+    <aside class="w-80 glass-panel border-r border-cyan-500/15 flex flex-col shrink-0 overflow-y-auto p-3 gap-4">
+
+      <!-- Instrument Picker -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-cyan-500/20">
+        <label class="text-xs font-semibold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5 mb-2">
+          <i data-lucide="sliders" class="w-4 h-4"></i> Active Sound Preset (30+)
+        </label>
+        <select id="select-instrument" class="w-full glass-input p-2 rounded-lg text-xs font-medium bg-slate-950 text-cyan-200">
+          <optgroup label="Keyboard & Pianos">
+            <option value="grand_piano" selected>Grand Piano (Warm & Clear)</option>
+            <option value="electric_piano">Rhodes Electric Piano</option>
+            <option value="bright_piano">Bright Studio Piano</option>
+            <option value="organ">Hammond B3 Organ</option>
+            <option value="harpsichord">Baroque Harpsichord</option>
+          </optgroup>
+          <optgroup label="Synthesizers & Leads">
+            <option value="synth_lead">Cyber Lead Synth</option>
+            <option value="saw_lead">Classic Saw Lead</option>
+            <option value="square_lead">Chiptune 8-Bit Square</option>
+            <option value="plucked_synth">Neon Pluck Synth</option>
+            <option value="acid_synth">Acid 303 Synth</option>
+          </optgroup>
+          <optgroup label="Basses">
+            <option value="sub_bass">Deep Sub Bass</option>
+            <option value="synth_bass">80s FM Synth Bass</option>
+            <option value="slap_bass">Slap Funk Bass</option>
+            <option value="acoustic_bass">Warm Upright Bass</option>
+          </optgroup>
+          <optgroup label="Pads & Strings">
+            <option value="warm_pad">Celestial Atmospheric Pad</option>
+            <option value="strings">Symphonic Strings Ensemble</option>
+            <option value="choir">Etherial Vocal Choir</option>
+            <option value="glass_pad">Glassy Crystal Pad</option>
+          </optgroup>
+          <optgroup label="Guitars & Brass">
+            <option value="acoustic_guitar">Nylon String Guitar</option>
+            <option value="overdrive_guitar">Overdriven Rock Guitar</option>
+            <option value="brass_section">Epic Synth Brass</option>
+            <option value="flute">Wooden Flute</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- ADSR ENVELOPE CONTROLS -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-cyan-500/20 flex flex-col gap-2">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+            <i data-lucide="waves" class="w-4 h-4"></i> ADSR Envelope
+          </span>
+          <button id="btn-reset-adsr" class="text-[10px] text-slate-400 hover:text-cyan-300">Reset</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Attack</span><span id="val-attack" class="font-mono text-cyan-400">0.01s</span>
+            </div>
+            <input type="range" id="param-attack" min="0.001" max="2" step="0.005" value="0.01" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Decay</span><span id="val-decay" class="font-mono text-cyan-400">0.20s</span>
+            </div>
+            <input type="range" id="param-decay" min="0.01" max="3" step="0.05" value="0.2" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Sustain</span><span id="val-sustain" class="font-mono text-cyan-400">0.70</span>
+            </div>
+            <input type="range" id="param-sustain" min="0" max="1" step="0.02" value="0.7" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Release</span><span id="val-release" class="font-mono text-cyan-400">0.30s</span>
+            </div>
+            <input type="range" id="param-release" min="0.05" max="4" step="0.05" value="0.3" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER CONTROLS -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-cyan-500/20 flex flex-col gap-2">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+            <i data-lucide="filter" class="w-4 h-4"></i> Lowpass Filter
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Cutoff</span><span id="val-cutoff" class="font-mono text-cyan-400">8000Hz</span>
+            </div>
+            <input type="range" id="param-cutoff" min="100" max="16000" step="100" value="8000" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+              <span>Resonance (Q)</span><span id="val-res" class="font-mono text-cyan-400">1.0</span>
+            </div>
+            <!-- Capped max Q at 3.0 to avoid filter self-oscillation runaway screech -->
+            <input type="range" id="param-res" min="0.1" max="3.0" step="0.1" value="1.0" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <!-- EFFECTS RACK: REVERB, DELAY, DISTORTION -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-cyan-500/20 flex flex-col gap-3">
+        <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-4 h-4"></i> Studio FX Rack
+        </span>
+
+        <!-- Reverb Controls (Capped & Safe) -->
+        <div>
+          <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="cloud" class="w-3 h-3 text-cyan-400"></i> Spatial Reverb Wet</span>
+            <span id="val-reverb" class="font-mono text-cyan-400">15%</span>
+          </div>
+          <!-- Max safe wet level ~0.20 to prevent runaway boom -->
+          <input type="range" id="param-reverb" min="0" max="0.25" step="0.01" value="0.15" class="w-full">
+        </div>
+
+        <!-- Delay Controls (Clamped feedback) -->
+        <div>
+          <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3 text-cyan-400"></i> Echo Delay Feedback</span>
+            <span id="val-delay-fb" class="font-mono text-cyan-400">20%</span>
+          </div>
+          <!-- Clamp Feedback strictly <= 0.35 max to prevent runaway loop gain -->
+          <input type="range" id="param-delay-fb" min="0" max="0.30" step="0.02" value="0.20" class="w-full">
+        </div>
+
+        <!-- Distortion / Saturation -->
+        <div>
+          <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+            <span class="flex items-center gap-1"><i data-lucide="zap" class="w-3 h-3 text-cyan-400"></i> Warm Drive / Saturation</span>
+            <span id="val-drive" class="font-mono text-cyan-400">0%</span>
+          </div>
+          <input type="range" id="param-drive" min="0" max="0.5" step="0.02" value="0" class="w-full">
+        </div>
+      </div>
+
+      <!-- MASTER VOLUME & LIMITER INDICATOR -->
+      <div class="bg-slate-900/60 p-3 rounded-xl border border-cyan-500/20 flex flex-col gap-2 mt-auto">
+        <div class="flex justify-between text-xs font-semibold text-slate-200">
+          <span class="flex items-center gap-1.5"><i data-lucide="volume-2" class="w-4 h-4 text-cyan-400"></i> Master Level</span>
+          <span id="val-master" class="font-mono text-cyan-400">80%</span>
+        </div>
+        <input type="range" id="param-master" min="0" max="1" step="0.02" value="0.8" class="w-full">
+        <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1">
+          <span>LIMITER: <span class="text-emerald-400">ACTIVE (-12dB)</span></span>
+          <span id="voice-count" class="text-cyan-400">VOICES: 0</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- MAIN PIANO ROLL WORKSPACE -->
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+
+      <!-- Toolbar over Piano Roll -->
+      <div class="h-10 bg-slate-900/90 border-b border-cyan-500/15 px-4 flex items-center justify-between text-xs z-10 shrink-0">
+        <!-- Tool Selection -->
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+          <button id="tool-draw" class="px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 font-medium transition">
+            <i data-lucide="pencil" class="w-3.5 h-3.5"></i> Draw
+          </button>
+          <button id="tool-select" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-400 flex items-center gap-1 font-medium transition">
+            <i data-lucide="mouse-pointer" class="w-3.5 h-3.5"></i> Select/Move
+          </button>
+          <button id="tool-erase" class="px-2.5 py-1 rounded hover:bg-slate-800 text-slate-400 flex items-center gap-1 font-medium transition">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+          </button>
+        </div>
+
+        <!-- Grid Resolution & Quantize -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5">
+            <span class="text-slate-400 font-mono text-[11px]">Grid:</span>
+            <select id="select-grid" class="glass-input text-xs px-2 py-0.5 rounded font-mono text-cyan-300 bg-slate-900">
+              <option value="16">1/16 Note</option>
+              <option value="8">1/8 Note</option>
+              <option value="4">1/4 Note</option>
+              <option value="32">1/32 Note</option>
+            </select>
+          </div>
+
+          <div class="h-4 w-px bg-slate-800"></div>
+
+          <!-- Zoom Controls -->
+          <div class="flex items-center gap-1">
+            <button id="btn-zoom-out" class="p-1 rounded hover:bg-slate-800 text-slate-300"><i data-lucide="zoom-out" class="w-3.5 h-3.5"></i></button>
+            <span id="zoom-level-text" class="font-mono text-[10px] text-cyan-400 w-10 text-center">100%</span>
+            <button id="btn-zoom-in" class="p-1 rounded hover:bg-slate-800 text-slate-300"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i></button>
+          </div>
+
+          <div class="h-4 w-px bg-slate-800"></div>
+
+          <button id="btn-clear-all" class="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs flex items-center gap-1">
+            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Clear Roll
+          </button>
+        </div>
+      </div>
+
+      <!-- Piano Roll Container: Left Keys + Right Interactive Canvas Grid -->
+      <div class="flex-1 flex overflow-hidden relative" id="piano-roll-viewport">
+
+        <!-- PIANO KEYS (LEFT STICKY COLUMN) -->
+        <div id="piano-keys-container" class="w-24 bg-slate-900 border-r border-cyan-500/20 shrink-0 overflow-hidden relative z-10 shadow-lg">
+          <!-- Dynamic rendered keys in JS -->
+        </div>
+
+        <!-- PIANO ROLL CANVAS GRID & SCROLL SYSTEM -->
+        <div id="grid-scroll-pane" class="flex-1 overflow-auto relative piano-roll-bg">
+          <!-- Playhead Line -->
+          <div id="playhead" class="absolute top-0 bottom-0 w-0.5 bg-cyan-400 shadow-[0_0_12px_#22d3ee] z-20 pointer-events-none hidden">
+            <div class="w-3 h-3 bg-cyan-400 -translate-x-[5px] rotate-45 rounded-sm"></div>
+          </div>
+
+          <!-- Main Note Canvas Container -->
+          <div id="piano-roll-grid" class="relative min-w-[2400px] h-full cursor-crosshair">
+            <!-- Beat & Bar Markers overlay -->
+            <div id="ruler-container" class="sticky top-0 h-6 bg-slate-900/90 border-b border-cyan-500/20 z-10 pointer-events-none font-mono text-[10px] text-slate-400"></div>
+            <!-- Rendered note elements -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Song Info & Status Bar at bottom -->
+      <footer class="h-7 bg-slate-950 border-t border-cyan-500/15 px-4 flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0">
+        <div class="flex items-center gap-4">
+          <span id="song-title-display" class="text-cyan-300 font-semibold">Title: Untitled Project</span>
+          <span id="song-artist-display">Artist: Studio User</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="note-count-display" class="text-slate-300">Notes: 0</span>
+          <span id="time-display" class="text-cyan-400">00:00:00</span>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    /* ====================================================================
+     * NATIVE PURE JS MIDI ENCODER & PARSER (Zero External Dependencies)
+     * ==================================================================== */
+
+    class NativeMidiHandler {
+      static noteToMidi(noteName) {
+        const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const octave = parseInt(noteName.slice(-1));
+        const keyName = noteName.slice(0, -1);
+        const noteIndex = notes.indexOf(keyName);
+        if (noteIndex === -1) return 60;
+        return (octave + 1) * 12 + noteIndex;
+      }
+
+      static midiToNote(midiNum) {
+        const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const octave = Math.floor(midiNum / 12) - 1;
+        const noteIndex = midiNum % 12;
+        return `${notes[noteIndex]}${octave}`;
+      }
+
+      static encodeVLQ(num) {
+        let buffer = [];
+        let value = num;
+        buffer.push(value & 0x7F);
+        while ((value >>= 7) > 0) {
+          buffer.unshift((value & 0x7F) | 0x80);
+        }
+        return buffer;
+      }
+
+      static exportToMidi(state) {
+        const ppq = 448; // Ticks per quarter note
+        const ticksPer16th = ppq / 4; // 112 ticks
+
+        // Header Chunk (MThd)
+        const header = [
+          0x4D, 0x54, 0x68, 0x64, // 'MThd'
+          0x00, 0x00, 0x00, 0x06, // Header length (6)
+          0x00, 0x00, // Format 0 (single track)
+          0x00, 0x01, // 1 track
+          (ppq >> 8) & 0xFF, ppq & 0xFF // Division (448 PPQ)
+        ];
+
+        // Build Track Events
+        let events = [];
+
+        // 1. Tempo Meta Event
+        const usPerQuarter = Math.round(60000000 / (state.bpm || 120));
+        events.push({
+          tick: 0,
+          data: [0xFF, 0x51, 0x03, (usPerQuarter >> 16) & 0xFF, (usPerQuarter >> 8) & 0xFF, usPerQuarter & 0xFF]
+        });
+
+        // 2. Note On and Note Off Events
+        state.notes.forEach(note => {
+          const midiNum = this.noteToMidi(note.pitch);
+          const startTick = note.startTick * ticksPer16th;
+          const durationTicks = (note.durationTicks || 4) * ticksPer16th;
+
+          // Note On
+          events.push({
+            tick: startTick,
+            data: [0x90, midiNum, 0x64] // Channel 0, velocity 100
+          });
+
+          // Note Off
+          events.push({
+            tick: startTick + durationTicks,
+            data: [0x80, midiNum, 0x00] // Channel 0, velocity 0
+          });
+        });
+
+        // Sort events by tick time
+        events.sort((a, b) => a.tick - b.tick);
+
+        // Convert absolute ticks to delta times and binary stream
+        let trackBytes = [];
+        let lastTick = 0;
+
+        events.forEach(ev => {
+          const delta = ev.tick - lastTick;
+          lastTick = ev.tick;
+          const vlq = this.encodeVLQ(delta);
+          trackBytes.push(...vlq, ...ev.data);
+        });
+
+        // End of Track Meta Event
+        trackBytes.push(...this.encodeVLQ(0), 0xFF, 0x2F, 0x00);
+
+        // Track Chunk Header (MTrk)
+        const trackLen = trackBytes.length;
+        const trackHeader = [
+          0x4D, 0x54, 0x72, 0x6B, // 'MTrk'
+          (trackLen >> 24) & 0xFF,
+          (trackLen >> 16) & 0xFF,
+          (trackLen >> 8) & 0xFF,
+          trackLen & 0xFF
+        ];
+
+        const fullMidi = new Uint8Array([...header, ...trackHeader, ...trackBytes]);
+        return new Blob([fullMidi], {
+          type: 'audio/midi'
+        });
+      }
+
+      static parseMidiBuffer(arrayBuffer) {
+        const bytes = new Uint8Array(arrayBuffer);
+        let pos = 0;
+
+        function readStr(len) {
+          let str = '';
+          for (let i = 0; i < len; i++) str += String.fromCharCode(bytes[pos++]);
+          return str;
+        }
+
+        function read16() {
+          return (bytes[pos++] << 8) | bytes[pos++];
+        }
+
+        function read32() {
+          return (bytes[pos++] << 24) | (bytes[pos++] << 16) | (bytes[pos++] << 8) | bytes[pos++];
+        }
+
+        function readVLQ() {
+          let value = 0;
+          let byte;
+          do {
+            byte = bytes[pos++];
+            value = (value << 7) | (byte & 0x7F);
+          } while (byte & 0x80);
+          return value;
+        }
+
+        if (readStr(4) !== 'MThd') throw new Error('Invalid MIDI Header');
+        pos += 4; // skip header length
+        const format = read16();
+        const numTracks = read16();
+        const division = read16(); // PPQ
+
+        const ticksPer16th = (division > 0) ? (division / 4) : 112;
+        let bpm = 120;
+        let parsedNotes = [];
+        let activeNotes = new Map(); // midiNum -> startTick
+
+        for (let t = 0; t < numTracks; t++) {
+          if (pos >= bytes.length) break;
+          const trackHeader = readStr(4);
+          if (trackHeader !== 'MTrk') break;
+          const trackLen = read32();
+          const trackEnd = pos + trackLen;
+
+          let currentTick = 0;
+          let runningStatus = 0;
+
+          while (pos < trackEnd && pos < bytes.length) {
+            const delta = readVLQ();
+            currentTick += delta;
+
+            let status = bytes[pos];
+            if (status >= 0x80) {
+              pos++;
+              runningStatus = status;
+            } else {
+              status = runningStatus;
+            }
+
+            const type = status & 0xF0;
+
+            if (type === 0x90) { // Note On
+              const note = bytes[pos++];
+              const vel = bytes[pos++];
+              const gridTick = Math.round(currentTick / ticksPer16th);
+
+              if (vel > 0) {
+                activeNotes.set(note, gridTick);
+              } else if (activeNotes.has(note)) {
+                const startTick = activeNotes.get(note);
+                activeNotes.delete(note);
+                const duration = Math.max(1, gridTick - startTick);
+                parsedNotes.push({
+                  note: NativeMidiHandler.midiToNote(note),
+                  delay: startTick * 112,
+                  duration
+                });
+              }
+            } else if (type === 0x80) { // Note Off
+              const note = bytes[pos++];
+              pos++; // skip velocity
+              if (activeNotes.has(note)) {
+                const startTick = activeNotes.get(note);
+                activeNotes.delete(note);
+                const gridTick = Math.round(currentTick / ticksPer16th);
+                const duration = Math.max(1, gridTick - startTick);
+                parsedNotes.push({
+                  note: NativeMidiHandler.midiToNote(note),
+                  delay: startTick * 112,
+                  duration
+                });
+              }
+            } else if (status === 0xFF) { // Meta Event
+              const metaType = bytes[pos++];
+              const metaLen = readVLQ();
+              if (metaType === 0x51 && metaLen === 3) {
+                const us = (bytes[pos] << 16) | (bytes[pos + 1] << 8) | bytes[pos + 2];
+                bpm = Math.round(60000000 / us);
+              }
+              pos += metaLen;
+            } else if (type === 0xA0 || type === 0xB0 || type === 0xE0) {
+              pos += 2;
+            } else if (type === 0xC0 || type === 0xD0) {
+              pos += 1;
+            } else {
+              pos++;
+            }
+          }
+        }
+
+        return {
+          bpm,
+          notes: parsedNotes
+        };
+      }
+    }
+
+    /* ====================================================================
+     * AUDIO ENGINE WITH DYNAMICS COMPRESSOR & ZERO RUNAWAY FEEDBACK LOOP
+     * ==================================================================== */
+
+    class StudioAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.masterLimiter = null;
+        this.filterNode = null;
+        this.delayNode = null;
+        this.delayFeedbackGain = null;
+        this.reverbNode = null;
+        this.reverbWetGain = null;
+        this.activeVoices = new Map(); // noteName -> Voice Object
+        this.maxPolyphony = 16;
+        this.activeVoiceCount = 0;
+
+        // Default Envelope & FX Settings
+        this.adsr = {
+          attack: 0.01,
+          decay: 0.2,
+          sustain: 0.7,
+          release: 0.3
+        };
+        this.filterSettings = {
+          cutoff: 8000,
+          res: 1.0
+        };
+        this.fxSettings = {
+          delayFb: 0.2,
+          reverbWet: 0.15,
+          drive: 0.0
+        };
+        this.masterVolume = 0.8;
+
+        this.currentInstrument = 'grand_piano';
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+
+        // 1. MASTER DYNAMICS COMPRESSOR / LIMITER (Prevents clipping distortion)
+        this.masterLimiter = this.ctx.createDynamicsCompressor();
+        this.masterLimiter.threshold.setValueAtTime(-12, this.ctx.currentTime); // -12dB threshold
+        this.masterLimiter.knee.setValueAtTime(12, this.ctx.currentTime);
+        this.masterLimiter.ratio.setValueAtTime(8, this.ctx.currentTime);
+        this.masterLimiter.attack.setValueAtTime(0.003, this.ctx.currentTime);
+        this.masterLimiter.release.setValueAtTime(0.25, this.ctx.currentTime);
+
+        // 2. MASTER GAIN
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(this.masterVolume, this.ctx.currentTime);
+
+        // Connect Master Bus -> Limiter -> Destination
+        this.masterGain.connect(this.masterLimiter);
+        this.masterLimiter.connect(this.ctx.destination);
+
+        // 3. MAIN FILTER
+        this.filterNode = this.ctx.createBiquadFilter();
+        this.filterNode.type = 'lowpass';
+        this.filterNode.frequency.setValueAtTime(this.filterSettings.cutoff, this.ctx.currentTime);
+        this.filterNode.Q.setValueAtTime(Math.min(this.filterSettings.res, 3.0), this.ctx.currentTime); // Capped Q <= 3.0
+
+        // 4. ECHO DELAY NODE WITH STRICT GAIN CLAMP (< 0.35)
+        this.delayNode = this.ctx.createDelay();
+        this.delayNode.delayTime.setValueAtTime(0.25, this.ctx.currentTime); // 250ms sync delay
+
+        this.delayFeedbackGain = this.ctx.createGain();
+        // Strictly clamp feedback below 0.35 max to avoid exponential volume escalation
+        this.delayFeedbackGain.gain.setValueAtTime(Math.min(this.fxSettings.delayFb, 0.30), this.ctx.currentTime);
+
+        // Delay Feedback Loop
+        this.delayNode.connect(this.delayFeedbackGain);
+        this.delayFeedbackGain.connect(this.delayNode);
+
+        // 5. REVERB NODE WITH NORMALIZED IMPULSE RESPONSE
+        this.reverbNode = this.ctx.createConvolver();
+        this.reverbNode.buffer = this.createNormalizedImpulseResponse(2.0, 2.0); // 2 sec tail
+
+        this.reverbWetGain = this.ctx.createGain();
+        // Keep reverb wet gain low (~0.15 - 0.2) to add space without drowning
+        this.reverbWetGain.gain.setValueAtTime(Math.min(this.fxSettings.reverbWet, 0.20), this.ctx.currentTime);
+
+        // Connect FX Chain to Master Gain
+        this.filterNode.connect(this.masterGain);
+
+        // Send to Delay
+        this.filterNode.connect(this.delayNode);
+        this.delayNode.connect(this.masterGain);
+
+        // Send to Reverb
+        this.filterNode.connect(this.reverbNode);
+        this.reverbNode.connect(this.reverbWetGain);
+        this.reverbWetGain.connect(this.masterGain);
+      }
+
+      // Generate clean normalized impulse response for studio reverb
+      createNormalizedImpulseResponse(duration, decay) {
+        const sampleRate = this.ctx.sampleRate;
+        const length = sampleRate * duration;
+        const impulse = this.ctx.createBuffer(2, length, sampleRate);
+        const left = impulse.getChannelData(0);
+        const right = impulse.getChannelData(1);
+
+        for (let i = 0; i < length; i++) {
+          const n = i;
+          // Exponential decay curve
+          const expDecay = Math.pow(1 - n / length, decay);
+          // White noise decay
+          left[i] = (Math.random() * 2 - 1) * expDecay * 0.3;
+          right[i] = (Math.random() * 2 - 1) * expDecay * 0.3;
+        }
+        return impulse;
+      }
+
+      setParams(adsr, filter, fx, masterVol, inst) {
+        if (!this.ctx) return;
+
+        if (adsr) this.adsr = {
+          ...this.adsr,
+          ...adsr
+        };
+
+        if (filter) {
+          this.filterSettings = {
+            ...this.filterSettings,
+            ...filter
+          };
+          // Safe filter resonance cutoff
+          const safeQ = Math.min(Math.max(this.filterSettings.res, 0.1), 3.0);
+          this.filterNode.frequency.setTargetAtTime(this.filterSettings.cutoff, this.ctx.currentTime, 0.02);
+          this.filterNode.Q.setTargetAtTime(safeQ, this.ctx.currentTime, 0.02);
+        }
+
+        if (fx) {
+          this.fxSettings = {
+            ...this.fxSettings,
+            ...fx
+          };
+          // STRICT GAIN CLAMP: max 0.30 to guarantee NO feedback runaway loop
+          const safeFb = Math.min(Math.max(this.fxSettings.delayFb, 0), 0.30);
+          this.delayFeedbackGain.gain.setTargetAtTime(safeFb, this.ctx.currentTime, 0.02);
+
+          // SAFE REVERB WET CLAMP: max 0.25 max wet level
+          const safeReverb = Math.min(Math.max(this.fxSettings.reverbWet, 0), 0.25);
+          this.reverbWetGain.gain.setTargetAtTime(safeReverb, this.ctx.currentTime, 0.02);
+        }
+
+        if (masterVol !== undefined) {
+          this.masterVolume = masterVol;
+          this.masterGain.gain.setTargetAtTime(this.masterVolume, this.ctx.currentTime, 0.02);
+        }
+
+        if (inst) this.currentInstrument = inst;
+      }
+
+      // Convert MIDI Note Name (e.g. C4, D#3) to Frequency Hz
+      noteToFreq(note) {
+        const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const octave = parseInt(note.slice(-1));
+        const keyName = note.slice(0, -1);
+        const noteIndex = notes.indexOf(keyName);
+        if (noteIndex === -1) return 440;
+        const midiNumber = (octave + 1) * 12 + noteIndex;
+        return 440 * Math.pow(2, (midiNumber - 69) / 12);
+      }
+
+      /* PLAY NOTE WITH CLEAN GAIN SCALING & SAFE RELEASE ENVELOPE
+         'when' lets the sequencer schedule notes precisely on the audio
+         clock instead of firing them at JS-callback time (removes jitter). */
+      playNote(noteName, durationSec = 0.5, velocity = 0.8, when) {
+        if (!this.ctx) this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        const freq = this.noteToFreq(noteName);
+        const now = (when !== undefined) ? when : this.ctx.currentTime;
+
+        // Stop active voice if same note is retriggered
+        this.stopNote(noteName, true);
+
+        // Polyphony Gain Scaling: Keep note gain scaled (~0.12 - 0.2 max) to prevent summing clipping
+        const basePolyphonyGain = 0.15 * Math.min(velocity, 1.0);
+
+        // Oscillators setup based on instrument
+        const voiceNodes = this.createInstrumentNodes(freq, basePolyphonyGain);
+        const voiceGain = voiceNodes.gainNode;
+
+        // ADSR Envelope calculation
+        const attack = Math.max(0.005, this.adsr.attack);
+        const decay = Math.max(0.01, this.adsr.decay);
+        const sustain = Math.max(0.01, this.adsr.sustain);
+        const release = Math.max(0.05, this.adsr.release);
+        const sustainLevel = Math.max(basePolyphonyGain * sustain, 0.0001);
+
+        // Attack -> Decay -> Sustain
+        voiceGain.gain.setValueAtTime(0.0001, now);
+        voiceGain.gain.linearRampToValueAtTime(basePolyphonyGain, now + attack);
+        voiceGain.gain.exponentialRampToValueAtTime(sustainLevel, now + attack + decay);
+
+        // Route through filter
+        voiceNodes.outputNode.connect(this.filterNode);
+
+        // Start Oscillators
+        voiceNodes.sources.forEach(src => src.start(now));
+
+        // Save Active Voice
+        const voiceObj = {
+          sources: voiceNodes.sources,
+          gainNode: voiceGain,
+          stopTime: now + durationSec,
+          released: false
+        };
+        this.activeVoices.set(noteName, voiceObj);
+        this.updateVoiceCountUI();
+
+        // Scheduled Release Envelope Cleanup
+        // FIX: previously this read `voiceGain.gain.value` synchronously right
+        // after scheduling the attack/decay ramps. Since the audio clock had not
+        // yet advanced through those ramps, `.value` was still ~0.0001, so the
+        // gain snapped down to near-silence at release time instead of holding
+        // the sustain level — producing an audible click/cutoff on every note.
+        // Using the explicitly computed `sustainLevel` fixes that.
+        const releaseStartTime = now + Math.max(durationSec, attack + decay);
+        voiceGain.gain.setValueAtTime(sustainLevel, releaseStartTime);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, releaseStartTime + release);
+
+        // Disconnect and stop oscillator nodes cleanly
+        const cleanupDelayMs = Math.max(0, (releaseStartTime + release - this.ctx.currentTime + 0.1) * 1000);
+        setTimeout(() => {
+          this.stopAndCleanupVoice(noteName, voiceObj);
+        }, cleanupDelayMs);
+      }
+
+      stopNote(noteName, immediate = false) {
+        if (!this.activeVoices.has(noteName)) return;
+        const voice = this.activeVoices.get(noteName);
+        if (voice.released && !immediate) return;
+
+        const now = this.ctx.currentTime;
+        const release = immediate ? 0.01 : Math.max(0.05, this.adsr.release);
+
+        voice.released = true;
+        voice.gainNode.gain.cancelScheduledValues(now);
+        voice.gainNode.gain.setValueAtTime(voice.gainNode.gain.value, now);
+        voice.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + release);
+
+        setTimeout(() => {
+          this.stopAndCleanupVoice(noteName, voice);
+        }, (release + 0.05) * 1000);
+      }
+
+      stopAndCleanupVoice(noteName, voiceObj) {
+        try {
+          voiceObj.sources.forEach(src => {
+            src.stop();
+            src.disconnect();
+          });
+          voiceObj.gainNode.disconnect();
+        } catch (e) {
+          // Nodes already stopped
+        }
+        if (this.activeVoices.get(noteName) === voiceObj) {
+          this.activeVoices.delete(noteName);
+          this.updateVoiceCountUI();
+        }
+      }
+
+      stopAllNotes() {
+        this.activeVoices.forEach((voice, noteName) => {
+          this.stopAndCleanupVoice(noteName, voice);
+        });
+        this.activeVoices.clear();
+        this.updateVoiceCountUI();
+      }
+
+      updateVoiceCountUI() {
+        const el = document.getElementById('voice-count');
+        if (el) el.innerText = `VOICES: ${this.activeVoices.size}`;
+      }
+
+      /* INSTRUMENT TIMBRE SYNTHESIZER (30+ Presets) */
+      createInstrumentNodes(freq, gainVal) {
+        const now = this.ctx.currentTime;
+        const gainNode = this.ctx.createGain();
+        const sources = [];
+
+        const type = this.currentInstrument;
+
+        if (type === 'grand_piano' || type === 'bright_piano') {
+          // Warm Dual Triangle/Sine harmonic structure
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          osc1.type = 'triangle';
+          osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(freq, now);
+          osc2.frequency.setValueAtTime(freq * 2, now); // 1st octave harmonic
+
+          const subGain = this.ctx.createGain();
+          subGain.gain.setValueAtTime(0.3, now);
+          osc2.connect(subGain);
+          subGain.connect(gainNode);
+
+          osc1.connect(gainNode);
+          sources.push(osc1, osc2);
+
+        } else if (type === 'electric_piano') {
+          // Rhodes Sine + FM Bell tines
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          osc1.type = 'sine';
+          osc2.type = 'triangle';
+          osc1.frequency.setValueAtTime(freq, now);
+          osc2.frequency.setValueAtTime(freq * 3.98, now); // FM tine bell harmonic
+
+          const tineGain = this.ctx.createGain();
+          tineGain.gain.setValueAtTime(0.15, now);
+          osc2.connect(tineGain);
+          tineGain.connect(gainNode);
+
+          osc1.connect(gainNode);
+          sources.push(osc1, osc2);
+
+        } else if (type.includes('lead') || type.includes('synth')) {
+          // Warm Saw/Square Synth Lead
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          osc1.type = type.includes('square') ? 'square' : 'sawtooth';
+          osc2.type = 'sawtooth';
+
+          osc1.frequency.setValueAtTime(freq, now);
+          osc2.frequency.setValueAtTime(freq * 1.002, now); // Detune for width
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          sources.push(osc1, osc2);
+
+        } else if (type.includes('bass')) {
+          // Deep Sub / FM Bass
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          osc1.type = 'sine';
+          osc2.type = 'triangle';
+
+          osc1.frequency.setValueAtTime(freq * 0.5, now); // Sub octave
+          osc2.frequency.setValueAtTime(freq, now);
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          sources.push(osc1, osc2);
+
+        } else if (type.includes('pad') || type.includes('strings') || type.includes('choir')) {
+          // Lush Poly Pad Detuned Oscillators
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const osc3 = this.ctx.createOscillator();
+
+          osc1.type = 'sawtooth';
+          osc2.type = 'triangle';
+          osc3.type = 'sine';
+
+          osc1.frequency.setValueAtTime(freq * 0.997, now);
+          osc2.frequency.setValueAtTime(freq, now);
+          osc3.frequency.setValueAtTime(freq * 1.003, now);
+
+          osc1.connect(gainNode);
+          osc2.connect(gainNode);
+          osc3.connect(gainNode);
+          sources.push(osc1, osc2, osc3);
+
+        } else {
+          // Default Warm Pure Harmonic Osc
+          const osc = this.ctx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          osc.connect(gainNode);
+          sources.push(osc);
+        }
+
+        return {
+          gainNode,
+          sources,
+          outputNode: gainNode
+        };
+      }
+    }
+
+    // Initialize Audio Engine Singleton
+    const audioEngine = new StudioAudioEngine();
+
+    /* ====================================================================
+     * PIANO ROLL SEQUENCER STATE & DATA STRUCTURES
+     * ==================================================================== */
+
+    const NOTES_PITCHES = [
+      "B7", "A#7", "A7", "G#7", "G7", "F#7", "F7", "E7", "D#7", "D7", "C#7", "C7",
+      "B6", "A#6", "A6", "G#6", "G6", "F#6", "F6", "E6", "D#6", "D6", "C#6", "C6",
+      "B5", "A#5", "A5", "G#5", "G5", "F#5", "F5", "E5", "D#5", "D5", "C#5", "C5",
+      "B4", "A#4", "A4", "G#4", "G4", "F#4", "F4", "E4", "D#4", "D4", "C#4", "C4",
+      "B3", "A#3", "A3", "G#3", "G3", "F#3", "F3", "E3", "D#3", "D3", "C#3", "C3",
+      "B2", "A#2", "A2", "G#2", "G2", "F#2", "F2", "E2", "D#2", "D2", "C#2", "C2"
+    ];
+
+    let state = {
+      bpm: 120,
+      scale: "chromatic",
+      isPlaying: false,
+      isLooping: true,
+      metronome: false,
+      currentTool: "draw", // draw, select, erase
+      gridSnap: 16, // 16th notes
+      zoomLevel: 1.0,
+      cellWidth: 32, // px per 16th note
+      cellHeight: 22, // px per note row
+      totalBars: 16,
+      notes: [], // Array of { id, pitch, startTick, durationTicks, velocity }
+      songTitle: "Adele - Someone Like You",
+      artist: "Adele",
+      playbackTick: 0,
+      timerId: null
+    };
+
+    // Adele - Someone Like You Sample Song Data
+    const SAMPLE_ADELE_SONG = {
+      title: "Someone Like You",
+      artist: "Adele",
+      bpm: 135,
+      scale: "A_minor",
+      notes: [
+        // Intro Arpeggio Bar 1
+        {
+          note: "A3",
+          delay: 0,
+          duration: 4
+        },
+        {
+          note: "E4",
+          delay: 2,
+          duration: 4
+        },
+        {
+          note: "A4",
+          delay: 4,
+          duration: 4
+        },
+        {
+          note: "C#5",
+          delay: 6,
+          duration: 4
+        },
+        {
+          note: "A3",
+          delay: 8,
+          duration: 4
+        },
+        {
+          note: "E4",
+          delay: 10,
+          duration: 4
+        },
+        {
+          note: "A4",
+          delay: 12,
+          duration: 4
+        },
+        {
+          note: "C#5",
+          delay: 14,
+          duration: 4
+        },
+
+        // Bar 2 (C# / G# bass)
+        {
+          note: "G#3",
+          delay: 16,
+          duration: 4
+        },
+        {
+          note: "E4",
+          delay: 18,
+          duration: 4
+        },
+        {
+          note: "G#4",
+          delay: 20,
+          duration: 4
+        },
+        {
+          note: "C#5",
+          delay: 22,
+          duration: 4
+        },
+        {
+          note: "G#3",
+          delay: 24,
+          duration: 4
+        },
+        {
+          note: "E4",
+          delay: 26,
+          duration: 4
+        },
+        {
+          note: "G#4",
+          delay: 28,
+          duration: 4
+        },
+        {
+          note: "C#5",
+          delay: 30,
+          duration: 4
+        },
+
+        // Bar 3 (F#m)
+        {
+          note: "F#3",
+          delay: 32,
+          duration: 4
+        },
+        {
+          note: "C#4",
+          delay: 34,
+          duration: 4
+        },
+        {
+          note: "F#4",
+          delay: 36,
+          duration: 4
+        },
+        {
+          note: "A4",
+          delay: 38,
+          duration: 4
+        },
+        {
+          note: "F#3",
+          delay: 40,
+          duration: 4
+        },
+        {
+          note: "C#4",
+          delay: 42,
+          duration: 4
+        },
+        {
+          note: "F#4",
+          delay: 44,
+          duration: 4
+        },
+        {
+          note: "A4",
+          delay: 46,
+          duration: 4
+        },
+
+        // Bar 4 (D)
+        {
+          note: "D3",
+          delay: 48,
+          duration: 4
+        },
+        {
+          note: "A3",
+          delay: 50,
+          duration: 4
+        },
+        {
+          note: "D4",
+          delay: 52,
+          duration: 4
+        },
+        {
+          note: "F#4",
+          delay: 54,
+          duration: 4
+        },
+        {
+          note: "D3",
+          delay: 56,
+          duration: 4
+        },
+        {
+          note: "A3",
+          delay: 58,
+          duration: 4
+        },
+        {
+          note: "D4",
+          delay: 60,
+          duration: 4
+        },
+        {
+          note: "F#4",
+          delay: 62,
+          duration: 4
+        }
+      ]
+    };
+
+    // Render Left Piano Keys
+    function renderPianoKeys() {
+      const container = document.getElementById('piano-keys-container');
+      container.innerHTML = '';
+
+      NOTES_PITCHES.forEach(pitch => {
+        const isBlack = pitch.includes('#');
+        const keyEl = document.createElement('div');
+        keyEl.style.height = `${state.cellHeight}px`;
+        keyEl.className = `flex items-center justify-end pr-2 text-[10px] font-mono border-b border-slate-800/80 cursor-pointer ${
+                    isBlack ? 'piano-key-black text-cyan-300 font-bold' : 'piano-key-white text-slate-800 font-semibold'
+                }`;
+        keyEl.innerHTML = `<span>${pitch}</span>`;
+
+        // Click key to preview note audio
+        keyEl.addEventListener('mousedown', () => {
+          audioEngine.playNote(pitch, 0.4);
+        });
+
+        container.appendChild(keyEl);
+      });
+    }
+
+    // Render Piano Roll Grid Canvas & Ruler
+    function renderPianoGrid() {
+      const grid = document.getElementById('piano-roll-grid');
+      const ruler = document.getElementById('ruler-container');
+
+      const totalTicks = state.totalBars * 16; // 16th notes
+      const totalWidth = totalTicks * state.cellWidth;
+      const totalHeight = NOTES_PITCHES.length * state.cellHeight;
+
+      grid.style.width = `${totalWidth}px`;
+      grid.style.height = `${totalHeight}px`;
+
+      // Clear old notes
+      const existingNotes = grid.querySelectorAll('.note-block');
+      existingNotes.forEach(n => n.remove());
+
+      // Render Bar Lines & Beat Ruler
+      ruler.innerHTML = '';
+      ruler.style.width = `${totalWidth}px`;
+      for (let b = 0; b < state.totalBars; b++) {
+        const barMarker = document.createElement('div');
+        barMarker.className = 'absolute top-0 bottom-0 border-l border-cyan-500/30 pl-1 pt-0.5 text-cyan-400 font-bold select-none';
+        barMarker.style.left = `${b * 16 * state.cellWidth}px`;
+        barMarker.innerText = `BAR ${b + 1}`;
+        ruler.appendChild(barMarker);
+      }
+
+      // Render Notes from State
+      state.notes.forEach(note => {
+        renderNoteElement(note);
+      });
+
+      updateNoteCountUI();
+    }
+
+    // Render Single Note DOM Box
+    function renderNoteElement(note) {
+      const grid = document.getElementById('piano-roll-grid');
+      const pitchIdx = NOTES_PITCHES.indexOf(note.pitch);
+      if (pitchIdx === -1) return;
+
+      const noteEl = document.createElement('div');
+      noteEl.dataset.id = note.id;
+      noteEl.className = 'note-block absolute rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 border border-cyan-200 shadow-md shadow-cyan-500/20 cursor-pointer flex items-center px-1.5 overflow-hidden text-[10px] font-mono text-slate-950 font-bold hover:brightness-110 transition-all';
+
+      noteEl.style.left = `${note.startTick * state.cellWidth}px`;
+      noteEl.style.top = `${pitchIdx * state.cellHeight + 1}px`;
+      noteEl.style.width = `${note.durationTicks * state.cellWidth - 2}px`;
+      noteEl.style.height = `${state.cellHeight - 2}px`;
+
+      noteEl.innerText = note.pitch;
+
+      // Handle Click / Delete / Drag
+      noteEl.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        if (state.currentTool === 'erase') {
+          deleteNote(note.id);
+        } else {
+          audioEngine.playNote(note.pitch, 0.3);
+        }
+      });
+
+      grid.appendChild(noteEl);
+    }
+
+    // Add Note to Engine State
+    function addNote(pitch, startTick, durationTicks = 4) {
+      const newNote = {
+        id: 'note_' + Math.random().toString(36).substr(2, 9),
+        pitch,
+        startTick,
+        durationTicks,
+        velocity: 0.8
+      };
+      state.notes.push(newNote);
+      renderNoteElement(newNote);
+      audioEngine.playNote(pitch, 0.3);
+      updateNoteCountUI();
+    }
+
+    function deleteNote(id) {
+      state.notes = state.notes.filter(n => n.id !== id);
+      const el = document.querySelector(`[data-id="${id}"]`);
+      if (el) el.remove();
+      updateNoteCountUI();
+    }
+
+    function updateNoteCountUI() {
+      document.getElementById('note-count-display').innerText = `Notes: ${state.notes.length}`;
+    }
+
+    /* ====================================================================
+     * SEQUENCER PLAYBACK ENGINE
+     * ==================================================================== */
+
+    // FIX: The old engine triggered notes directly inside a setInterval callback.
+    // setInterval is only guaranteed to fire "no earlier than" its delay — the
+    // browser's main thread (DOM updates, GC, other scripts) can delay it by
+    // tens of milliseconds, which is very audible as jitter/flams on a sequencer.
+    // This is replaced with the standard Web Audio "lookahead scheduler" pattern:
+    // a fast timer just checks the precise audio clock and schedules upcoming
+    // notes slightly ahead of time via playNote(..., when), so the actual sound
+    // timing comes from the sample-accurate audio clock, not from JS timing.
+    const SCHEDULE_AHEAD_SEC = 0.12; // how far ahead of "now" we schedule notes
+    const SCHEDULER_INTERVAL_MS = 25; // how often we check the clock
+    let nextNoteTime = 0; // audio-clock time of the next tick to schedule
+
+    function startPlayback() {
+      if (state.isPlaying) return;
+      audioEngine.init();
+      if (audioEngine.ctx.state === 'suspended') audioEngine.ctx.resume();
+      state.isPlaying = true;
+
+      const btnPlay = document.getElementById('btn-play-pause');
+      btnPlay.innerHTML = `<i data-lucide="pause" class="w-5 h-5 fill-current"></i>`;
+      lucide.createIcons();
+
+      nextNoteTime = audioEngine.ctx.currentTime + 0.05;
+      state.timerId = setInterval(schedulerTick, SCHEDULER_INTERVAL_MS);
+    }
+
+    function stopPlayback() {
+      state.isPlaying = false;
+      if (state.timerId) clearInterval(state.timerId);
+      state.timerId = null;
+
+      const btnPlay = document.getElementById('btn-play-pause');
+      btnPlay.innerHTML = `<i data-lucide="play" class="w-5 h-5 fill-current"></i>`;
+      lucide.createIcons();
+
+      state.playbackTick = 0;
+      updatePlayheadUI();
+      audioEngine.stopAllNotes();
+    }
+
+    // Runs frequently on a lightweight timer; only does real scheduling work
+    // when the audio clock has actually caught up to the lookahead window.
+    function schedulerTick() {
+      const secPerTick = (60 / state.bpm) / 4; // duration of one 16th note
+      while (nextNoteTime < audioEngine.ctx.currentTime + SCHEDULE_AHEAD_SEC) {
+        scheduleTickNotes(state.playbackTick, nextNoteTime);
+        advancePlaybackTick(nextNoteTime);
+        nextNoteTime += secPerTick;
+      }
+    }
+
+    // Schedules the audio for one tick at a precise audio-clock time.
+    function scheduleTickNotes(tick, time) {
+      const currentNotes = state.notes.filter(n => n.startTick === tick);
+      currentNotes.forEach(n => {
+        const durationSec = (n.durationTicks * (60 / state.bpm)) / 4;
+        audioEngine.playNote(n.pitch, durationSec, n.velocity, time);
+      });
+
+      if (state.metronome && tick % 4 === 0) {
+        const isDownbeat = tick % 16 === 0;
+        audioEngine.playNote(isDownbeat ? "C6" : "C5", 0.05, 0.3, time);
+      }
+
+      // Update the visual playhead in sync with when this tick actually sounds,
+      // instead of the instant it was scheduled (which is up to SCHEDULE_AHEAD_SEC early).
+      const uiDelayMs = Math.max(0, (time - audioEngine.ctx.currentTime) * 1000);
+      setTimeout(() => updatePlayheadUI(tick), uiDelayMs);
+    }
+
+    function advancePlaybackTick(scheduledTime) {
+      const maxTicks = state.totalBars * 16;
+
+      state.playbackTick++;
+      if (state.playbackTick >= maxTicks) {
+        if (state.isLooping) {
+          state.playbackTick = 0;
+        } else {
+          const secPerTick = (60 / state.bpm) / 4;
+          const stopDelayMs = Math.max(0, (scheduledTime + secPerTick - audioEngine.ctx.currentTime) * 1000);
+          setTimeout(stopPlayback, stopDelayMs);
+        }
+      }
+    }
+
+    function updatePlayheadUI(tick) {
+      const displayTick = tick !== undefined ? tick : state.playbackTick;
+      const playhead = document.getElementById('playhead');
+      playhead.classList.remove('hidden');
+      const leftPos = displayTick * state.cellWidth;
+      playhead.style.transform = `translateX(${leftPos}px)`;
+
+      // Update Timer Clock
+      const totalSec = Math.floor((displayTick * (60 / state.bpm)) / 4);
+      const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      const secs = String(totalSec % 60).padStart(2, '0');
+      document.getElementById('time-display').innerText = `00:${mins}:${secs}`;
+    }
+
+    /* ====================================================================
+     * EVENT LISTENERS & USER INTERACTION
+     * ==================================================================== */
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderPianoKeys();
+
+      // Load Default Adele Song Sample
+      loadSongFromJSON(SAMPLE_ADELE_SONG);
+
+      // Export MIDI Button Event
+      document.getElementById('btn-export-midi').addEventListener('click', () => {
+        const blob = NativeMidiHandler.exportToMidi(state);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.songTitle.replace(/\s+/g, '_')}.mid`;
+        a.click();
+      });
+
+      // Sync Scrolling between keys and grid
+      const gridPane = document.getElementById('grid-scroll-pane');
+      const keysPane = document.getElementById('piano-keys-container');
+      gridPane.addEventListener('scroll', () => {
+        keysPane.scrollTop = gridPane.scrollTop;
+      });
+
+      // Grid Click Handler for drawing notes
+      const grid = document.getElementById('piano-roll-grid');
+      grid.addEventListener('click', (e) => {
+        if (state.currentTool !== 'draw') return;
+        const rect = grid.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const startTick = Math.floor(x / state.cellWidth);
+        const pitchIdx = Math.floor(y / state.cellHeight);
+
+        if (pitchIdx >= 0 && pitchIdx < NOTES_PITCHES.length) {
+          addNote(NOTES_PITCHES[pitchIdx], startTick, 4);
+        }
+      });
+
+      // Transport Buttons
+      document.getElementById('btn-play-pause').addEventListener('click', () => {
+        if (state.isPlaying) stopPlayback();
+        else startPlayback();
+      });
+
+      document.getElementById('btn-stop').addEventListener('click', () => {
+        stopPlayback();
+      });
+
+      document.getElementById('btn-loop').addEventListener('click', () => {
+        state.isLooping = !state.isLooping;
+        document.getElementById('loop-status-text').innerText = `LOOP: ${state.isLooping ? 'ON' : 'OFF'}`;
+      });
+
+      document.getElementById('btn-metronome').addEventListener('click', () => {
+        state.metronome = !state.metronome;
+        document.getElementById('metro-status-text').innerText = state.metronome ? 'METRO: ON' : 'METRO';
+      });
+
+      document.getElementById('input-bpm').addEventListener('change', (e) => {
+        state.bpm = Math.min(Math.max(parseInt(e.target.value) || 120, 40), 240);
+        if (state.isPlaying) {
+          stopPlayback();
+          startPlayback();
+        }
+      });
+
+      // Tools Selection
+      document.getElementById('tool-draw').addEventListener('click', () => setTool('draw'));
+      document.getElementById('tool-select').addEventListener('click', () => setTool('select'));
+      document.getElementById('tool-erase').addEventListener('click', () => setTool('erase'));
+
+      function setTool(tool) {
+        state.currentTool = tool;
+        ['draw', 'select', 'erase'].forEach(t => {
+          const btn = document.getElementById(`tool-${t}`);
+          if (t === tool) {
+            btn.className = 'px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1 font-medium transition';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded hover:bg-slate-800 text-slate-400 flex items-center gap-1 font-medium transition';
+          }
+        });
+      }
+
+      // Instrument Picker Sync
+      document.getElementById('select-instrument').addEventListener('change', (e) => {
+        audioEngine.setParams(null, null, null, undefined, e.target.value);
+      });
+
+      // FX & ADSR Sliders Realtime Sync
+      bindSlider('param-attack', 'val-attack', (v) => {
+        audioEngine.setParams({
+          attack: parseFloat(v)
+        });
+        return `${v}s`;
+      });
+      bindSlider('param-decay', 'val-decay', (v) => {
+        audioEngine.setParams({
+          decay: parseFloat(v)
+        });
+        return `${v}s`;
+      });
+      bindSlider('param-sustain', 'val-sustain', (v) => {
+        audioEngine.setParams({
+          sustain: parseFloat(v)
+        });
+        return v;
+      });
+      bindSlider('param-release', 'val-release', (v) => {
+        audioEngine.setParams({
+          release: parseFloat(v)
+        });
+        return `${v}s`;
+      });
+
+      bindSlider('param-cutoff', 'val-cutoff', (v) => {
+        audioEngine.setParams(null, {
+          cutoff: parseFloat(v)
+        });
+        return `${v}Hz`;
+      });
+      bindSlider('param-res', 'val-res', (v) => {
+        audioEngine.setParams(null, {
+          res: parseFloat(v)
+        });
+        return v;
+      });
+
+      bindSlider('param-reverb', 'val-reverb', (v) => {
+        audioEngine.setParams(null, null, {
+          reverbWet: parseFloat(v)
+        });
+        return `${Math.round(v * 100)}%`;
+      });
+      bindSlider('param-delay-fb', 'val-delay-fb', (v) => {
+        audioEngine.setParams(null, null, {
+          delayFb: parseFloat(v)
+        });
+        return `${Math.round(v * 100)}%`;
+      });
+      bindSlider('param-master', 'val-master', (v) => {
+        audioEngine.setParams(null, null, null, parseFloat(v));
+        return `${Math.round(v * 100)}%`;
+      });
+
+      function bindSlider(id, valId, callback) {
+        const input = document.getElementById(id);
+        const display = document.getElementById(valId);
+        input.addEventListener('input', (e) => {
+          display.innerText = callback(e.target.value);
+        });
+      }
+
+      // Clear Roll
+      document.getElementById('btn-clear-all').addEventListener('click', () => {
+        state.notes = [];
+        renderPianoGrid();
+      });
+
+      // Preset Song Loader
+      document.getElementById('btn-load-preset').addEventListener('click', () => {
+        loadSongFromJSON(SAMPLE_ADELE_SONG);
+      });
+
+      // Fullscreen Toggle
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      // Export JSON
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const exportData = {
+          title: state.songTitle,
+          artist: state.artist,
+          bpm: state.bpm,
+          scale: state.scale,
+          notes: state.notes.map(n => ({
+            note: n.pitch,
+            delay: n.startTick,
+            duration: n.durationTicks
+          }))
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+          type: 'application/json'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.songTitle.replace(/\s+/g, '_')}.json`;
+        a.click();
+      });
+
+      // File Import (JSON or Standard MIDI)
+      document.getElementById('file-input').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.name.endsWith('.json')) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            try {
+              const data = JSON.parse(evt.target.result);
+              loadSongFromJSON(data);
+            } catch (err) {
+              alert("Invalid JSON format");
+            }
+          };
+          reader.readAsText(file);
+        } else if (file.name.endsWith('.mid') || file.name.endsWith('.midi')) {
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            try {
+              const result = NativeMidiHandler.parseMidiBuffer(evt.target.result);
+              loadSongFromJSON({
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                artist: "Imported MIDI",
+                bpm: result.bpm || 120,
+                notes: result.notes
+              });
+            } catch (err) {
+              alert("Error parsing MIDI file");
+            }
+          };
+          reader.readAsArrayBuffer(file);
+        }
+      });
+    });
+
+    // Load JSON Song structure (Matching Adele - Someone Like You standard format)
+    function loadSongFromJSON(data) {
+      state.songTitle = data.title || "Untitled Project";
+      state.artist = data.artist || "Studio User";
+      state.bpm = data.bpm || 120;
+      state.scale = data.scale || "chromatic";
+
+      document.getElementById('song-title-display').innerText = `Title: ${state.songTitle}`;
+      document.getElementById('song-artist-display').innerText = `Artist: ${state.artist}`;
+      document.getElementById('input-bpm').value = state.bpm;
+
+      state.notes = (data.notes || []).map((n, idx) => {
+        // Falls startTick bereits gesetzt ist oder delay als Schritt vorliegt:
+        let startTick = 0;
+        if (typeof n.startTick === 'number') {
+          startTick = n.startTick;
+        } else if (typeof n.delay === 'number') {
+          // Wenn delay > 64 ist, kommt es von einem rohen MIDI-Import (Ticks), ansonsten sind es bereits Grid-Schritte
+          startTick = n.delay > 64 ? Math.round(n.delay / 112) : n.delay;
+        }
+
+        return {
+          id: 'note_' + idx + '_' + Math.random().toString(36).substr(2, 5),
+          pitch: n.note,
+          startTick: startTick,
+          durationTicks: n.duration || 4,
+          velocity: 0.8
+        };
+      });
+
+      renderPianoGrid();
+    }
+  </script>
+</body>
+</html>

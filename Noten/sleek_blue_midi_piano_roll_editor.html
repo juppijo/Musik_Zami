@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-[#070b19] text-slate-100 selection:bg-cyan-500 selection:text-black">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Note Studio - Advanced MIDI & Piano Roll Editor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            950: '#070b19',
+                            900: '#0a1128',
+                            800: '#101a38',
+                            700: '#1c2541',
+                            600: '#273459',
+                            500: '#3a4b7c'
+                        },
+                        cyanHighlight: {
+                            400: '#38bdf8',
+                            500: '#00b4d8',
+                            300: '#90e0ef',
+                            200: '#caf0f8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a1128;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1c2541;
+            border-radius: 4px;
+            border: 1px solid #273459;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00b4d8;
+        }
+        
+        .piano-roll-container {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        input[type=range] {
+            accent-color: #00b4d8;
+        }
+
+        optgroup {
+            background-color: #0a1128;
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        option {
+            background-color: #101a38;
+            color: #f1f5f9;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-hidden">
+
+    <header class="bg-navy-900 border-b border-navy-700/80 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 shadow-lg z-20 shrink-0">
+        <!-- Logo & Branding -->
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid font-bold fa-sliders text-navy-950 text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-base font-bold tracking-wide bg-gradient-to-r from-white via-cyanHighlight-200 to-cyanHighlight-500 bg-clip-text text-transparent">
+                    Blue Note Studio
+                </h1>
+                <p class="text-[10px] text-slate-400 font-medium">Pro MIDI Synthesizer Editor</p>
+            </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="flex items-center space-x-2 bg-navy-800/80 p-1.5 rounded-xl border border-navy-700/60 shadow-inner">
+            <button id="btnPlay" class="w-9 h-9 rounded-lg bg-cyanHighlight-500 hover:bg-cyanHighlight-400 text-navy-950 font-bold flex items-center justify-center transition shadow-md shadow-cyan-500/20" title="Abspielen">
+                <i class="fa-solid fa-play text-sm ml-0.5"></i>
+            </button>
+            <button id="btnPause" class="w-9 h-9 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-200 flex items-center justify-center transition" title="Pause">
+                <i class="fa-solid fa-pause text-sm"></i>
+            </button>
+            <button id="btnStop" class="w-9 h-9 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-200 flex items-center justify-center transition" title="Stoppen">
+                <i class="fa-solid fa-stop text-sm"></i>
+            </button>
+            <button id="btnLoop" class="w-9 h-9 rounded-lg bg-navy-700 hover:bg-navy-600 text-slate-400 flex items-center justify-center transition" title="Schleife umschalten">
+                <i class="fa-solid fa-repeat text-sm"></i>
+            </button>
+            
+            <div class="h-5 w-px bg-navy-700 mx-1"></div>
+
+            <!-- BPM Control -->
+            <div class="flex items-center space-x-2 px-2">
+                <span class="text-xs font-semibold text-slate-400">BPM</span>
+                <input type="number" id="bpmInput" min="40" max="240" value="67" class="w-14 bg-navy-950 border border-navy-700 rounded-lg px-2 py-1 text-xs font-mono text-cyanHighlight-300 focus:outline-none focus:border-cyanHighlight-500 text-center">
+                <input type="range" id="bpmSlider" min="40" max="200" value="67" class="w-20 cursor-pointer hidden lg:block">
+            </div>
+        </div>
+
+        <!-- Instrument & Sound Settings -->
+        <div class="flex items-center space-x-2.5">
+            <!-- Expanded Instrument Dropdown -->
+            <div class="flex items-center space-x-2 bg-navy-800/90 px-3 py-1.5 rounded-xl border border-navy-700/80 shadow-md">
+                <i class="fa-solid fa-compact-disc text-cyanHighlight-400 text-xs"></i>
+                <select id="instrumentSelect" class="bg-transparent text-xs font-medium text-slate-100 focus:outline-none cursor-pointer max-w-[170px] sm:max-w-none">
+                    <optgroup label="🎹 Keys & Pianos">
+                        <option value="grand_piano">Grand Piano</option>
+                        <option value="bright_piano">Bright Piano</option>
+                        <option value="rhodes_epiano">Rhodes Electric Piano</option>
+                        <option value="honky_tonk">Honky-Tonk Piano</option>
+                        <option value="harpsichord">Harpsichord</option>
+                        <option value="clavinet">Clavinet</option>
+                    </optgroup>
+                    <optgroup label="⛪ Organs & Accordions">
+                        <option value="church_organ">Church Organ</option>
+                        <option value="drawbar_organ">Drawbar Rock Organ</option>
+                        <option value="accordion">Musette Accordion</option>
+                    </optgroup>
+                    <optgroup label="🎸 Guitars & Bass">
+                        <option value="acoustic_nylon">Acoustic Guitar (Nylon)</option>
+                        <option value="electric_clean">Electric Guitar Clean</option>
+                        <option value="overdrive_guitar">Overdrive Lead Guitar</option>
+                        <option value="acoustic_bass">Acoustic Upright Bass</option>
+                        <option value="electric_bass">Electric Bass (Fingered)</option>
+                        <option value="acid_synth_bass">Synth Bass (303 Style)</option>
+                    </optgroup>
+                    <optgroup label="🎻 Strings & Orchestra">
+                        <option value="orchestral_strings">Orchestral Strings</option>
+                        <option value="warm_synth_strings">Warm Synth Strings</option>
+                        <option value="pizzicato">Pizzicato Strings</option>
+                        <option value="choir_pad">Vocal Choir Pad</option>
+                        <option value="harp">Concert Harp</option>
+                        <option value="orchestral_flute">Orchestral Flute</option>
+                    </optgroup>
+                    <optgroup label="🎛️ Synths & Leads">
+                        <option value="square_lead">Classic Square Lead</option>
+                        <option value="saw_lead">Sawtooth Synth Lead</option>
+                        <option value="synth_80s">Retro 80s Synth</option>
+                        <option value="dreamy_pad">Dreamy Ambient Pad</option>
+                    </optgroup>
+                    <optgroup label="🔔 Bells & Percussion">
+                        <option value="celeste">Celeste / Music Box</option>
+                        <option value="marimba">Marimba / Xylophone</option>
+                        <option value="synth_perc">Electronic Synth Percussion</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Quantize Grid Selector -->
+            <div class="hidden md:flex items-center space-x-2 bg-navy-800/80 px-3 py-1.5 rounded-xl border border-navy-700/60">
+                <i class="fa-solid fa-border-all text-slate-400 text-xs"></i>
+                <select id="quantizeSelect" class="bg-transparent text-xs font-medium text-slate-200 focus:outline-none cursor-pointer">
+                    <option value="16">1/16 Note</option>
+                    <option value="8">1/8 Note</option>
+                    <option value="4">1/4 Note</option>
+                    <option value="32">1/32 Note</option>
+                </select>
+            </div>
+
+            <!-- Import / Export Actions -->
+            <div class="flex items-center space-x-1.5">
+                <div class="relative inline-block text-left">
+                    <button id="btnFileMenu" class="px-3 py-1.5 bg-navy-700 hover:bg-navy-600 text-xs font-medium rounded-xl border border-navy-600 text-slate-200 flex items-center space-x-1.5 transition">
+                        <i class="fa-solid fa-folder-open text-cyanHighlight-400"></i>
+                        <span>Datei</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <!-- File Dropdown -->
+                    <div id="fileDropdown" class="hidden absolute right-0 mt-2 w-56 bg-navy-800 rounded-xl shadow-2xl border border-navy-700 py-1.5 z-50 text-xs">
+                        <button id="btnLoadDemo" class="w-full text-left px-4 py-2 hover:bg-navy-700 text-cyanHighlight-300 flex items-center space-x-2">
+                            <i class="fa-solid fa-star text-yellow-400 w-4"></i>
+                            <span>Adele Song laden (JSON)</span>
+                        </button>
+                        <hr class="border-navy-700 my-1">
+                        <label class="w-full text-left px-4 py-2 hover:bg-navy-700 text-slate-200 flex items-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-file-import w-4 text-cyanHighlight-400"></i>
+                            <span>JSON / MIDI laden...</span>
+                            <input type="file" id="fileInput" accept=".json,.mid,.midi" class="hidden">
+                        </label>
+                        <hr class="border-navy-700 my-1">
+                        <button id="btnSaveJson" class="w-full text-left px-4 py-2 hover:bg-navy-700 text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-file-code w-4 text-blue-400"></i>
+                            <span>Speichern als JSON</span>
+                        </button>
+                        <button id="btnSaveMidi" class="w-full text-left px-4 py-2 hover:bg-navy-700 text-slate-200 flex items-center space-x-2">
+                            <i class="fa-solid fa-file-audio w-4 text-emerald-400"></i>
+                            <span>Speichern als MIDI (.mid)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fullscreen Toggle Button -->
+                <button id="btnFullscreen" class="w-8 h-8 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-300 flex items-center justify-center transition border border-navy-700/60" title="Vollbild umschalten">
+                    <i class="fa-solid fa-expand text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="bg-navy-950 border-b border-navy-800 px-4 py-1.5 flex flex-wrap items-center justify-between text-xs gap-3 shrink-0">
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-1.5">
+                <span class="text-slate-500 font-medium">Titel:</span>
+                <input type="text" id="songTitleInput" value="Someone Like You" class="bg-transparent border-b border-navy-700 focus:border-cyanHighlight-500 text-slate-200 font-medium px-1 focus:outline-none w-36">
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <span class="text-slate-500 font-medium">Künstler:</span>
+                <input type="text" id="songArtistInput" value="Adele" class="bg-transparent border-b border-navy-700 focus:border-cyanHighlight-500 text-slate-200 font-medium px-1 focus:outline-none w-28">
+            </div>
+            <div class="flex items-center space-x-1.5">
+                <span class="text-slate-500 font-medium">Skala:</span>
+                <input type="text" id="songScaleInput" value="d_kurd" class="bg-transparent border-b border-navy-700 focus:border-cyanHighlight-500 text-slate-200 font-medium px-1 focus:outline-none w-20">
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-4 text-[11px] text-slate-400">
+            <div><i class="fa-solid fa-music text-cyanHighlight-500 mr-1"></i> <span id="noteCountDisplay">0</span> Noten</div>
+            <div><i class="fa-solid fa-clock text-slate-500 mr-1"></i> <span id="durationDisplay">0.0s</span></div>
+            <!-- Zoom controls -->
+            <div class="flex items-center space-x-1 bg-navy-900 border border-navy-800 rounded-lg px-1 py-0.5">
+                <button id="btnZoomOut" class="px-1.5 text-slate-400 hover:text-white" title="Zoom -"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                <span class="text-[10px] text-slate-400 px-1"><i class="fa-solid fa-magnifying-glass"></i></span>
+                <button id="btnZoomIn" class="px-1.5 text-slate-400 hover:text-white" title="Zoom +"><i class="fa-solid fa-plus text-[10px]"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-1 flex relative overflow-hidden bg-navy-950">
+        <!-- Keyboard Panel -->
+        <div id="keyboardSidebar" class="w-16 sm:w-20 bg-navy-900 border-r border-navy-800 flex flex-col shrink-0 z-10 select-none overflow-hidden shadow-2xl">
+            <div class="h-7 bg-navy-900 border-b border-navy-800 flex items-center justify-center text-[10px] text-slate-500 font-mono">
+                PITCH
+            </div>
+            <div id="keyboardKeysContainer" class="flex-1 overflow-hidden relative">
+                <div id="keyboardKeys" class="absolute w-full top-0 left-0"></div>
+            </div>
+        </div>
+
+        <!-- Editor Viewport -->
+        <div id="editorViewport" class="flex-1 flex flex-col overflow-auto relative">
+            <div id="timelineRuler" class="h-7 bg-navy-900/90 border-b border-navy-800 sticky top-0 left-0 z-10 flex text-[10px] text-slate-400 font-mono select-none">
+                <canvas id="rulerCanvas" class="h-full block"></canvas>
+            </div>
+            <div id="gridWorkspace" class="relative flex-1 cursor-crosshair">
+                <canvas id="pianoRollCanvas" class="block"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-navy-900 border-t border-navy-800 px-4 py-1.5 text-[11px] text-slate-400 flex flex-wrap justify-between items-center z-20 shrink-0">
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center text-cyanHighlight-400"><i class="fa-solid fa-circle-info mr-1.5 text-xs"></i> Steuerung:</span>
+            <span class="hidden sm:inline">Klick = Note setzen | Drag = Note ziehen | Doppelklick / Rechtsklick = Note löschen</span>
+        </div>
+        <div id="toastMessage" class="text-cyanHighlight-300 font-medium transition-opacity duration-300 opacity-0">
+            Bereit
+        </div>
+    </footer>
+
+    <script>
+        const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const START_OCTAVE = 2;
+        const END_OCTAVE = 5;
+        const PITCHES = [];
+        for (let oct = END_OCTAVE; oct >= START_OCTAVE; oct--) {
+            for (let i = 11; i >= 0; i--) {
+                PITCHES.push(`${NOTE_NAMES[i]}${oct}`);
+            }
+        }
+
+        const ADELE_DEMO_JSON = {
+            "title": "Someone Like You",
+            "artist": "Adele",
+            "scale": "d_kurd",
+            "bpm": 67,
+            "createdAt": "2026-09-25T09:07:00Z",
+            "notes": [
+                { "note": "D3", "delay": 0 },
+                { "note": "A3", "delay": 448 },
+                { "note": "D4", "delay": 896 },
+                { "note": "F4", "delay": 1344 },
+                { "note": "D3", "delay": 1792 },
+                { "note": "A3", "delay": 2240 },
+                { "note": "D4", "delay": 2688 },
+                { "note": "F4", "delay": 3136 },
+                { "note": "A3", "delay": 3584 },
+                { "note": "C4", "delay": 4032 },
+                { "note": "E4", "delay": 4480 },
+                { "note": "G4", "delay": 4928 },
+                { "note": "Bb3", "delay": 5376 },
+                { "note": "D4", "delay": 5824 },
+                { "note": "F4", "delay": 6272 },
+                { "note": "G4", "delay": 6720 },
+                { "note": "D3", "delay": 7168 },
+                { "note": "F4", "delay": 7616 },
+                { "note": "A4", "delay": 8064 },
+                { "note": "G4", "delay": 8512 },
+                { "note": "F4", "delay": 8960 },
+                { "note": "E4", "delay": 9408 },
+                { "note": "D4", "delay": 9856 },
+                { "note": "C4", "delay": 10304 },
+                { "note": "A4", "delay": 10752 },
+                { "note": "G4", "delay": 11200 },
+                { "note": "F4", "delay": 11648 },
+                { "note": "E4", "delay": 12096 },
+                { "note": "D4", "delay": 12544 },
+                { "note": "F4", "delay": 12992 },
+                { "note": "E4", "delay": 13440 },
+                { "note": "D4", "delay": 13888 },
+                { "note": "Bb3", "delay": 14336 },
+                { "note": "D4", "delay": 14784 },
+                { "note": "F4", "delay": 15232 },
+                { "note": "A4", "delay": 15680 },
+                { "note": "G4", "delay": 16128 },
+                { "note": "F4", "delay": 16576 },
+                { "note": "E4", "delay": 17024 },
+                { "note": "C4", "delay": 17472 },
+                { "note": "E4", "delay": 17920 },
+                { "note": "G4", "delay": 18368 },
+                { "note": "F4", "delay": 18816 },
+                { "note": "E4", "delay": 19264 },
+                { "note": "D3", "delay": 19712 },
+                { "note": "A3", "delay": 20160 },
+                { "note": "D3", "delay": 20608 }
+            ]
+        };
+
+        const SYNTH_PRESETS = {
+            // Keys & Pianos
+            grand_piano: { osc1: 'sine', osc2: 'triangle', oct2: 1, gain1: 0.6, gain2: 0.2, attack: 0.005, decay: 0.8, sustain: 0.1, release: 0.4, filter: 'lowpass', filterFreq: 3000 },
+            bright_piano: { osc1: 'triangle', osc2: 'sawtooth', oct2: 0, gain1: 0.5, gain2: 0.25, attack: 0.002, decay: 0.6, sustain: 0.15, release: 0.3, filter: 'lowpass', filterFreq: 5000 },
+            rhodes_epiano: { osc1: 'sine', osc2: 'sine', oct2: 2, gain1: 0.6, gain2: 0.15, attack: 0.01, decay: 1.2, sustain: 0.2, release: 0.5, filter: 'lowpass', filterFreq: 2200 },
+            honky_tonk: { osc1: 'sawtooth', osc2: 'triangle', oct2: 0, detune2: 12, gain1: 0.4, gain2: 0.4, attack: 0.005, decay: 0.7, sustain: 0.1, release: 0.3, filter: 'lowpass', filterFreq: 3500 },
+            harpsichord: { osc1: 'sawtooth', osc2: 'square', oct2: 1, gain1: 0.4, gain2: 0.3, attack: 0.001, decay: 0.4, sustain: 0.05, release: 0.1, filter: 'highpass', filterFreq: 400 },
+            clavinet: { osc1: 'square', osc2: 'sawtooth', oct2: 0, gain1: 0.5, gain2: 0.3, attack: 0.002, decay: 0.3, sustain: 0.1, release: 0.15, filter: 'bandpass', filterFreq: 1800 },
+
+            // Organs
+            church_organ: { osc1: 'square', osc2: 'sine', oct2: 1, gain1: 0.4, gain2: 0.4, attack: 0.03, decay: 0.1, sustain: 0.9, release: 0.2, filter: 'lowpass', filterFreq: 4500, reverb: true },
+            drawbar_organ: { osc1: 'sine', osc2: 'sawtooth', oct2: 1, detune2: 4, gain1: 0.5, gain2: 0.3, attack: 0.01, decay: 0.1, sustain: 0.85, release: 0.1, filter: 'lowpass', filterFreq: 3200 },
+            accordion: { osc1: 'sawtooth', osc2: 'sawtooth', oct2: 0, detune2: 15, gain1: 0.4, gain2: 0.35, attack: 0.04, decay: 0.1, sustain: 0.8, release: 0.2, filter: 'lowpass', filterFreq: 2800 },
+
+            // Guitars & Bass
+            acoustic_nylon: { osc1: 'triangle', osc2: 'sine', oct2: 0, gain1: 0.6, gain2: 0.3, attack: 0.01, decay: 0.9, sustain: 0.05, release: 0.4, filter: 'lowpass', filterFreq: 2400 },
+            electric_clean: { osc1: 'sine', osc2: 'sawtooth', oct2: 0, gain1: 0.5, gain2: 0.2, attack: 0.005, decay: 0.8, sustain: 0.2, release: 0.3, filter: 'lowpass', filterFreq: 2900 },
+            overdrive_guitar: { osc1: 'sawtooth', osc2: 'square', oct2: 0, gain1: 0.5, gain2: 0.4, attack: 0.005, decay: 0.5, sustain: 0.6, release: 0.2, filter: 'bandpass', filterFreq: 2000 },
+            acoustic_bass: { osc1: 'sine', osc2: 'triangle', oct2: -1, gain1: 0.7, gain2: 0.3, attack: 0.02, decay: 0.6, sustain: 0.1, release: 0.25, filter: 'lowpass', filterFreq: 800 },
+            electric_bass: { osc1: 'triangle', osc2: 'square', oct2: 0, gain1: 0.6, gain2: 0.3, attack: 0.008, decay: 0.5, sustain: 0.3, release: 0.2, filter: 'lowpass', filterFreq: 1200 },
+            acid_synth_bass: { osc1: 'sawtooth', osc2: 'square', oct2: 0, gain1: 0.6, gain2: 0.2, attack: 0.002, decay: 0.25, sustain: 0.1, release: 0.15, filter: 'lowpass', filterFreq: 1500, filterEnv: true },
+
+            // Strings & Orchestra
+            orchestral_strings: { osc1: 'sawtooth', osc2: 'sawtooth', oct2: 0, detune2: 8, gain1: 0.3, gain2: 0.3, attack: 0.15, decay: 0.3, sustain: 0.85, release: 0.6, filter: 'lowpass', filterFreq: 3000, reverb: true },
+            warm_synth_strings: { osc1: 'sawtooth', osc2: 'triangle', oct2: 1, detune2: 10, gain1: 0.3, gain2: 0.25, attack: 0.2, decay: 0.4, sustain: 0.9, release: 0.8, filter: 'lowpass', filterFreq: 2200, reverb: true },
+            pizzicato: { osc1: 'sawtooth', osc2: 'sine', oct2: 0, gain1: 0.6, gain2: 0.3, attack: 0.001, decay: 0.15, sustain: 0.01, release: 0.1, filter: 'lowpass', filterFreq: 3500 },
+            choir_pad: { osc1: 'sine', osc2: 'sawtooth', oct2: 1, gain1: 0.4, gain2: 0.2, attack: 0.3, decay: 0.5, sustain: 0.9, release: 1.0, filter: 'bandpass', filterFreq: 1400, reverb: true },
+            harp: { osc1: 'sine', osc2: 'triangle', oct2: 1, gain1: 0.5, gain2: 0.3, attack: 0.002, decay: 1.0, sustain: 0.05, release: 0.5, filter: 'lowpass', filterFreq: 4000, reverb: true },
+            orchestral_flute: { osc1: 'sine', osc2: 'triangle', oct2: 1, gain1: 0.6, gain2: 0.2, attack: 0.06, decay: 0.1, sustain: 0.8, release: 0.2, filter: 'lowpass', filterFreq: 2600, vibrato: true },
+
+            // Synths & Leads
+            square_lead: { osc1: 'square', osc2: 'square', oct2: 0, detune2: 5, gain1: 0.4, gain2: 0.3, attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.2, filter: 'lowpass', filterFreq: 3500 },
+            saw_lead: { osc1: 'sawtooth', osc2: 'sawtooth', oct2: 0, detune2: 12, gain1: 0.4, gain2: 0.3, attack: 0.01, decay: 0.2, sustain: 0.75, release: 0.25, filter: 'lowpass', filterFreq: 4500 },
+            synth_80s: { osc1: 'sawtooth', osc2: 'square', oct2: 1, gain1: 0.35, gain2: 0.35, attack: 0.03, decay: 0.3, sustain: 0.6, release: 0.4, filter: 'lowpass', filterFreq: 2800 },
+            dreamy_pad: { osc1: 'sine', osc2: 'sawtooth', oct2: 1, gain1: 0.4, gain2: 0.2, attack: 0.25, decay: 0.6, sustain: 0.85, release: 1.2, filter: 'lowpass', filterFreq: 1800, delay: true },
+
+            // Bells & Percussion
+            celeste: { osc1: 'sine', osc2: 'sine', oct2: 2, gain1: 0.6, gain2: 0.3, attack: 0.001, decay: 1.2, sustain: 0.01, release: 0.6, filter: 'lowpass', filterFreq: 6000 },
+            marimba: { osc1: 'sine', osc2: 'triangle', oct2: 1, gain1: 0.7, gain2: 0.2, attack: 0.001, decay: 0.3, sustain: 0.01, release: 0.2, filter: 'lowpass', filterFreq: 3000 },
+            synth_perc: { osc1: 'triangle', osc2: 'square', oct2: -1, gain1: 0.6, gain2: 0.3, attack: 0.001, decay: 0.12, sustain: 0.01, release: 0.08, filter: 'lowpass', filterFreq: 2500 }
+        };
+
+        class PianoRollApp {
+            constructor() {
+                this.rowHeight = 22;
+                this.pixelsPerBeat = 120;
+                this.beatsPerBar = 4;
+                this.totalBars = 32;
+                this.bpm = 67;
+                this.instrumentKey = 'grand_piano';
+                this.quantizeDiv = 16;
+
+                this.notes = [];
+                this.isPlaying = false;
+                this.isLooping = false;
+                this.playbackBeat = 0;
+                this.playbackStartTime = 0;
+                this.playbackStartBeat = 0;
+                this.animationFrameId = null;
+
+                this.audioCtx = null;
+                this.delayNode = null;
+                this.reverbNode = null;
+
+                this.viewport = document.getElementById('editorViewport');
+                this.canvas = document.getElementById('pianoRollCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.rulerCanvas = document.getElementById('rulerCanvas');
+                this.rulerCtx = this.rulerCanvas.getContext('2d');
+                this.keyboardKeys = document.getElementById('keyboardKeys');
+                this.keysContainer = document.getElementById('keyboardKeysContainer');
+
+                this.dragState = null;
+
+                this.init();
+            }
+
+            init() {
+                this.setupKeyboardUI();
+                this.setupEventListeners();
+                this.loadSongJson(ADELE_DEMO_JSON);
+                this.resizeCanvas();
+                this.render();
+                this.showToast("Willkommen im Blue Note Studio!");
+            }
+
+            initAudio() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.audioCtx = new AudioContext();
+
+                    // Create FX Bus (Simple Reverb/Delay Simulation)
+                    this.delayNode = this.audioCtx.createDelay();
+                    this.delayNode.delayTime.value = 0.25;
+                    const delayFeedback = this.audioCtx.createGain();
+                    delayFeedback.gain.value = 0.3;
+                    this.delayNode.connect(delayFeedback);
+                    delayFeedback.connect(this.delayNode);
+                    this.delayNode.connect(this.audioCtx.destination);
+                }
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+            }
+
+            setupKeyboardUI() {
+                this.keyboardKeys.innerHTML = '';
+                this.keyboardKeys.style.height = `${PITCHES.length * this.rowHeight}px`;
+
+                PITCHES.forEach((pitch) => {
+                    const isSharp = pitch.includes('#');
+                    const keyEl = document.createElement('div');
+                    keyEl.className = `flex items-center justify-end pr-2 text-[10px] font-mono border-b border-navy-800/60 cursor-pointer transition-colors ${
+                        isSharp ? 'bg-navy-950 text-slate-400 font-semibold' : 'bg-navy-800 text-slate-200 font-bold'
+                    } hover:bg-cyanHighlight-500 hover:text-navy-950`;
+                    keyEl.style.height = `${this.rowHeight}px`;
+                    keyEl.innerHTML = `<span>${pitch}</span>`;
+                    
+                    keyEl.addEventListener('mousedown', () => {
+                        this.initAudio();
+                        this.playNoteTone(pitch, 0.4);
+                    });
+
+                    this.keyboardKeys.appendChild(keyEl);
+                });
+            }
+
+            resizeCanvas() {
+                const totalBeats = this.totalBars * this.beatsPerBar;
+                const width = Math.max(this.viewport.clientWidth, totalBeats * this.pixelsPerBeat);
+                const height = PITCHES.length * this.rowHeight;
+
+                this.canvas.width = width;
+                this.canvas.height = height;
+
+                this.rulerCanvas.width = width;
+                this.rulerCanvas.height = 28;
+
+                this.render();
+            }
+
+            playNoteTone(pitchName, durationSec = 0.4) {
+                if (!this.audioCtx) return;
+
+                const freq = this.pitchToFreq(pitchName);
+                if (!freq) return;
+
+                const preset = SYNTH_PRESETS[this.instrumentKey] || SYNTH_PRESETS.grand_piano;
+                const now = this.audioCtx.currentTime;
+
+                const noteGain = this.audioCtx.createGain();
+                noteGain.connect(this.audioCtx.destination);
+
+                if (preset.delay && this.delayNode) {
+                    noteGain.connect(this.delayNode);
+                }
+
+                // ADSR Envelope
+                const attack = preset.attack || 0.01;
+                const decay = preset.decay || 0.3;
+                const sustain = preset.sustain || 0.2;
+                const release = preset.release || 0.3;
+
+                noteGain.gain.setValueAtTime(0.0001, now);
+                noteGain.gain.linearRampToValueAtTime(1.0, now + attack);
+                noteGain.gain.exponentialRampToValueAtTime(Math.max(0.001, sustain), now + attack + decay);
+                
+                const stopTime = now + Math.max(durationSec, attack + decay);
+                noteGain.gain.setValueAtTime(Math.max(0.001, sustain), stopTime);
+                noteGain.gain.exponentialRampToValueAtTime(0.0001, stopTime + release);
+
+                // Filter Node
+                let filterNode = null;
+                if (preset.filter) {
+                    filterNode = this.audioCtx.createBiquadFilter();
+                    filterNode.type = preset.filter;
+                    filterNode.frequency.setValueAtTime(preset.filterFreq || 2500, now);
+
+                    if (preset.filterEnv) {
+                        filterNode.frequency.exponentialRampToValueAtTime(300, now + decay);
+                    }
+                    filterNode.connect(noteGain);
+                }
+
+                const destination = filterNode || noteGain;
+
+                // Oscillator 1
+                const osc1 = this.audioCtx.createOscillator();
+                osc1.type = preset.osc1 || 'sine';
+                osc1.frequency.setValueAtTime(freq, now);
+                
+                const g1 = this.audioCtx.createGain();
+                g1.gain.value = preset.gain1 || 0.5;
+                osc1.connect(g1);
+                g1.connect(destination);
+
+                // Oscillator 2 (Harmonic / Overtone)
+                let osc2 = null;
+                if (preset.osc2) {
+                    osc2 = this.audioCtx.createOscillator();
+                    osc2.type = preset.osc2;
+                    const octMultiplier = Math.pow(2, preset.oct2 || 0);
+                    osc2.frequency.setValueAtTime(freq * octMultiplier, now);
+                    if (preset.detune2) {
+                        osc2.detune.setValueAtTime(preset.detune2, now);
+                    }
+                    const g2 = this.audioCtx.createGain();
+                    g2.gain.value = preset.gain2 || 0.2;
+                    osc2.connect(g2);
+                    g2.connect(destination);
+                }
+
+                // Optional Vibrato
+                if (preset.vibrato) {
+                    const lfo = this.audioCtx.createOscillator();
+                    lfo.frequency.value = 5.5; // 5.5 Hz vibrato
+                    const lfoGain = this.audioCtx.createGain();
+                    lfoGain.gain.value = freq * 0.015;
+                    lfo.connect(lfoGain);
+                    lfoGain.connect(osc1.frequency);
+                    lfo.start(now);
+                    lfo.stop(stopTime + release);
+                }
+
+                osc1.start(now);
+                if (osc2) osc2.start(now);
+
+                osc1.stop(stopTime + release);
+                if (osc2) osc2.stop(stopTime + release);
+            }
+
+            pitchToFreq(pitchStr) {
+                const match = pitchStr.match(/^([A-G]#?)(-?\d+)$/);
+                if (!match) return 440;
+                const name = match[1];
+                const octave = parseInt(match[2], 10);
+                const semitone = NOTE_NAMES.indexOf(name);
+                const midiNum = (octave + 1) * 12 + semitone;
+                return 440 * Math.pow(2, (midiNum - 69) / 12);
+            }
+
+            startPlayback() {
+                this.initAudio();
+                if (this.isPlaying) return;
+
+                this.isPlaying = true;
+                this.playbackStartTime = this.audioCtx.currentTime;
+                this.playbackStartBeat = this.playbackBeat;
+                
+                document.getElementById('btnPlay').classList.add('bg-cyanHighlight-300', 'text-black');
+                this.scheduledNotes = new Set();
+                this.runPlaybackLoop();
+            }
+
+            pausePlayback() {
+                this.isPlaying = false;
+                if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+                document.getElementById('btnPlay').classList.remove('bg-cyanHighlight-300', 'text-black');
+            }
+
+            stopPlayback() {
+                this.pausePlayback();
+                this.playbackBeat = 0;
+                this.viewport.scrollLeft = 0;
+                this.render();
+            }
+
+            runPlaybackLoop() {
+                if (!this.isPlaying) return;
+
+                const secondsPerBeat = 60 / this.bpm;
+                const elapsedSec = this.audioCtx.currentTime - this.playbackStartTime;
+                this.playbackBeat = this.playbackStartBeat + (elapsedSec / secondsPerBeat);
+
+                const maxBeats = this.totalBars * this.beatsPerBar;
+                
+                if (this.playbackBeat >= maxBeats) {
+                    if (this.isLooping) {
+                        this.playbackBeat = 0;
+                        this.playbackStartTime = this.audioCtx.currentTime;
+                        this.playbackStartBeat = 0;
+                        this.scheduledNotes.clear();
+                    } else {
+                        this.stopPlayback();
+                        return;
+                    }
+                }
+
+                const lookaheadBeats = 0.5;
+                this.notes.forEach(n => {
+                    if (n.startBeat >= this.playbackBeat && n.startBeat <= this.playbackBeat + lookaheadBeats) {
+                        if (!this.scheduledNotes.has(n.id)) {
+                            this.scheduledNotes.add(n.id);
+                            const noteDurSec = n.durationBeats * secondsPerBeat;
+                            this.playNoteTone(n.pitch, noteDurSec);
+                        }
+                    }
+                });
+
+                const playheadX = this.playbackBeat * this.pixelsPerBeat;
+                if (playheadX > this.viewport.scrollLeft + this.viewport.clientWidth - 100) {
+                    this.viewport.scrollLeft = playheadX - 100;
+                }
+
+                this.render();
+                this.animationFrameId = requestAnimationFrame(() => this.runPlaybackLoop());
+            }
+
+            render() {
+                this.renderRuler();
+                this.renderGridAndNotes();
+            }
+
+            renderRuler() {
+                const ctx = this.rulerCtx;
+                const width = this.rulerCanvas.width;
+                const height = this.rulerCanvas.height;
+
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = '#0a1128';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.strokeStyle = '#1c2541';
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px Inter, sans-serif';
+
+                const totalBeats = this.totalBars * this.beatsPerBar;
+                for (let b = 0; b <= totalBeats; b++) {
+                    const x = b * this.pixelsPerBeat;
+                    const isBar = b % this.beatsPerBar === 0;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, isBar ? 0 : 18);
+                    ctx.lineTo(x, height);
+                    ctx.strokeStyle = isBar ? '#3a4b7c' : '#1c2541';
+                    ctx.stroke();
+
+                    if (isBar) {
+                        const barNum = (b / this.beatsPerBar) + 1;
+                        ctx.fillText(`Takt ${barNum}`, x + 4, 14);
+                    }
+                }
+            }
+
+            renderGridAndNotes() {
+                const ctx = this.ctx;
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+
+                ctx.fillStyle = '#070b19';
+                ctx.fillRect(0, 0, width, height);
+
+                // Pitch Rows
+                PITCHES.forEach((pitch, i) => {
+                    const y = i * this.rowHeight;
+                    const isSharp = pitch.includes('#');
+
+                    ctx.fillStyle = isSharp ? '#0a1128' : '#0e1735';
+                    ctx.fillRect(0, y, width, this.rowHeight);
+
+                    ctx.strokeStyle = '#101a38';
+                    ctx.beginPath();
+                    ctx.moveTo(0, y + this.rowHeight);
+                    ctx.lineTo(width, y + this.rowHeight);
+                    ctx.stroke();
+                });
+
+                // Beat Subdivisions
+                const stepBeats = 4 / this.quantizeDiv;
+                const totalBeats = this.totalBars * this.beatsPerBar;
+
+                for (let b = 0; b <= totalBeats; b += stepBeats) {
+                    const x = b * this.pixelsPerBeat;
+                    const isBar = (b % this.beatsPerBar) === 0;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.strokeStyle = isBar ? '#273459' : '#101a38';
+                    ctx.lineWidth = isBar ? 1.5 : 1;
+                    ctx.stroke();
+                }
+
+                // Render Notes
+                this.notes.forEach(note => {
+                    const pitchIdx = PITCHES.indexOf(note.pitch);
+                    if (pitchIdx === -1) return;
+
+                    const x = note.startBeat * this.pixelsPerBeat;
+                    const y = pitchIdx * this.rowHeight;
+                    const w = Math.max(12, note.durationBeats * this.pixelsPerBeat);
+                    const h = this.rowHeight - 2;
+
+                    const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+                    grad.addColorStop(0, '#00b4d8');
+                    grad.addColorStop(1, '#0077b6');
+
+                    ctx.fillStyle = grad;
+                    this.roundRect(ctx, x + 1, y + 1, w - 2, h, 4, true, false);
+
+                    ctx.strokeStyle = '#90e0ef';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#000000';
+                    ctx.font = 'bold 10px Inter, sans-serif';
+                    if (w > 24) {
+                        ctx.fillText(note.pitch, x + 5, y + 14);
+                    }
+                });
+
+                // Render Playhead Line
+                const playheadX = this.playbackBeat * this.pixelsPerBeat;
+                ctx.strokeStyle = '#ff3366';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(playheadX, 0);
+                ctx.lineTo(playheadX, height);
+                ctx.stroke();
+
+                ctx.fillStyle = '#ff3366';
+                ctx.beginPath();
+                ctx.arc(playheadX, 6, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                document.getElementById('noteCountDisplay').innerText = this.notes.length;
+                const totalDurSec = (totalBeats * 60 / this.bpm).toFixed(1);
+                document.getElementById('durationDisplay').innerText = `${totalDurSec}s`;
+            }
+
+            roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + width - radius, y);
+                ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                ctx.lineTo(x + width, y + height - radius);
+                ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                ctx.lineTo(x + radius, y + height);
+                ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+                if (fill) ctx.fill();
+                if (stroke) ctx.stroke();
+            }
+
+            setupEventListeners() {
+                this.viewport.addEventListener('scroll', () => {
+                    this.keysContainer.scrollTop = this.viewport.scrollTop;
+                });
+
+                this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                window.addEventListener('mouseup', () => this.handleMouseUp());
+
+                this.canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    const { pitch, beat } = this.getGridPosFromCoords(e.clientX, e.clientY);
+                    const noteIdx = this.findNoteAt(pitch, beat);
+                    if (noteIdx !== -1) {
+                        this.notes.splice(noteIdx, 1);
+                        this.render();
+                        this.showToast("Note gelöscht");
+                    }
+                });
+
+                document.getElementById('btnPlay').addEventListener('click', () => this.startPlayback());
+                document.getElementById('btnPause').addEventListener('click', () => this.pausePlayback());
+                document.getElementById('btnStop').addEventListener('click', () => this.stopPlayback());
+                
+                const btnLoop = document.getElementById('btnLoop');
+                btnLoop.addEventListener('click', () => {
+                    this.isLooping = !this.isLooping;
+                    btnLoop.classList.toggle('text-cyanHighlight-400', this.isLooping);
+                    btnLoop.classList.toggle('bg-navy-600', this.isLooping);
+                    this.showToast(this.isLooping ? "Schleife AN" : "Schleife AUS");
+                });
+
+                const bpmInput = document.getElementById('bpmInput');
+                const bpmSlider = document.getElementById('bpmSlider');
+                const updateBpm = (val) => {
+                    this.bpm = Math.min(240, Math.max(40, parseInt(val, 10) || 120));
+                    bpmInput.value = this.bpm;
+                    bpmSlider.value = this.bpm;
+                    this.render();
+                };
+
+                bpmInput.addEventListener('change', (e) => updateBpm(e.target.value));
+                bpmSlider.addEventListener('input', (e) => updateBpm(e.target.value));
+
+                document.getElementById('instrumentSelect').addEventListener('change', (e) => {
+                    this.instrumentKey = e.target.value;
+                    const label = e.target.options[e.target.selectedIndex].text;
+                    this.showToast(`Instrument gewählt: ${label}`);
+                });
+
+                document.getElementById('quantizeSelect').addEventListener('change', (e) => {
+                    this.quantizeDiv = parseInt(e.target.value, 10);
+                    this.render();
+                });
+
+                document.getElementById('btnZoomIn').addEventListener('click', () => {
+                    this.pixelsPerBeat = Math.min(240, this.pixelsPerBeat + 20);
+                    this.resizeCanvas();
+                });
+                document.getElementById('btnZoomOut').addEventListener('click', () => {
+                    this.pixelsPerBeat = Math.max(60, this.pixelsPerBeat - 20);
+                    this.resizeCanvas();
+                });
+
+                this.rulerCanvas.addEventListener('click', (e) => {
+                    const rect = this.rulerCanvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    this.playbackBeat = Math.max(0, x / this.pixelsPerBeat);
+                    this.render();
+                });
+
+                document.getElementById('btnFullscreen').addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen();
+                    } else {
+                        if (document.exitFullscreen) document.exitFullscreen();
+                    }
+                });
+
+                const btnFileMenu = document.getElementById('btnFileMenu');
+                const fileDropdown = document.getElementById('fileDropdown');
+                btnFileMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fileDropdown.classList.toggle('hidden');
+                });
+                document.addEventListener('click', () => fileDropdown.classList.add('hidden'));
+
+                document.getElementById('btnLoadDemo').addEventListener('click', () => {
+                    this.loadSongJson(ADELE_DEMO_JSON);
+                    this.showToast("Adele Demo geladen!");
+                });
+
+                document.getElementById('fileInput').addEventListener('change', (e) => this.handleFileLoad(e));
+                document.getElementById('btnSaveJson').addEventListener('click', () => this.exportJson());
+                document.getElementById('btnSaveMidi').addEventListener('click', () => this.exportMidi());
+            }
+
+            getGridPosFromCoords(clientX, clientY) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = clientX - rect.left;
+                const y = clientY - rect.top;
+
+                const pitchIndex = Math.floor(y / this.rowHeight);
+                const pitch = PITCHES[Math.min(PITCHES.length - 1, Math.max(0, pitchIndex))];
+
+                const rawBeat = x / this.pixelsPerBeat;
+                const step = 4 / this.quantizeDiv;
+                const snappedBeat = Math.floor(rawBeat / step) * step;
+
+                return { pitch, beat: Math.max(0, snappedBeat), rawBeat };
+            }
+
+            findNoteAt(pitch, beat) {
+                return this.notes.findIndex(n => n.pitch === pitch && beat >= n.startBeat && beat < (n.startBeat + n.durationBeats));
+            }
+
+            handleMouseDown(e) {
+                if (e.button !== 0) return;
+                this.initAudio();
+
+                const { pitch, beat } = this.getGridPosFromCoords(e.clientX, e.clientY);
+                const existingIdx = this.findNoteAt(pitch, beat);
+
+                if (existingIdx !== -1) {
+                    const note = this.notes[existingIdx];
+                    const noteEndX = (note.startBeat + note.durationBeats) * this.pixelsPerBeat;
+                    const rect = this.canvas.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+
+                    if (Math.abs(clickX - noteEndX) < 8) {
+                        this.dragState = { type: 'resize', note };
+                    } else {
+                        this.dragState = { type: 'move', note, startBeatOffset: beat - note.startBeat };
+                    }
+                } else {
+                    const defaultDuration = 4 / this.quantizeDiv;
+                    const newNote = {
+                        id: Date.now() + Math.random(),
+                        pitch,
+                        startBeat: beat,
+                        durationBeats: defaultDuration
+                    };
+                    this.notes.push(newNote);
+                    this.playNoteTone(pitch, 0.3);
+                    this.dragState = { type: 'resize', note: newNote };
+                    this.render();
+                }
+            }
+
+            handleMouseMove(e) {
+                if (!this.dragState) return;
+
+                const { pitch, beat } = this.getGridPosFromCoords(e.clientX, e.clientY);
+                const { type, note, startBeatOffset } = this.dragState;
+
+                if (type === 'move') {
+                    note.pitch = pitch;
+                    note.startBeat = Math.max(0, beat - (startBeatOffset || 0));
+                    this.render();
+                } else if (type === 'resize') {
+                    const step = 4 / this.quantizeDiv;
+                    const minDur = step;
+                    note.durationBeats = Math.max(minDur, beat - note.startBeat + step);
+                    this.render();
+                }
+            }
+
+            handleMouseUp() {
+                this.dragState = null;
+            }
+
+            loadSongJson(json) {
+                try {
+                    document.getElementById('songTitleInput').value = json.title || 'Unbenannt';
+                    document.getElementById('songArtistInput').value = json.artist || 'Unbekannt';
+                    document.getElementById('songScaleInput').value = json.scale || 'd_kurd';
+                    
+                    this.bpm = json.bpm || 67;
+                    document.getElementById('bpmInput').value = this.bpm;
+                    document.getElementById('bpmSlider').value = this.bpm;
+
+                    const msPerBeat = (60 / this.bpm) * 1000;
+                    this.notes = (json.notes || []).map((n, i) => {
+                        const startBeat = n.delay / msPerBeat;
+                        const nextNote = json.notes[i + 1];
+                        let durationBeats = 1.0;
+                        if (nextNote) {
+                            const diffMs = nextNote.delay - n.delay;
+                            durationBeats = Math.max(0.25, Math.min(2.0, diffMs / msPerBeat));
+                        }
+                        return {
+                            id: i + 1,
+                            pitch: n.note,
+                            startBeat: startBeat,
+                            durationBeats: durationBeats
+                        };
+                    });
+
+                    this.stopPlayback();
+                    this.render();
+                } catch(err) {
+                    console.error(err);
+                    this.showToast("Fehler beim Lesen der JSON Datei");
+                }
+            }
+
+            exportJson() {
+                const msPerBeat = (60 / this.bpm) * 1000;
+                const sortedNotes = [...this.notes].sort((a, b) => a.startBeat - b.startBeat);
+
+                const songData = {
+                    title: document.getElementById('songTitleInput').value || 'Unbenannt',
+                    artist: document.getElementById('songArtistInput').value || 'Unbekannt',
+                    scale: document.getElementById('songScaleInput').value || 'd_kurd',
+                    bpm: this.bpm,
+                    createdAt: new Date().toISOString(),
+                    notes: sortedNotes.map(n => ({
+                        note: n.pitch,
+                        delay: Math.round(n.startBeat * msPerBeat)
+                    }))
+                };
+
+                const blob = new Blob([JSON.stringify(songData, null, 2)], { type: 'application/json' });
+                this.downloadBlob(blob, `${songData.title.replace(/\s+/g, '_')}.json`);
+                this.showToast("JSON Datei exportiert!");
+            }
+
+            handleFileLoad(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                if (file.name.endsWith('.json')) {
+                    reader.onload = (evt) => {
+                        try {
+                            const data = JSON.parse(evt.target.result);
+                            this.loadSongJson(data);
+                            this.showToast(`JSON "${file.name}" geladen`);
+                        } catch(err) {
+                            this.showToast("Ungültiges JSON-Format");
+                        }
+                    };
+                    reader.readAsText(file);
+                } else if (file.name.endsWith('.mid') || file.name.endsWith('.midi')) {
+                    reader.onload = (evt) => {
+                        this.parseMidiBuffer(evt.target.result);
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            }
+
+            parseMidiBuffer(arrayBuffer) {
+                try {
+                    const data = new DataView(arrayBuffer);
+                    let pos = 0;
+
+                    const headerChunk = String.fromCharCode(data.getUint8(0), data.getUint8(1), data.getUint8(2), data.getUint8(3));
+                    if (headerChunk !== 'MThd') throw new Error("Keine MIDI Datei");
+
+                    const headerLength = data.getUint32(4);
+                    const numTracks = data.getUint16(10);
+                    const timeDivision = data.getUint16(12);
+
+                    pos = 8 + headerLength;
+                    const loadedNotes = [];
+                    const activeNotes = {};
+
+                    for (let t = 0; t < numTracks; t++) {
+                        if (pos >= data.byteLength) break;
+                        const trackLen = data.getUint32(pos + 4);
+                        pos += 8;
+
+                        const trackEnd = pos + trackLen;
+                        let currentTick = 0;
+                        let runningStatus = 0;
+
+                        while (pos < trackEnd) {
+                            let deltaTime = 0;
+                            let byte;
+                            do {
+                                byte = data.getUint8(pos++);
+                                deltaTime = (deltaTime << 7) | (byte & 0x7f);
+                            } while (byte & 0x80);
+
+                            currentTick += deltaTime;
+
+                            let status = data.getUint8(pos);
+                            if (status & 0x80) {
+                                runningStatus = status;
+                                pos++;
+                            } else {
+                                status = runningStatus;
+                            }
+
+                            const eventType = status >> 4;
+
+                            if (eventType === 0x9) { // Note On
+                                const noteNum = data.getUint8(pos++);
+                                const velocity = data.getUint8(pos++);
+                                const startBeat = currentTick / timeDivision;
+
+                                if (velocity > 0) {
+                                    activeNotes[noteNum] = startBeat;
+                                } else if (activeNotes[noteNum] !== undefined) {
+                                    const pitchName = this.midiToPitch(noteNum);
+                                    if (pitchName) {
+                                        loadedNotes.push({
+                                            id: loadedNotes.length + 1,
+                                            pitch: pitchName,
+                                            startBeat: activeNotes[noteNum],
+                                            durationBeats: Math.max(0.25, startBeat - activeNotes[noteNum])
+                                        });
+                                    }
+                                    delete activeNotes[noteNum];
+                                }
+                            } else if (eventType === 0x8) { // Note Off
+                                const noteNum = data.getUint8(pos++);
+                                pos++; // Velocity
+                                const endBeat = currentTick / timeDivision;
+
+                                if (activeNotes[noteNum] !== undefined) {
+                                    const pitchName = this.midiToPitch(noteNum);
+                                    if (pitchName) {
+                                        loadedNotes.push({
+                                            id: loadedNotes.length + 1,
+                                            pitch: pitchName,
+                                            startBeat: activeNotes[noteNum],
+                                            durationBeats: Math.max(0.25, endBeat - activeNotes[noteNum])
+                                        });
+                                    }
+                                    delete activeNotes[noteNum];
+                                }
+                            } else if (status === 0xFF) { // Meta Event
+                                const type = data.getUint8(pos++);
+                                let len = 0;
+                                do {
+                                    byte = data.getUint8(pos++);
+                                    len = (len << 7) | (byte & 0x7f);
+                                } while (byte & 0x80);
+
+                                if (type === 0x51 && len === 3) {
+                                    const microsecondsPerBeat = (data.getUint8(pos) << 16) | (data.getUint8(pos+1) << 8) | data.getUint8(pos+2);
+                                    this.bpm = Math.round(60000000 / microsecondsPerBeat);
+                                    document.getElementById('bpmInput').value = this.bpm;
+                                    document.getElementById('bpmSlider').value = this.bpm;
+                                }
+                                pos += len;
+                            } else {
+                                if (eventType === 0xC || eventType === 0xD) pos += 1;
+                                else pos += 2;
+                            }
+                        }
+                    }
+
+                    if (loadedNotes.length > 0) {
+                        this.notes = loadedNotes;
+                        this.stopPlayback();
+                        this.render();
+                        this.showToast("MIDI-Datei erfolgreich geladen!");
+                    } else {
+                        this.showToast("Keine Noten in MIDI gefunden");
+                    }
+                } catch(err) {
+                    console.error(err);
+                    this.showToast("Fehler beim Verarbeiten der MIDI-Datei");
+                }
+            }
+
+            exportMidi() {
+                const ticksPerQuarter = 480;
+                const events = [];
+
+                this.notes.forEach(n => {
+                    const midiNote = this.pitchToMidi(n.pitch);
+                    if (midiNote !== null) {
+                        const startTick = Math.round(n.startBeat * ticksPerQuarter);
+                        const endTick = Math.round((n.startBeat + n.durationBeats) * ticksPerQuarter);
+
+                        events.push({ tick: startTick, type: 'on', note: midiNote });
+                        events.push({ tick: endTick, type: 'off', note: midiNote });
+                    }
+                });
+
+                events.sort((a, b) => a.tick - b.tick);
+
+                const bytes = [];
+                bytes.push(0x4D, 0x54, 0x68, 0x64);
+                bytes.push(0x00, 0x00, 0x00, 0x06);
+                bytes.push(0x00, 0x00);
+                bytes.push(0x00, 0x01);
+                bytes.push((ticksPerQuarter >> 8) & 0xFF, ticksPerQuarter & 0xFF);
+
+                const trackBytes = [];
+                const tempoMicro = Math.round(60000000 / this.bpm);
+                trackBytes.push(0x00);
+                trackBytes.push(0xFF, 0x51, 0x03);
+                trackBytes.push((tempoMicro >> 16) & 0xFF, (tempoMicro >> 8) & 0xFF, tempoMicro & 0xFF);
+
+                let lastTick = 0;
+                events.forEach(ev => {
+                    const delta = ev.tick - lastTick;
+                    lastTick = ev.tick;
+
+                    let buffer = delta & 0x7F;
+                    let num = delta;
+                    const vlen = [];
+                    while ((num >>= 7) > 0) {
+                        buffer <<= 8;
+                        buffer |= 0x80 | (num & 0x7F);
+                    }
+                    while (true) {
+                        vlen.push(buffer & 0xFF);
+                        if (buffer & 0x80) buffer >>= 8;
+                        else break;
+                    }
+                    trackBytes.push(...vlen);
+
+                    if (ev.type === 'on') {
+                        trackBytes.push(0x90, ev.note, 0x64);
+                    } else {
+                        trackBytes.push(0x80, ev.note, 0x00);
+                    }
+                });
+
+                trackBytes.push(0x00, 0xFF, 0x2F, 0x00);
+
+                bytes.push(0x4D, 0x54, 0x72, 0x6B);
+                const trackLen = trackBytes.length;
+                bytes.push((trackLen >> 24) & 0xFF, (trackLen >> 16) & 0xFF, (trackLen >> 8) & 0xFF, trackLen & 0xFF);
+                bytes.push(...trackBytes);
+
+                const blob = new Blob([new Uint8Array(bytes)], { type: 'audio/midi' });
+                const title = document.getElementById('songTitleInput').value || 'Song';
+                this.downloadBlob(blob, `${title.replace(/\s+/g, '_')}.mid`);
+                this.showToast("MIDI-Datei (.mid) exportiert!");
+            }
+
+            pitchToMidi(pitchStr) {
+                const match = pitchStr.match(/^([A-G]#?)(-?\d+)$/);
+                if (!match) return null;
+                const name = match[1];
+                const octave = parseInt(match[2], 10);
+                return (octave + 1) * 12 + NOTE_NAMES.indexOf(name);
+            }
+
+            midiToPitch(midiNum) {
+                const octave = Math.floor(midiNum / 12) - 1;
+                const name = NOTE_NAMES[midiNum % 12];
+                const pitch = `${name}${octave}`;
+                return PITCHES.includes(pitch) ? pitch : null;
+            }
+
+            downloadBlob(blob, filename) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('toastMessage');
+                toast.innerText = msg;
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }, 2500);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            window.pianoRollApp = new PianoRollApp();
+        });
+    </script>
+</body>
+</html>

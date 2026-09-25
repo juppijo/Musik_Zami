@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acoustic Metal Synthesizer mit Oszi-Visualizer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: radial-gradient(circle at center, #0b1329 0%, #020617 100%); }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pad-btn {
+      transition: all 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .pad-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: inset 0 2px 8px rgba(255,255,255,0.2), 0 8px 20px rgba(0,0,0,0.6);
+    }
+    .pad-btn:active, .pad-btn.active {
+      transform: scale(0.95);
+      box-shadow: 0 0 25px var(--glow-color, #38bdf8), inset 0 0 10px var(--glow-color, #38bdf8);
+    }
+    input[type=range] {
+      accent-color: #38bdf8;
+    }
+    canvas {
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between">
+
+  <header class="max-w-6xl mx-auto w-full flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 rounded-2xl bg-sky-500/20 flex items-center justify-center border border-sky-500/40 text-sky-400 shadow-lg shadow-sky-500/10">
+        <i class="fa-solid fa-wave-square text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-200 via-sky-400 to-cyan-300">
+          Acoustic Waveform Synthesizer
+        </h1>
+        <p class="text-xs text-slate-400">Handpan, Tongue Drum & Bell Sound Generator mit Echtzeit-Oszilloskop</p>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="flex flex-wrap items-center justify-center gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10">
+      <button data-preset="handpan" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500 text-slate-950 transition-all shadow-md">
+        <i class="fa-solid fa-hands text-[11px] mr-1"></i> Handpan
+      </button>
+      <button data-preset="tongue" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">
+        <i class="fa-solid fa-drum text-[11px] mr-1"></i> Tongue Drum
+      </button>
+      <button data-preset="bell" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">
+        <i class="fa-solid fa-bell text-[11px] mr-1"></i> Temple Bell
+      </button>
+      <button data-preset="crystal" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">
+        <i class="fa-solid fa-gem text-[11px] mr-1"></i> Crystal Bowl
+      </button>
+      <button data-preset="marimba" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all">
+        <i class="fa-solid fa-bars text-[11px] mr-1"></i> Marimba
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+
+    <!-- Left Section: Visualizer Canvas + Performance Pads -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Realtime Visualizer Canvas (Oscilloscope & Spectrum) -->
+      <div class="glass-card rounded-3xl p-4 shadow-2xl relative overflow-hidden flex flex-col gap-2">
+        <div class="flex justify-between items-center px-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider">
+              Echtzeit-Oszilloskop & Spektrum
+            </h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="viewToggle" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 px-2.5 py-1 rounded-lg transition-all">
+              Ansicht: Kombiniert
+            </button>
+          </div>
+        </div>
+
+        <div class="relative w-full h-52 bg-slate-950/90 rounded-2xl overflow-hidden border border-slate-800 shadow-inner">
+          <canvas id="visualizerCanvas" class="w-full h-full block"></canvas>
+          <div class="absolute bottom-2 left-3 text-[10px] text-slate-500 font-mono pointer-events-none">
+            Wellensignal (Time-Domain) &bull; 44.1 kHz
+          </div>
+        </div>
+      </div>
+
+      <!-- Playable Pad Instrument -->
+      <div class="glass-card rounded-3xl p-5 shadow-2xl flex flex-col justify-between flex-grow">
+        <div class="flex justify-between items-center mb-3 px-1">
+          <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-grip"></i> Tonfelder (Kurd 8 Skala)
+          </h2>
+          <span class="text-xs text-slate-400">Tastatur: <strong class="text-sky-300 font-mono">1 - 8</strong></span>
+        </div>
+
+        <!-- Pads Grid -->
+        <div id="padsContainer" class="grid grid-cols-4 gap-3 my-auto py-2">
+          <!-- Dynamically generated pads -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Section: Synth Sound Shaping Controls -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+
+      <div class="glass-card rounded-3xl p-5 shadow-2xl space-y-4">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2 border-b border-white/10 pb-2">
+          <i class="fa-solid fa-sliders"></i> Klangkurven-Synthese (Parameters)
+        </h2>
+
+        <!-- Inharmonicity / Overtone Multiplier -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 font-medium">Oberton-Multiplikator (Inharmonicity)</span>
+            <span id="valOvertone" class="text-sky-400 font-mono font-bold">2.00x</span>
+          </div>
+          <input type="range" id="paramOvertone" min="1.0" max="4.0" step="0.01" value="2.00" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <p class="text-[10px] text-slate-500 mt-1">Gibt die Frequenz der zweiten Resonanzwelle an (Handpan: 2.0x, Tongue Drum: 2.75x, Glocke: 3.1x+)</p>
+        </div>
+
+        <!-- Percussive Knock / Attack Envelope -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 font-medium">Anschlag-Impuls (Transient Knock)</span>
+            <span id="valKnock" class="text-sky-400 font-mono font-bold">50%</span>
+          </div>
+          <input type="range" id="paramKnock" min="0" max="100" value="50" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          <p class="text-[10px] text-slate-500 mt-1">Kurze Dreieckswelle für den Finger-Anschlag auf das Metall</p>
+        </div>
+
+        <!-- Decay Time -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 font-medium">Ausklingzeit (Decay / Sustain)</span>
+            <span id="valDecay" class="text-sky-400 font-mono font-bold">3.5s</span>
+          </div>
+          <input type="range" id="paramDecay" min="0.3" max="8.0" step="0.1" value="3.5" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+        </div>
+
+        <!-- Reverb Level -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-300 font-medium">Raum-Resonanz (Reverb)</span>
+            <span id="valReverb" class="text-sky-400 font-mono font-bold">35%</span>
+          </div>
+          <input type="range" id="paramReverb" min="0" max="100" value="35" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+        </div>
+      </div>
+
+      <!-- Waveform Selectors -->
+      <div class="glass-card rounded-3xl p-5 shadow-2xl space-y-3">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2 border-b border-white/10 pb-2">
+          <i class="fa-solid fa-atom"></i> Wellenform-Oszillatoren
+        </h2>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Haupt-Schwingung</label>
+            <select id="paramWave1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+              <option value="sine">Sinus (Reine Welle)</option>
+              <option value="triangle">Dreieck (Holz/Metall)</option>
+              <option value="square">Rechteck (Rauchig)</option>
+              <option value="sawtooth">Sägezahn (Scharf)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Anschlag-Gegenwelle</label>
+            <select id="paramWaveKnock" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+              <option value="triangle">Dreieck (Weich)</option>
+              <option value="sine">Sinus (Subtil)</option>
+              <option value="sawtooth">Sägezahn (Harter Schlag)</option>
+              <option value="square">Rechteck (Klick)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="max-w-6xl mx-auto w-full text-center text-xs text-slate-500 mt-6 border-t border-white/5 pt-4">
+    Real-Time Waveform & Spectrum Visualizer Synthesizer &bull; Web Audio API
+  </footer>
+
+  <script>
+    class MetalVisualSynth {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.analyser = null;
+        this.reverbNode = null;
+        this.reverbGain = null;
+
+        // Current Synthesis Parameters
+        this.params = {
+          overtoneRatio: 2.00,
+          knockAmount: 0.5,
+          decay: 3.5,
+          reverbLevel: 0.35,
+          wave1: 'sine',
+          waveKnock: 'triangle'
+        };
+
+        // Handpan D-Minor Scale (Kurd 8)
+        this.notes = [
+          { name: 'Ding (D3)', freq: 146.83, key: '1', color: 'from-amber-600/40 to-orange-700/40 border-amber-500/50' },
+          { name: 'A3', freq: 220.00, key: '2', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'Bb3', freq: 233.08, key: '3', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'C4', freq: 261.63, key: '4', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'D4', freq: 293.66, key: '5', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'E4', freq: 329.63, key: '6', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'F4', freq: 349.23, key: '7', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' },
+          { name: 'G4', freq: 392.00, key: '8', color: 'from-sky-600/30 to-indigo-700/30 border-sky-500/40' }
+        ];
+
+        // Sound Presets
+        this.presets = {
+          handpan: { overtoneRatio: 2.00, knockAmount: 0.5, decay: 3.5, reverbLevel: 0.35, wave1: 'sine', waveKnock: 'triangle' },
+          tongue: { overtoneRatio: 2.75, knockAmount: 0.25, decay: 2.8, reverbLevel: 0.45, wave1: 'sine', waveKnock: 'triangle' },
+          bell: { overtoneRatio: 3.12, knockAmount: 0.7, decay: 5.5, reverbLevel: 0.65, wave1: 'sine', waveKnock: 'sawtooth' },
+          crystal: { overtoneRatio: 1.50, knockAmount: 0.05, decay: 6.5, reverbLevel: 0.80, wave1: 'sine', waveKnock: 'sine' },
+          marimba: { overtoneRatio: 3.90, knockAmount: 0.9, decay: 1.2, reverbLevel: 0.15, wave1: 'triangle', waveKnock: 'square' }
+        };
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+
+        // Master Gain
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.8;
+
+        // Analyser for Visualization
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.analyser.smoothingTimeConstant = 0.85;
+
+        // Reverb Convolver Node
+        this.reverbNode = this.ctx.createConvolver();
+        this.reverbGain = this.ctx.createGain();
+        this.createReverbBuffer();
+
+        // Audio Route: Instruments -> MasterGain -> Analyser -> Output
+        //                                     \--> Reverb -> Output
+        this.masterGain.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
+
+        this.masterGain.connect(this.reverbNode);
+        this.reverbNode.connect(this.reverbGain);
+        this.reverbGain.connect(this.ctx.destination);
+      }
+
+      createReverbBuffer() {
+        if (!this.ctx) return;
+        const rate = this.ctx.sampleRate;
+        const length = rate * 3.0;
+        const impulse = this.ctx.createBuffer(2, length, rate);
+        const left = impulse.getChannelData(0);
+        const right = impulse.getChannelData(1);
+
+        for (let i = 0; i < length; i++) {
+          const decay = Math.exp(-i / (rate * 0.7));
+          left[i] = (Math.random() * 2 - 1) * decay;
+          right[i] = (Math.random() * 2 - 1) * decay;
+        }
+        this.reverbNode.buffer = impulse;
+        this.reverbGain.gain.value = this.params.reverbLevel;
+      }
+
+      triggerNote(freq) {
+        this.init();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        const now = this.ctx.currentTime;
+        const p = this.params;
+
+        // 1. Primary Fundamental Oscillator
+        const osc1 = this.ctx.createOscillator();
+        const gain1 = this.ctx.createGain();
+        osc1.type = p.wave1;
+        osc1.frequency.setValueAtTime(freq, now);
+
+        // 2. Metallic Inharmonic Overtone
+        const osc2 = this.ctx.createOscillator();
+        const gain2 = this.ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * p.overtoneRatio, now);
+
+        // 3. Sub-harmonic Ring / Shimmer
+        const osc3 = this.ctx.createOscillator();
+        const gain3 = this.ctx.createGain();
+        osc3.type = 'sine';
+        osc3.frequency.setValueAtTime(freq * (p.overtoneRatio * 1.414), now);
+
+        // 4. Transient Attack Knock (Hand Strike / Mallet Tap)
+        const knockOsc = this.ctx.createOscillator();
+        const knockGain = this.ctx.createGain();
+        knockOsc.type = p.waveKnock;
+        knockOsc.frequency.setValueAtTime(freq * 0.7, now);
+        knockOsc.frequency.exponentialRampToValueAtTime(35, now + 0.035);
+
+        // Envelopes
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.75, now + 0.005);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
+
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.linearRampToValueAtTime(0.35, now + 0.004);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + (p.decay * 0.65));
+
+        gain3.gain.setValueAtTime(0, now);
+        gain3.gain.linearRampToValueAtTime(0.12, now + 0.004);
+        gain3.gain.exponentialRampToValueAtTime(0.0001, now + (p.decay * 0.35));
+
+        knockGain.gain.setValueAtTime(p.knockAmount * 0.85, now);
+        knockGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+
+        // Connect Signals
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        osc3.connect(gain3);
+        knockOsc.connect(knockGain);
+
+        gain1.connect(this.masterGain);
+        gain2.connect(this.masterGain);
+        gain3.connect(this.masterGain);
+        knockGain.connect(this.masterGain);
+
+        // Start Oscillators
+        osc1.start(now); osc2.start(now); osc3.start(now); knockOsc.start(now);
+        osc1.stop(now + p.decay + 0.1);
+        osc2.stop(now + p.decay + 0.1);
+        osc3.stop(now + p.decay + 0.1);
+        knockOsc.stop(now + 0.04);
+      }
+
+      applyPreset(key) {
+        if (this.presets[key]) {
+          this.params = { ...this.presets[key] };
+          if (this.reverbGain) this.reverbGain.gain.value = this.params.reverbLevel;
+        }
+      }
+    }
+
+    // Initialize Synth Engine & Elements
+    const synth = new MetalVisualSynth();
+
+    const canvas = document.getElementById('visualizerCanvas');
+    const canvasCtx = canvas.getContext('2d');
+    const padsContainer = document.getElementById('padsContainer');
+    const viewToggle = document.getElementById('viewToggle');
+
+    let viewMode = 'combined'; // 'combined', 'waveform', 'spectrum'
+
+    // Resize Canvas to Match Container Resolution
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth * window.devicePixelRatio;
+      canvas.height = canvas.parentElement.clientHeight * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Render Canvas Loop (Oscilloscope + Spectrum)
+    function renderVisualizer() {
+      requestAnimationFrame(renderVisualizer);
+
+      const width = canvas.width;
+      const height = canvas.height;
+
+      canvasCtx.fillStyle = '#020617';
+      canvasCtx.fillRect(0, 0, width, height);
+
+      // Grid background lines
+      canvasCtx.lineWidth = 1;
+      canvasCtx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      for (let x = 0; x < width; x += width / 12) {
+        canvasCtx.beginPath(); canvasCtx.moveTo(x, 0); canvasCtx.lineTo(x, height); canvasCtx.stroke();
+      }
+      for (let y = 0; y < height; y += height / 6) {
+        canvasCtx.beginPath(); canvasCtx.moveTo(0, y); canvasCtx.lineTo(width, y); canvasCtx.stroke();
+      }
+
+      if (!synth.analyser) {
+        // Flatline idle state
+        canvasCtx.beginPath();
+        canvasCtx.strokeStyle = '#38bdf8';
+        canvasCtx.lineWidth = 2 * window.devicePixelRatio;
+        canvasCtx.moveTo(0, height / 2);
+        canvasCtx.lineTo(width, height / 2);
+        canvasCtx.stroke();
+        return;
+      }
+
+      // Draw Spectrum Bars
+      if (viewMode === 'combined' || viewMode === 'spectrum') {
+        const bufferLength = synth.analyser.frequencyBinCount;
+        const freqData = new Uint8Array(bufferLength);
+        synth.analyser.getByteFrequencyData(freqData);
+
+        const barWidth = (width / (bufferLength * 0.3)) * 2.5;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength * 0.3; i++) {
+          const barHeight = (freqData[i] / 255) * height * 0.85;
+
+          const gradient = canvasCtx.createLinearGradient(0, height, 0, height - barHeight);
+          gradient.addColorStop(0, 'rgba(14, 165, 233, 0.05)');
+          gradient.addColorStop(0.5, 'rgba(56, 189, 248, 0.3)');
+          gradient.addColorStop(1, 'rgba(129, 140, 248, 0.7)');
+
+          canvasCtx.fillStyle = gradient;
+          canvasCtx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+
+          x += barWidth;
+        }
+      }
+
+      // Draw Waveform Oscilloscope Curve
+      if (viewMode === 'combined' || viewMode === 'waveform') {
+        const bufferLength = synth.analyser.fftSize;
+        const timeData = new Uint8Array(bufferLength);
+        synth.analyser.getByteTimeDomainData(timeData);
+
+        canvasCtx.lineWidth = 2.5 * window.devicePixelRatio;
+        canvasCtx.strokeStyle = '#38bdf8';
+        canvasCtx.shadowBlur = 12;
+        canvasCtx.shadowColor = '#0284c7';
+        canvasCtx.beginPath();
+
+        const sliceWidth = width / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = timeData[i] / 128.0;
+          const y = (v * height) / 2;
+
+          if (i === 0) canvasCtx.moveTo(x, y);
+          else canvasCtx.lineTo(x, y);
+
+          x += sliceWidth;
+        }
+
+        canvasCtx.lineTo(width, height / 2);
+        canvasCtx.stroke();
+        canvasCtx.shadowBlur = 0; // Reset shadow
+      }
+    }
+
+    renderVisualizer();
+
+    // View Mode Toggle Button
+    viewToggle.addEventListener('click', () => {
+      if (viewMode === 'combined') {
+        viewMode = 'waveform';
+        viewToggle.textContent = 'Ansicht: Wellenform';
+      } else if (viewMode === 'waveform') {
+        viewMode = 'spectrum';
+        viewToggle.textContent = 'Ansicht: Spektrum';
+      } else {
+        viewMode = 'combined';
+        viewToggle.textContent = 'Ansicht: Kombiniert';
+      }
+    });
+
+    // Build Interactive Performance Pads
+    synth.notes.forEach((note) => {
+      const btn = document.createElement('button');
+      btn.className = `pad-btn bg-gradient-to-br ${note.color} border rounded-2xl p-3.5 flex flex-col items-center justify-center gap-1 cursor-pointer select-none min-h-[90px] h-full`;
+      btn.setAttribute('data-key', note.key);
+      btn.innerHTML = `
+        <span class="text-[10px] text-sky-300 font-bold bg-black/40 px-2 py-0.5 rounded-full border border-white/10">${note.key}</span>
+        <span class="text-sm font-bold text-slate-100">${note.name}</span>
+        <span class="text-[10px] text-slate-400 font-mono">${note.freq.toFixed(1)} Hz</span>
+      `;
+
+      btn.addEventListener('mousedown', (e) => { e.preventDefault(); triggerPad(btn, note.freq); });
+      btn.addEventListener('touchstart', (e) => { e.preventDefault(); triggerPad(btn, note.freq); });
+
+      padsContainer.appendChild(btn);
+    });
+
+    function triggerPad(element, freq) {
+      synth.triggerNote(freq);
+      element.classList.add('active');
+      setTimeout(() => element.classList.remove('active'), 150);
+    }
+
+    // Keyboard Key Triggers
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      const note = synth.notes.find(n => n.key === e.key);
+      if (note) {
+        const btn = document.querySelector(`[data-key="${note.key}"]`);
+        if (btn) triggerPad(btn, note.freq);
+      }
+    });
+
+    // Controls Parameter Listeners
+    const paramOvertone = document.getElementById('paramOvertone');
+    const paramKnock = document.getElementById('paramKnock');
+    const paramDecay = document.getElementById('paramDecay');
+    const paramReverb = document.getElementById('paramReverb');
+    const paramWave1 = document.getElementById('paramWave1');
+    const paramWaveKnock = document.getElementById('paramWaveKnock');
+
+    const valOvertone = document.getElementById('valOvertone');
+    const valKnock = document.getElementById('valKnock');
+    const valDecay = document.getElementById('valDecay');
+    const valReverb = document.getElementById('valReverb');
+
+    paramOvertone.addEventListener('input', (e) => {
+      synth.params.overtoneRatio = parseFloat(e.target.value);
+      valOvertone.textContent = `${synth.params.overtoneRatio.toFixed(2)}x`;
+    });
+
+    paramKnock.addEventListener('input', (e) => {
+      synth.params.knockAmount = parseInt(e.target.value) / 100;
+      valKnock.textContent = `${e.target.value}%`;
+    });
+
+    paramDecay.addEventListener('input', (e) => {
+      synth.params.decay = parseFloat(e.target.value);
+      valDecay.textContent = `${synth.params.decay.toFixed(1)}s`;
+    });
+
+    paramReverb.addEventListener('input', (e) => {
+      synth.params.reverbLevel = parseInt(e.target.value) / 100;
+      valReverb.textContent = `${e.target.value}%`;
+      if (synth.reverbGain) synth.reverbGain.gain.value = synth.params.reverbLevel;
+    });
+
+    paramWave1.addEventListener('change', (e) => synth.params.wave1 = e.target.value);
+    paramWaveKnock.addEventListener('change', (e) => synth.params.waveKnock = e.target.value);
+
+    // Preset Switching
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          b.className = 'preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-all';
+        });
+        btn.className = 'preset-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500 text-slate-950 transition-all shadow-md';
+
+        const presetKey = btn.getAttribute('data-preset');
+        synth.applyPreset(presetKey);
+
+        // Sync UI Sliders
+        paramOvertone.value = synth.params.overtoneRatio;
+        valOvertone.textContent = `${synth.params.overtoneRatio.toFixed(2)}x`;
+
+        paramKnock.value = synth.params.knockAmount * 100;
+        valKnock.textContent = `${Math.round(synth.params.knockAmount * 100)}%`;
+
+        paramDecay.value = synth.params.decay;
+        valDecay.textContent = `${synth.params.decay.toFixed(1)}s`;
+
+        paramReverb.value = synth.params.reverbLevel * 100;
+        valReverb.textContent = `${Math.round(synth.params.reverbLevel * 100)}%`;
+
+        paramWave1.value = synth.params.wave1;
+        paramWaveKnock.value = synth.params.waveKnock;
+      });
+    });
+  </script>
+</body>
+</html>

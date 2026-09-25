@@ -173,12 +173,12 @@
         <!-- Action Tools -->
         <div class="flex items-center gap-2">
             <!-- Transpose Dropdown -->
-            <div class="relative group">
-                <button class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-xs font-medium transition">
+            <div class="relative" id="transpose-dropdown-wrapper">
+                <button id="btn-toggle-transpose" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1.5 text-xs font-medium transition">
                     <i class="fa-solid fa-sliders text-amber-400"></i> Transponieren
                     <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                 </button>
-                <div class="absolute right-0 top-full mt-2 w-60 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-3 hidden group-hover:block z-50">
+                <div id="transpose-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-[100]">
                     <div class="text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">D-Kurd Tonleiter</div>
                     <button id="btn-snap-dkurd" class="w-full text-left bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1.5 rounded-lg text-xs font-medium mb-3 flex items-center gap-2 transition">
                         <i class="fa-solid fa-bullseye"></i> In D-Kurd einpassen
@@ -1233,6 +1233,22 @@
                 renderMusicSheet();
             });
 
+            // Transponieren Dropdown Toggle
+            const btnToggleTranspose = document.getElementById('btn-toggle-transpose');
+            const transposeMenu = document.getElementById('transpose-menu');
+
+            btnToggleTranspose.onclick = (e) => {
+                e.stopPropagation();
+                transposeMenu.classList.toggle('hidden');
+            };
+
+            document.addEventListener('click', (e) => {
+                const wrapper = document.getElementById('transpose-dropdown-wrapper');
+                if (wrapper && !wrapper.contains(e.target)) {
+                    transposeMenu.classList.add('hidden');
+                }
+            });
+
             // Reverb Slider Event
             reverbSlider.addEventListener('input', (e) => {
                 const val = parseFloat(e.target.value);
@@ -1302,9 +1318,18 @@
                 showToast('Song zurückgesetzt');
             };
 
-            document.getElementById('btn-transpose-up').onclick = () => transposeSong(1);
-            document.getElementById('btn-transpose-down').onclick = () => transposeSong(-1);
-            document.getElementById('btn-snap-dkurd').onclick = snapToDKurdScale;
+            document.getElementById('btn-transpose-up').onclick = () => {
+                transposeSong(1);
+                transposeMenu.classList.add('hidden');
+            };
+            document.getElementById('btn-transpose-down').onclick = () => {
+                transposeSong(-1);
+                transposeMenu.classList.add('hidden');
+            };
+            document.getElementById('btn-snap-dkurd').onclick = () => {
+                snapToDKurdScale();
+                transposeMenu.classList.add('hidden');
+            };
 
             document.getElementById('btn-export').onclick = exportJsonFile;
             const fileInput = document.getElementById('file-input');

@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSON → MIDI Konverter</title>
+<style>
+  :root{
+    --bg: #060b1a;
+    --bg2: #0a1330;
+    --panel: #0e1a42;
+    --panel-border: #1e3a8a;
+    --blue: #3b82f6;
+    --blue-bright: #60a5fa;
+    --blue-glow: #38bdf8;
+    --text: #dbeafe;
+    --text-dim: #93a5c9;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 20% -10%, #12234f 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: 32px 16px 60px;
+  }
+  .topbar{
+    width:100%;
+    max-width:760px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+  }
+  h1{
+    font-size:1.5rem;
+    margin:0;
+    letter-spacing:.5px;
+    background: linear-gradient(90deg, var(--blue-bright), var(--blue-glow));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  #fullscreenBtn{
+    background: var(--panel);
+    border:1px solid var(--panel-border);
+    color: var(--blue-bright);
+    width:42px; height:42px;
+    border-radius:10px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: box-shadow .2s, transform .1s, background .2s;
+  }
+  #fullscreenBtn:hover{
+    background:#122051;
+    box-shadow: 0 0 14px rgba(56,189,248,.45);
+  }
+  #fullscreenBtn:active{ transform: scale(0.94); }
+  #fullscreenBtn svg{ width:20px; height:20px; }
+
+  .card{
+    width:100%;
+    max-width:760px;
+    background: linear-gradient(180deg, var(--panel), #0a1533);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 0 0 1px rgba(59,130,246,.05), 0 20px 60px -20px rgba(0,20,80,.7);
+    margin-bottom: 24px;
+  }
+
+  #dropzone{
+    border: 2px dashed #2447a6;
+    border-radius: 14px;
+    padding: 36px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition: border-color .2s, background .2s;
+    color: var(--text-dim);
+  }
+  #dropzone.drag{
+    border-color: var(--blue-glow);
+    background: rgba(56,189,248,.06);
+    color: var(--text);
+  }
+  #dropzone strong{ color: var(--blue-bright); }
+  #fileInput{ display:none; }
+
+  .meta{
+    margin-top:22px;
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+    gap:12px;
+  }
+  .meta div{
+    background: #0a1633;
+    border:1px solid #16244f;
+    border-radius:10px;
+    padding:10px 14px;
+  }
+  .meta .label{ font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color: var(--text-dim); }
+  .meta .value{ font-size:1.05rem; color: var(--blue-bright); margin-top:2px; word-break:break-word; }
+
+  .instrument-row{
+    margin-top:22px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .instrument-row label{
+    font-size:.85rem;
+    color: var(--text-dim);
+    white-space:nowrap;
+  }
+  #instrumentSelect{
+    flex:1;
+    min-width:220px;
+    background:#0a1633;
+    border:1px solid #16244f;
+    color: var(--text);
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:.92rem;
+    cursor:pointer;
+  }
+  #instrumentSelect:hover{ border-color: var(--blue); }
+  #instrumentSelect option{ background:#0a1633; }
+
+  .actions{
+    display:flex;
+    gap:12px;
+    margin-top:24px;
+    flex-wrap:wrap;
+  }
+  button.primary{
+    flex:1;
+    min-width:200px;
+    background: linear-gradient(90deg, #1d4ed8, #2563eb);
+    border:1px solid #3b82f6;
+    color:#eaf2ff;
+    font-size:1rem;
+    font-weight:600;
+    padding:14px 18px;
+    border-radius:12px;
+    cursor:pointer;
+    transition: box-shadow .2s, transform .1s, filter .2s;
+  }
+  button.primary:disabled{
+    filter: grayscale(.6) opacity(.5);
+    cursor:not-allowed;
+  }
+  button.primary:not(:disabled):hover{
+    box-shadow: 0 0 22px rgba(59,130,246,.55);
+  }
+  button.primary:not(:disabled):active{ transform: scale(0.98); }
+
+  #status{
+    margin-top:14px;
+    font-size:.9rem;
+    min-height:1.2em;
+    color: var(--text-dim);
+  }
+  #status.error{ color:#f87171; }
+  #status.ok{ color:#4ade80; }
+
+  .notelist{
+    margin-top:18px;
+    max-height:180px;
+    overflow-y:auto;
+    font-family: Consolas, monospace;
+    font-size:.8rem;
+    color: var(--text-dim);
+    background:#08102a;
+    border:1px solid #16244f;
+    border-radius:10px;
+    padding:10px 14px;
+    display:none;
+  }
+  .notelist.show{ display:block; }
+  .notelist span{ color: var(--blue-bright); }
+
+  footer{
+    color:#3f5591;
+    font-size:.78rem;
+    margin-top:10px;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>JSON → MIDI Konverter</h1>
+    <button id="fullscreenBtn" title="Vollbild umschalten">
+      <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+        <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+        <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+        <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="card">
+    <div id="dropzone">
+      <div>📂 JSON-Datei hierher ziehen oder <strong>klicken zum Auswählen</strong></div>
+      <div style="font-size:.78rem; margin-top:6px; opacity:.7;">Erwartet: title, artist, bpm, notes[] mit note &amp; delay (ms)</div>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json">
+
+    <div class="meta" id="meta" style="display:none;">
+      <div><div class="label">Titel</div><div class="value" id="metaTitle">–</div></div>
+      <div><div class="label">Künstler</div><div class="value" id="metaArtist">–</div></div>
+      <div><div class="label">BPM</div><div class="value" id="metaBpm">–</div></div>
+      <div><div class="label">Scale</div><div class="value" id="metaScale">–</div></div>
+      <div><div class="label">Noten</div><div class="value" id="metaCount">–</div></div>
+    </div>
+
+    <div class="instrument-row" id="instrumentRow" style="display:none;">
+      <label for="instrumentSelect">Instrument</label>
+      <select id="instrumentSelect"></select>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="convertBtn" disabled>🎵 Als MIDI-Datei speichern</button>
+    </div>
+    <div id="status"></div>
+    <div class="notelist" id="notelist"></div>
+  </div>
+
+  <footer>Läuft komplett lokal im Browser — es werden keine Daten hochgeladen.</footer>
+
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const meta = document.getElementById('meta');
+  const convertBtn = document.getElementById('convertBtn');
+  const statusEl = document.getElementById('status');
+  const notelistEl = document.getElementById('notelist');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+  let loadedData = null;
+
+  // ---- General MIDI instrument list (Program Change 0–127) ----
+  // Jede Gruppe: [Gruppenname, [[Anzeigename, GM-Programmnummer 0–127], ...]]
+  const GM_GROUPS = [
+    ['Handpan-Klänge (angenähert – GM kennt keine echte Handpan)', [
+      ['Steel Drums (empfohlen)',114], ['Kalimba',108], ['Vibraphon',11],
+      ['Glockenspiel',9], ['Tubular Bells',14], ['Music Box',10]
+    ]],
+    ['Piano', [['Akustik-Flügel',0],['Helles Akustik-Piano',1],['E-Piano (Grand)',2],['Honky-Tonk-Piano',3],['E-Piano 1',4],['E-Piano 2',5],['Cembalo',6],['Clavinet',7]]],
+    ['Chromatische Perkussion', [['Celesta',8],['Glockenspiel',9],['Music Box',10],['Vibraphon',11],['Marimba',12],['Xylophon',13],['Tubular Bells',14],['Hackbrett',15]]],
+    ['Orgel', [['Hammondorgel',16],['Percussive Orgel',17],['Rockorgel',18],['Kirchenorgel',19],['Reed-Orgel',20],['Akkordeon',21],['Harmonika',22],['Tango-Akkordeon',23]]],
+    ['Gitarre', [['Nylon-Gitarre',24],['Stahlsaiten-Gitarre',25],['Jazz-Gitarre',26],['Clean E-Gitarre',27],['Gedämpfte E-Gitarre',28],['Overdrive-Gitarre',29],['Distortion-Gitarre',30],['Gitarren-Harmonics',31]]],
+    ['Bass', [['Akustik-Bass',32],['E-Bass (Finger)',33],['E-Bass (Plektrum)',34],['Fretless-Bass',35],['Slap-Bass 1',36],['Slap-Bass 2',37],['Synth-Bass 1',38],['Synth-Bass 2',39]]],
+    ['Streicher', [['Violine',40],['Bratsche',41],['Cello',42],['Kontrabass',43],['Tremolo-Streicher',44],['Pizzicato-Streicher',45],['Harfe',46],['Timpani',47]]],
+    ['Ensemble', [['Streicher-Ensemble 1',48],['Streicher-Ensemble 2',49],['Synth-Strings 1',50],['Synth-Strings 2',51],['Chor Aah',52],['Chor Ooh',53],['Synth-Voice',54],['Orchester-Hit',55]]],
+    ['Blechbläser', [['Trompete',56],['Posaune',57],['Tuba',58],['Gedämpfte Trompete',59],['Waldhorn',60],['Blechbläser-Section',61],['Synth-Brass 1',62],['Synth-Brass 2',63]]],
+    ['Rohrblatt', [['Sopransaxophon',64],['Altsaxophon',65],['Tenorsaxophon',66],['Baritonsaxophon',67],['Oboe',68],['Englischhorn',69],['Fagott',70],['Klarinette',71]]],
+    ['Blasinstrumente', [['Piccolo',72],['Flöte',73],['Blockflöte',74],['Panflöte',75],['Flasche blasen',76],['Shakuhachi',77],['Pfeife',78],['Ocarina',79]]],
+    ['Synth-Lead', [['Lead (Square)',80],['Lead (Sawtooth)',81],['Lead (Calliope)',82],['Lead (Chiff)',83],['Lead (Charang)',84],['Lead (Voice)',85],['Lead (Fifths)',86],['Lead (Bass+Lead)',87]]],
+    ['Synth-Pad', [['Pad (New Age)',88],['Pad (Warm)',89],['Pad (Polysynth)',90],['Pad (Choir)',91],['Pad (Bowed)',92],['Pad (Metallic)',93],['Pad (Halo)',94],['Pad (Sweep)',95]]],
+    ['Synth-Effekte', [['FX (Rain)',96],['FX (Soundtrack)',97],['FX (Crystal)',98],['FX (Atmosphere)',99],['FX (Brightness)',100],['FX (Goblins)',101],['FX (Echoes)',102],['FX (Sci-Fi)',103]]],
+    ['Ethnisch', [['Sitar',104],['Banjo',105],['Shamisen',106],['Koto',107],['Kalimba',108],['Dudelsack',109],['Fidel',110],['Shehnai',111]]],
+    ['Perkussiv', [['Glockenspiel (Tinkle Bell)',112],['Agogo',113],['Steel Drums',114],['Woodblock',115],['Taiko-Trommel',116],['Melodie-Tom',117],['Synth-Drum',118],['Reverse Cymbal',119]]],
+    ['Klangeffekte', [['Gitarre Fret Noise',120],['Atem-Geräusch',121],['Möwen/Seashore',122],['Vogelgezwitscher',123],['Telefonklingeln',124],['Hubschrauber',125],['Applaus',126],['Schuss',127]]]
+  ];
+  const instrumentSelect = document.getElementById('instrumentSelect');
+  const instrumentRow = document.getElementById('instrumentRow');
+  let program = 114; // Standard: Steel Drums (Handpan-Annäherung)
+  GM_GROUPS.forEach(group => {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = group[0];
+    group[1].forEach(entry => {
+      const opt = document.createElement('option');
+      opt.value = entry[1];
+      opt.textContent = entry[0];
+      optgroup.appendChild(opt);
+    });
+    instrumentSelect.appendChild(optgroup);
+  });
+  instrumentSelect.value = program;
+  instrumentSelect.addEventListener('change', () => {
+    program = parseInt(instrumentSelect.value, 10) || 0;
+  });
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) handleFile(fileInput.files[0]);
+  });
+
+  function setStatus(msg, kind){
+    statusEl.textContent = msg || '';
+    statusEl.className = kind || '';
+  }
+
+  function handleFile(file){
+    setStatus('Lese Datei …');
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!Array.isArray(data.notes) || !data.notes.length) {
+          throw new Error('Kein gültiges "notes"-Array gefunden.');
+        }
+        loadedData = data;
+        showMeta(data);
+        convertBtn.disabled = false;
+        setStatus('Datei geladen: ' + (data.notes.length) + ' Noten.', 'ok');
+      } catch (err) {
+        loadedData = null;
+        convertBtn.disabled = true;
+        meta.style.display = 'none';
+        notelistEl.classList.remove('show');
+        setStatus('Fehler beim Lesen: ' + err.message, 'error');
+      }
+    };
+    reader.onerror = () => setStatus('Datei konnte nicht gelesen werden.', 'error');
+    reader.readAsText(file);
+  }
+
+  function showMeta(data){
+    document.getElementById('metaTitle').textContent = data.title || '–';
+    document.getElementById('metaArtist').textContent = data.artist || '–';
+    document.getElementById('metaBpm').textContent = data.bpm || '120 (Standard)';
+    document.getElementById('metaScale').textContent = data.scale || '–';
+    document.getElementById('metaCount').textContent = data.notes.length;
+    meta.style.display = 'grid';
+    instrumentRow.style.display = 'flex';
+
+    notelistEl.innerHTML = data.notes.map((n,i) =>
+      '<span>' + (i+1).toString().padStart(3,'0') + '</span>  ' + (n.note || '?') + '   +' + n.delay + 'ms'
+    ).join('<br>');
+    notelistEl.classList.add('show');
+  }
+
+  // ---- MIDI note name → number ----
+  function noteNameToMidi(name){
+    const m = /^([A-Ga-g])(#|b)?(-?\d+)$/.exec(String(name).trim());
+    if (!m) return null;
+    const base = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 }[m[1].toUpperCase()];
+    let semitone = base + (m[2] === '#' ? 1 : m[2] === 'b' ? -1 : 0);
+    const octave = parseInt(m[3], 10);
+    return (octave + 1) * 12 + semitone;
+  }
+
+  function writeVarLen(value){
+    const bytes = [value & 0x7f];
+    value >>= 7;
+    while (value > 0) {
+      bytes.unshift((value & 0x7f) | 0x80);
+      value >>= 7;
+    }
+    return bytes;
+  }
+
+  function u32(v){ return [(v>>>24)&0xff, (v>>>16)&0xff, (v>>>8)&0xff, v&0xff]; }
+  function u16(v){ return [(v>>>8)&0xff, v&0xff]; }
+  function u24(v){ return [(v>>>16)&0xff, (v>>>8)&0xff, v&0xff]; }
+
+  function buildMidi(data){
+    const ticksPerQuarter = 480;
+    const bpm = Number(data.bpm) > 0 ? Number(data.bpm) : 120;
+    const notes = data.notes;
+
+    function msToTicks(ms){
+      return Math.round(ms * ticksPerQuarter * bpm / 60000);
+    }
+
+    const events = [];
+    notes.forEach((n, i) => {
+      const midiNote = noteNameToMidi(n.note);
+      if (midiNote === null) return;
+      const delay = Number(n.delay) || 0;
+      const nextDelay = (i < notes.length - 1) ? Number(notes[i+1].delay) : (delay + 500);
+      let duration = Math.round(Math.max(1, nextDelay - delay) * 0.85);
+      if (duration < 40) duration = 40;
+      events.push({ tick: msToTicks(delay), type: 0x90, note: midiNote, vel: 96 });
+      events.push({ tick: msToTicks(delay + duration), type: 0x80, note: midiNote, vel: 0 });
+    });
+
+    if (!events.length) throw new Error('Keine gültigen Noten zum Konvertieren gefunden.');
+
+    events.sort((a, b) => (a.tick - b.tick) || (a.type - b.type));
+
+    const track = [];
+    // Tempo meta event
+    const microsPerQuarter = Math.round(60000000 / bpm);
+    track.push(0x00, 0xFF, 0x51, 0x03, ...u24(microsPerQuarter));
+
+    // Track name meta event
+    const nameBytes = Array.from(String(data.title || 'Konvertiert').slice(0,64)).map(c => c.charCodeAt(0));
+    track.push(0x00, 0xFF, 0x03, nameBytes.length, ...nameBytes);
+
+    // Program Change → gewähltes Instrument auf Kanal 0
+    track.push(0x00, 0xC0, program & 0x7f);
+
+    let lastTick = 0;
+    events.forEach(e => {
+      const delta = e.tick - lastTick;
+      lastTick = e.tick;
+      track.push(...writeVarLen(delta), e.type, e.note, e.vel);
+    });
+    track.push(0x00, 0xFF, 0x2F, 0x00); // End of track
+
+    const header = [
+      0x4D,0x54,0x68,0x64, // "MThd"
+      ...u32(6),
+      ...u16(0),   // format 0
+      ...u16(1),   // 1 track
+      ...u16(ticksPerQuarter)
+    ];
+    const trackChunk = [0x4D,0x54,0x72,0x6B, ...u32(track.length), ...track]; // "MTrk"
+
+    return new Uint8Array([...header, ...trackChunk]);
+  }
+
+  function sanitizeFilename(name){
+    return (name || 'konvertiert').replace(/[\\/:*?"<>|]+/g,'').trim() || 'konvertiert';
+  }
+
+  convertBtn.addEventListener('click', () => {
+    if (!loadedData) return;
+    try {
+      setStatus('Konvertiere …');
+      const bytes = buildMidi(loadedData);
+      const blob = new Blob([bytes], { type: 'audio/midi' });
+      const filename = sanitizeFilename(loadedData.title) + '.mid';
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      setStatus('MIDI-Datei "' + filename + '" wurde gespeichert.', 'ok');
+    } catch (err) {
+      setStatus('Fehler bei der Konvertierung: ' + err.message, 'error');
+    }
+  });
+
+  // ---- Fullscreen ----
+  fullscreenBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        setStatus('Vollbild wird von diesem Browser nicht unterstützt.', 'error');
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+})();
+</script>
+</body>
+</html>

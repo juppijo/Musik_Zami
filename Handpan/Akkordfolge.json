@@ -1,0 +1,40 @@
+{
+  "title": "Akkordfolge Dm - Bb - F - C",
+  "artist": "Handpan Ubung",
+  "scale": "d_kurd",
+  "bpm": 80,
+  "createdAt": "2026-09-25T09:35:00Z",
+  "notes": [
+    { "note": "D3", "delay": 0, "lyric": "Dm" },
+    { "note": "F4", "delay": 0 },
+    { "note": "A4", "delay": 0 },
+    { "note": "A3", "delay": 750 },
+    { "note": "D4", "delay": 1500 },
+    { "note": "F4", "delay": 2250 },
+
+    { "note": "Bb3", "delay": 3000, "lyric": "Bb" },
+    { "note": "D4", "delay": 3000 },
+    { "note": "F4", "delay": 3000 },
+    { "note": "F4", "delay": 3750 },
+    { "note": "D4", "delay": 4500 },
+    { "note": "Bb3", "delay": 5250 },
+
+    { "note": "F4", "delay": 6000, "lyric": "F" },
+    { "note": "A4", "delay": 6000 },
+    { "note": "C4", "delay": 6000 },
+    { "note": "A3", "delay": 6750 },
+    { "note": "C4", "delay": 7500 },
+    { "note": "F4", "delay": 8250 },
+
+    { "note": "C4", "delay": 9000, "lyric": "C" },
+    { "note": "E4", "delay": 9000 },
+    { "note": "G4", "delay": 9000 },
+    { "note": "E4", "delay": 9750 },
+    { "note": "G4", "delay": 10500 },
+    { "note": "C4", "delay": 11250 },
+
+    { "note": "D3", "delay": 12000, "lyric": "Dm (Ende)" },
+    { "note": "F4", "delay": 12000 },
+    { "note": "A4", "delay": 12000 }
+  ]
+}

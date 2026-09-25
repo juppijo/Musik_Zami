@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON zu MIDI Konverter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0b1329 0%, #0f172a 35%, #1e293b 70%, #0369a1 100%);
+            background-attachment: fixed;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+
+        .glass-card-subtle {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(56, 189, 248, 0.12);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            color: #f8fafc;
+        }
+
+        .glass-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+            outline: none;
+        }
+
+        select option {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.35);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.7);
+        }
+    </style>
+</head>
+<body class="min-h-full text-slate-100 p-3 sm:p-6 md:p-8 flex flex-col justify-between">
+
+    <div class="max-w-7xl mx-auto w-full space-y-6">
+        
+        <!-- Header Panel -->
+        <header class="glass-card rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-cyan-500/30">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <i class="fa-solid fa-music text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold bg-gradient-to-r from-white via-cyan-200 to-blue-400 bg-clip-text text-transparent">
+                        JSON zu MIDI Konverter
+                    </h1>
+                    <p class="text-xs text-cyan-200/80">Verwandle JSON-Sequenzen nativ im Browser in gültige .mid MIDI-Dateien</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                <button id="fullscreenBtn" onclick="toggleFullscreen()" class="px-4 py-2.5 rounded-xl glass-card hover:bg-slate-800/80 transition-all text-xs sm:text-sm font-semibold flex items-center space-x-2 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 shadow-md">
+                    <i class="fa-solid fa-expand text-base" id="fullscreenIcon"></i>
+                    <span id="fullscreenText" class="hidden sm:inline">Vollbild</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column: JSON Editor & Upload -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-2">
+                        <h2 class="text-base sm:text-lg font-bold text-cyan-100 flex items-center gap-2">
+                            <i class="fa-solid fa-code text-cyan-400"></i> JSON Quelle & Sequenz
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <button onclick="loadSampleJSON('melody')" class="text-xs bg-cyan-500/20 hover:bg-cyan-500/35 text-cyan-200 px-3 py-1.5 rounded-lg border border-cyan-500/30 transition-all flex items-center gap-1.5 font-medium">
+                                <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i> Melodie
+                            </button>
+                            <button onclick="loadSampleJSON('chords')" class="text-xs bg-blue-500/20 hover:bg-blue-500/35 text-blue-200 px-3 py-1.5 rounded-lg border border-blue-500/30 transition-all flex items-center gap-1.5 font-medium">
+                                <i class="fa-solid fa-layer-group text-blue-400"></i> Akkorde
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Zone -->
+                    <div id="dropZone" onclick="document.getElementById('fileInput').click()" 
+                         class="border-2 border-dashed border-cyan-500/30 hover:border-cyan-400 rounded-xl p-5 text-center cursor-pointer transition-all bg-slate-900/40 hover:bg-cyan-950/30 group">
+                        <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileSelect(event)">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-cyan-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-sm font-medium text-slate-200">JSON-Datei hierher ziehen oder <span class="text-cyan-400 underline">durchsuchen</span></p>
+                        <p class="text-xs text-slate-400 mt-1">Unterstützt Notennamen (z.B. "C4", "F#3") oder MIDI-Zahlen (60, 64)</p>
+                    </div>
+
+                    <!-- Code Editor Textarea -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs text-slate-300">
+                            <label for="jsonInput" class="font-medium">JSON Code Editor:</label>
+                            <span id="jsonFormatBadge" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">Bereit</span>
+                        </div>
+                        <textarea id="jsonInput" rows="13" 
+                            class="w-full glass-input rounded-xl p-4 font-mono text-xs leading-relaxed focus:outline-none transition-all resize-y" 
+                            placeholder='[&#10;  { "note": "C4", "duration": 0.5, "velocity": 90 },&#10;  { "note": "E4", "duration": 0.5, "velocity": 95 },&#10;  { "note": "G4", "duration": 1.0, "velocity": 100 }&#10;]' 
+                            oninput="validateAndParseJSON()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Instruments, Controls & Export -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Settings Panel -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-5">
+                    <h2 class="text-base sm:text-lg font-bold text-cyan-100 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-cyan-400"></i> Instrument & Einstellungen
+                    </h2>
+
+                    <!-- Full 128 GM Instrument Select -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="instrumentSelect" class="block text-xs font-semibold text-slate-200">
+                                Instrument (Alle 128 GM Sound-Klassen):
+                            </label>
+                            <span class="text-[10px] text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">128 Sounds</span>
+                        </div>
+                        <select id="instrumentSelect" class="w-full glass-input rounded-xl p-3 text-xs font-medium focus:outline-none cursor-pointer">
+                            <!-- Categorized via JavaScript -->
+                        </select>
+                    </div>
+
+                    <!-- Tempo & Filename Fields -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="bpmInput" class="block text-xs font-semibold text-slate-200 mb-1.5">Tempo (BPM):</label>
+                            <div class="relative">
+                                <input type="number" id="bpmInput" value="120" min="20" max="300" class="w-full glass-input rounded-xl p-3 text-xs font-mono font-bold">
+                                <span class="absolute right-3 top-3 text-[10px] text-slate-400">BPM</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="filenameInput" class="block text-xs font-semibold text-slate-200 mb-1.5">Dateiname:</label>
+                            <input type="text" id="filenameInput" value="meine_musik.mid" class="w-full glass-input rounded-xl p-3 text-xs font-mono">
+                        </div>
+                    </div>
+
+                    <!-- Status Display Box -->
+                    <div id="statusBox" class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-700/60 flex items-start gap-3 text-xs transition-all">
+                        <i id="statusIcon" class="fa-solid fa-circle-info text-cyan-400 text-sm mt-0.5"></i>
+                        <div class="space-y-0.5">
+                            <div id="statusTitle" class="font-bold text-slate-200">Bereit zum Konvertieren</div>
+                            <div id="statusText" class="text-slate-400">Füge JSON ein oder lade ein Beispiel.</div>
+                        </div>
+                    </div>
+
+                    <!-- Download MIDI Button -->
+                    <button id="convertBtn" onclick="generateAndDownloadMIDI()" disabled
+                        class="w-full py-4 px-6 rounded-xl font-bold text-sm bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-lg shadow-cyan-500/25 transition-all opacity-50 cursor-not-allowed flex items-center justify-center space-x-2.5 active:scale-[0.98]">
+                        <i class="fa-solid fa-file-arrow-down text-lg"></i>
+                        <span>MIDI Datei Generieren & Speichern</span>
+                    </button>
+                </div>
+
+                <!-- Live Note Preview Panel -->
+                <div class="glass-card rounded-2xl p-5 sm:p-6 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-cyan-100 flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-cyan-400"></i> Noten-Vorschau
+                        </h2>
+                        <span id="noteCount" class="text-xs font-mono bg-cyan-950/80 text-cyan-300 px-2.5 py-1 rounded-full border border-cyan-500/30">0 Noten</span>
+                    </div>
+
+                    <div id="previewContainer" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
+                        <div class="text-slate-500 italic text-center py-8">Keine Noten geladen</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 text-center text-xs text-cyan-200/50">
+        <p>JSON zu MIDI Konverter &bull; Standalone Native Encoder (100% Client-side)</p>
+    </footer>
+
+    <script>
+        // Full General MIDI 128 Instrument List categorized
+        const gmCategories = [
+            {
+                name: "🎹 Klaviere & Tasten (0-7)",
+                instruments: [
+                    [0, "Acoustic Grand Piano"], [1, "Bright Acoustic Piano"], [2, "Electric Grand Piano"],
+                    [3, "Honky-tonk Piano"], [4, "Electric Piano 1"], [5, "Electric Piano 2"],
+                    [6, "Harpsichord"], [7, "Clavinet"]
+                ]
+            },
+            {
+                name: "🔔 Perkutativ & Mallets (8-15)",
+                instruments: [
+                    [8, "Celesta"], [9, "Glockenspiel"], [10, "Music Box"], [11, "Vibraphone"],
+                    [12, "Marimba"], [13, "Xylophone"], [14, "Tubular Bells"], [15, "Dulcimer"]
+                ]
+            },
+            {
+                name: "🎷 Orgeln (16-23)",
+                instruments: [
+                    [16, "Drawbar Organ"], [17, "Percussive Organ"], [18, "Rock Organ"], [19, "Church Organ"],
+                    [20, "Reed Organ"], [21, "Accordion"], [22, "Harmonica"], [23, "Tango Accordion"]
+                ]
+            },
+            {
+                name: "🎸 Gitarren (24-31)",
+                instruments: [
+                    [24, "Acoustic Guitar (Nylon)"], [25, "Acoustic Guitar (Steel)"], [26, "Electric Guitar (Jazz)"],
+                    [27, "Electric Guitar (Clean)"], [28, "Electric Guitar (Muted)"], [29, "Overdriven Guitar"],
+                    [30, "Distortion Guitar"], [31, "Guitar Harmonics"]
+                ]
+            },
+            {
+                name: "🎸 Bässe (32-39)",
+                instruments: [
+                    [32, "Acoustic Bass"], [33, "Electric Bass (Finger)"], [34, "Electric Bass (Pick)"],
+                    [35, "Fretless Bass"], [36, "Slap Bass 1"], [37, "Slap Bass 2"],
+                    [38, "Synth Bass 1"], [39, "Synth Bass 2"]
+                ]
+            },
+            {
+                name: "🎻 Streicher & Streichorchester (40-47)",
+                instruments: [
+                    [40, "Violin"], [41, "Viola"], [42, "Cello"], [43, "Contrabass"],
+                    [44, "Tremolo Strings"], [45, "Pizzicato Strings"], [46, "Orchestral Harp"], [47, "Timpani"]
+                ]
+            },
+            {
+                name: "🎺 Ensemble & Streicher-Pads (48-55)",
+                instruments: [
+                    [48, "String Ensemble 1"], [49, "String Ensemble 2"], [50, "SynthStrings 1"], [51, "SynthStrings 2"],
+                    [52, "Choir Aahs"], [53, "Voice Oohs"], [54, "Synth Voice"], [55, "Orchestra Hit"]
+                ]
+            },
+            {
+                name: "🎺 Blasinstrumente / Brass (56-63)",
+                instruments: [
+                    [56, "Trumpet"], [57, "Trombone"], [58, "Tuba"], [59, "Muted Trumpet"],
+                    [60, "French Horn"], [61, "Brass Section"], [62, "Synth Brass 1"], [63, "Synth Brass 2"]
+                ]
+            },
+            {
+                name: "🎷 Holzbläser & Saxofon (64-71)",
+                instruments: [
+                    [64, "Soprano Sax"], [65, "Alto Sax"], [66, "Tenor Sax"], [67, "Baritone Sax"],
+                    [68, "Oboe"], [69, "English Horn"], [70, "Bassoon"], [71, "Clarinet"]
+                ]
+            },
+            {
+                name: "🪈 Flöten & Pfeifen (72-79)",
+                instruments: [
+                    [72, "Piccolo"], [73, "Flute"], [74, "Recorder"], [75, "Pan Flute"],
+                    [76, "Blown Bottle"], [77, "Shakuhachi"], [78, "Whistle"], [79, "Ocarina"]
+                ]
+            },
+            {
+                name: "🎛️ Synth Leads (80-87)",
+                instruments: [
+                    [80, "Lead 1 (Square)"], [81, "Lead 2 (Sawtooth)"], [82, "Lead 3 (Calliope)"], [83, "Lead 4 (Chiff)"],
+                    [84, "Lead 5 (Charang)"], [85, "Lead 6 (Voice)"], [86, "Lead 7 (Fifths)"], [87, "Lead 8 (Bass + Lead)"]
+                ]
+            },
+            {
+                name: "🌌 Synth Pads (88-95)",
+                instruments: [
+                    [88, "Pad 1 (New Age)"], [89, "Pad 2 (Warm)"], [90, "Pad 3 (Polysynth)"], [91, "Pad 4 (Choir)"],
+                    [92, "Pad 5 (Bowed)"], [93, "Pad 6 (Metallic)"], [94, "Pad 7 (Halo)"], [95, "Pad 8 (Sweep)"]
+                ]
+            },
+            {
+                name: "✨ FX & Ethno Sounds (96-111)",
+                instruments: [
+                    [96, "FX 1 (Rain)"], [98, "FX 3 (Crystal)"], [100, "FX 5 (Brightness)"], [104, "Sitar"],
+                    [105, "Banjo"], [107, "Koto"], [108, "Kalimba"], [111, "Shanai"]
+                ]
+            },
+            {
+                name: "🥁 Percussive & SFX (112-127)",
+                instruments: [
+                    [112, "Tinkle Bell"], [114, "Steel Drums"], [115, "Woodblock"], [118, "Synth Drum"],
+                    [120, "Guitar Fret Noise"], [122, "Seashore"], [123, "Bird Tweet"], [125, "Helicopter"]
+                ]
+            }
+        ];
+
+        let parsedNotes = [];
+
+        const samples = {
+            melody: [
+                { "note": "C4", "duration": 0.5, "velocity": 85 },
+                { "note": "E4", "duration": 0.5, "velocity": 90 },
+                { "note": "G4", "duration": 0.5, "velocity": 95 },
+                { "note": "B4", "duration": 0.5, "velocity": 100 },
+                { "note": "C5", "duration": 1.0, "velocity": 110 },
+                { "note": "G4", "duration": 0.5, "velocity": 90 },
+                { "note": "E4", "duration": 0.5, "velocity": 85 },
+                { "note": "C4", "duration": 1.5, "velocity": 100 }
+            ],
+            chords: [
+                // C Major Chord
+                { "note": "C4", "duration": 1.0, "time": 0.0, "velocity": 90 },
+                { "note": "E4", "duration": 1.0, "time": 0.0, "velocity": 85 },
+                { "note": "G4", "duration": 1.0, "time": 0.0, "velocity": 85 },
+                // A Minor Chord
+                { "note": "A3", "duration": 1.0, "time": 1.0, "velocity": 90 },
+                { "note": "C4", "duration": 1.0, "time": 1.0, "velocity": 85 },
+                { "note": "E4", "duration": 1.0, "time": 1.0, "velocity": 85 },
+                // F Major Chord
+                { "note": "F3", "duration": 1.0, "time": 2.0, "velocity": 90 },
+                { "note": "A3", "duration": 1.0, "time": 2.0, "velocity": 85 },
+                { "note": "C4", "duration": 1.0, "time": 2.0, "velocity": 85 },
+                // G Major Chord
+                { "note": "G3", "duration": 1.5, "time": 3.0, "velocity": 95 },
+                { "note": "B3", "duration": 1.5, "time": 3.0, "velocity": 90 },
+                { "note": "D4", "duration": 1.5, "time": 3.0, "velocity": 90 }
+            ]
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            populateInstruments();
+
+            // Setup Drag and Drop
+            const dropZone = document.getElementById('dropZone');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) readFile(files[0]);
+            }, false);
+
+            // Load default sample
+            loadSampleJSON('melody');
+        });
+
+        function populateInstruments() {
+            const select = document.getElementById('instrumentSelect');
+            select.innerHTML = '';
+
+            gmCategories.forEach(cat => {
+                const group = document.createElement('optgroup');
+                group.label = cat.name;
+                cat.instruments.forEach(([id, name]) => {
+                    const opt = document.createElement('option');
+                    opt.value = id;
+                    opt.textContent = `${id.toString().padStart(3, '0')}: ${name}`;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            });
+        }
+
+        function loadSampleJSON(type) {
+            const data = samples[type] || samples.melody;
+            document.getElementById('jsonInput').value = JSON.stringify(data, null, 2);
+            validateAndParseJSON();
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                readFile(e.target.files[0]);
+            }
+        }
+
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('jsonInput').value = e.target.result;
+                validateAndParseJSON();
+            };
+            reader.readAsText(file);
+        }
+
+        function validateAndParseJSON() {
+            const rawText = document.getElementById('jsonInput').value.trim();
+            const badge = document.getElementById('jsonFormatBadge');
+            const convertBtn = document.getElementById('convertBtn');
+
+            if (!rawText) {
+                updateStatus('Warte auf Eingabe...', 'info', 'Kein JSON vorhanden');
+                badge.textContent = 'Leer';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400';
+                convertBtn.disabled = true;
+                convertBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                renderPreview([]);
+                return;
+            }
+
+            try {
+                const data = JSON.parse(rawText);
+                const notes = extractNotes(data);
+
+                if (notes.length === 0) {
+                    updateStatus('Keine verwertbaren Noten im JSON gefunden.', 'warning', 'Format Warnung');
+                    badge.textContent = 'Keine Noten';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800';
+                    convertBtn.disabled = true;
+                    convertBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    renderPreview([]);
+                } else {
+                    parsedNotes = notes;
+                    updateStatus(`${notes.length} Noten bereit zur Konvertierung.`, 'success', 'JSON Gültig');
+                    badge.textContent = 'Gültig';
+                    badge.className = 'text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800';
+                    convertBtn.disabled = false;
+                    convertBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    renderPreview(notes);
+                }
+            } catch (err) {
+                updateStatus(`Syntaxfehler im JSON: ${err.message}`, 'error', 'Ungültiges JSON');
+                badge.textContent = 'Fehler';
+                badge.className = 'text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800';
+                convertBtn.disabled = true;
+                convertBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                renderPreview([]);
+            }
+        }
+
+        function extractNotes(data) {
+            const list = Array.isArray(data) ? data : (data.notes || data.tracks || []);
+            const notes = [];
+            let currentTime = 0;
+
+            list.forEach(item => {
+                let noteVal = item.note ?? item.pitch ?? item.midi ?? item.key;
+                if (noteVal === undefined) return;
+
+                let midiNum = parseNoteToMidiNumber(noteVal);
+                if (midiNum < 0 || midiNum > 127) return;
+
+                let durationSec = parseFloat(item.duration ?? item.length ?? 0.5);
+                if (isNaN(durationSec) || durationSec <= 0) durationSec = 0.5;
+
+                let velocity = parseInt(item.velocity ?? item.vol ?? item.volume ?? 90);
+                velocity = Math.min(127, Math.max(1, isNaN(velocity) ? 90 : velocity));
+
+                // Optional start time / offset
+                let startTime = item.time !== undefined ? parseFloat(item.time) : currentTime;
+
+                notes.push({
+                    midi: midiNum,
+                    pitchName: midiToPitchName(midiNum),
+                    duration: durationSec,
+                    time: startTime,
+                    velocity: velocity
+                });
+
+                // Auto advance time if not explicitly provided
+                if (item.time === undefined) {
+                    currentTime += durationSec;
+                }
+            });
+
+            // Sort notes by start time
+            return notes.sort((a, b) => a.time - b.time);
+        }
+
+        function parseNoteToMidiNumber(val) {
+            if (typeof val === 'number') return Math.floor(val);
+            
+            const str = String(val).trim().toUpperCase();
+            if (!isNaN(str)) return parseInt(str, 10);
+
+            // Parse Note String like "C4", "F#3", "Eb5"
+            const match = str.match(/^([A-G][#B]?)(-?\d+)$/);
+            if (!match) return -1;
+
+            const noteNames = { 'C': 0, 'C#': 1, 'DB': 1, 'D': 2, 'D#': 3, 'EB': 3, 'E': 4, 'F': 5, 'F#': 6, 'GB': 6, 'G': 7, 'G#': 8, 'AB': 8, 'A': 9, 'A#': 10, 'BB': 10, 'B': 11 };
+            const noteIndex = noteNames[match[1]];
+            const octave = parseInt(match[2], 10);
+
+            if (noteIndex === undefined) return -1;
+            return (octave + 1) * 12 + noteIndex;
+        }
+
+        function midiToPitchName(midi) {
+            const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const octave = Math.floor(midi / 12) - 1;
+            return names[midi % 12] + octave;
+        }
+
+        /*
+          NATIVE MIDI BINARY FILE WRITER
+          Generates a standard Type 0 MIDI file without external dependencies.
+        */
+        function buildMidiBinary(notes, instrumentId, bpm) {
+            const PPQ = 480; // Ticks per quarter note
+            const secondsPerQuarter = 60.0 / bpm;
+
+            // MIDI Header Chunk: "MThd" + Length 6 + Format 0 + 1 Track + Division
+            const header = [
+                0x4D, 0x54, 0x68, 0x64, // MThd
+                0x00, 0x00, 0x00, 0x06, // Header length (6 bytes)
+                0x00, 0x00,             // Single track format
+                0x00, 0x01,             // 1 track
+                (PPQ >> 8) & 0xFF, PPQ & 0xFF // Division
+            ];
+
+            const trackEvents = [];
+
+            // Tempo Event (Meta Event 0x51)
+            const microsecondsPerQuarter = Math.round(60000000 / bpm);
+            trackEvents.push({
+                tick: 0,
+                bytes: [
+                    0xFF, 0x51, 0x03,
+                    (microsecondsPerQuarter >> 16) & 0xFF,
+                    (microsecondsPerQuarter >> 8) & 0xFF,
+                    microsecondsPerQuarter & 0xFF
+                ]
+            });
+
+            // Program Change (Instrument Event)
+            trackEvents.push({
+                tick: 0,
+                bytes: [0xC0, instrumentId & 0x7F]
+            });
+
+            // Convert Note Start & End times into MIDI Ticks
+            notes.forEach(n => {
+                const startTick = Math.round((n.time / secondsPerQuarter) * PPQ);
+                const durationTicks = Math.round((n.duration / secondsPerQuarter) * PPQ);
+                const endTick = startTick + Math.max(1, durationTicks);
+
+                // Note ON (Channel 1 -> 0x90)
+                trackEvents.push({
+                    tick: startTick,
+                    bytes: [0x90, n.midi & 0x7F, n.velocity & 0x7F]
+                });
+
+                // Note OFF (Channel 1 -> 0x80)
+                trackEvents.push({
+                    tick: endTick,
+                    bytes: [0x80, n.midi & 0x7F, 0x00]
+                });
+            });
+
+            // Sort Events Chronologically
+            trackEvents.sort((a, b) => a.tick - b.tick);
+
+            // Construct Track Data Array with Delta Times
+            let trackBytes = [];
+            let lastTick = 0;
+
+            trackEvents.forEach(evt => {
+                const delta = evt.tick - lastTick;
+                lastTick = evt.tick;
+
+                // Write Variable Length Quantity (VLQ) for Delta Time
+                trackBytes.push(...writeVarLen(delta));
+                trackBytes.push(...evt.bytes);
+            });
+
+            // End of Track Event (Meta Event 0x2F)
+            trackBytes.push(0x00, 0xFF, 0x2F, 0x00);
+
+            // Construct Track Chunk Header: "MTrk" + Length
+            const trackLen = trackBytes.length;
+            const trackChunkHeader = [
+                0x4D, 0x54, 0x72, 0x6B, // MTrk
+                (trackLen >> 24) & 0xFF,
+                (trackLen >> 16) & 0xFF,
+                (trackLen >> 8) & 0xFF,
+                trackLen & 0xFF
+            ];
+
+            // Combine Header & Track Chunks
+            return new Uint8Array([...header, ...trackChunkHeader, ...trackBytes]);
+        }
+
+        // Helper: Variable Length Quantity (VLQ) for MIDI Deltas
+        function writeVarLen(value) {
+            let buffer = value & 0x7F;
+            const bytes = [];
+            while (value >>= 7) {
+                buffer <<= 8;
+                buffer |= (value & 0x7F) | 0x80;
+            }
+            while (true) {
+                bytes.push(buffer & 0xFF);
+                if (buffer & 0x80) {
+                    buffer >>= 8;
+                } else {
+                    break;
+                }
+            }
+            return bytes;
+        }
+
+        function generateAndDownloadMIDI() {
+            if (!parsedNotes.length) return;
+
+            try {
+                const instrumentId = parseInt(document.getElementById('instrumentSelect').value, 10);
+                const bpm = parseInt(document.getElementById('bpmInput').value, 10) || 120;
+
+                // Build MIDI Byte Array Natively
+                const midiUint8Array = buildMidiBinary(parsedNotes, instrumentId, bpm);
+
+                // Create Downloadable Blob
+                const blob = new Blob([midiUint8Array], { type: 'audio/midi' });
+                const url = URL.createObjectURL(blob);
+
+                let filename = document.getElementById('filenameInput').value.trim() || 'meine_musik.mid';
+                if (!filename.toLowerCase().endsWith('.mid')) filename += '.mid';
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                updateStatus(`Erfolgreich gespeichert als "${filename}"!`, 'success', 'Export Erreicht');
+            } catch (err) {
+                console.error(err);
+                updateStatus(`Fehler beim Erstellen der MIDI-Datei: ${err.message}`, 'error', 'Export Fehlgeschlagen');
+            }
+        }
+
+        function updateStatus(msg, type, title = '') {
+            const statusBox = document.getElementById('statusBox');
+            const statusText = document.getElementById('statusText');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusIcon = document.getElementById('statusIcon');
+
+            statusText.textContent = msg;
+            statusTitle.textContent = title || 'Status';
+
+            if (type === 'success') {
+                statusBox.className = 'p-3.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40 flex items-start gap-3 text-xs';
+                statusIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-sm mt-0.5';
+            } else if (type === 'error') {
+                statusBox.className = 'p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/40 flex items-start gap-3 text-xs';
+                statusIcon.className = 'fa-solid fa-triangle-exclamation text-rose-400 text-sm mt-0.5';
+            } else if (type === 'warning') {
+                statusBox.className = 'p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/40 flex items-start gap-3 text-xs';
+                statusIcon.className = 'fa-solid fa-circle-exclamation text-amber-400 text-sm mt-0.5';
+            } else {
+                statusBox.className = 'p-3.5 rounded-xl bg-slate-900/70 border border-slate-700/60 flex items-start gap-3 text-xs';
+                statusIcon.className = 'fa-solid fa-circle-info text-cyan-400 text-sm mt-0.5';
+            }
+        }
+
+        function renderPreview(notes) {
+            const container = document.getElementById('previewContainer');
+            const noteCount = document.getElementById('noteCount');
+
+            noteCount.textContent = `${notes.length} Noten`;
+            container.innerHTML = '';
+
+            if (notes.length === 0) {
+                container.innerHTML = `<div class="text-slate-500 italic text-center py-8">Keine Noten geladen</div>`;
+                return;
+            }
+
+            notes.forEach((n, idx) => {
+                const el = document.createElement('div');
+                el.className = 'flex items-center justify-between p-2 rounded-lg glass-card-subtle text-xs hover:border-cyan-400/50 transition-all';
+                el.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-slate-500 text-[10px]">#${idx + 1}</span>
+                        <span class="text-cyan-300 font-bold">${n.pitchName}</span>
+                        <span class="text-[10px] text-slate-400">(MIDI ${n.midi})</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-[11px] text-slate-300">
+                        <span><i class="fa-regular fa-clock text-cyan-500/70"></i> ${n.duration}s</span>
+                        <span><i class="fa-solid fa-gauge-high text-cyan-500/70"></i> ${n.velocity}</span>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function toggleFullscreen() {
+            const fsIcon = document.getElementById('fullscreenIcon');
+            const fsText = document.getElementById('fullscreenText');
+
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    fsIcon.className = 'fa-solid fa-compress text-base';
+                    fsText.textContent = 'Beenden';
+                }).catch(err => {
+                    console.error("Vollbildmodus konnte nicht aktiviert werden:", err);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().then(() => {
+                        fsIcon.className = 'fa-solid fa-expand text-base';
+                        fsText.textContent = 'Vollbild';
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

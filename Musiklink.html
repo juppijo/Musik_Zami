@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>WRZT Seite</title>
+   <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ['$', '$'],
+          ['\(', '\)']
+        ],
+        displayMath: [
+          ['$$', '$$'],
+          ['\[', '\]']
+        ]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+  body {
+    font-family: sans-serif;
+    margin: 40px;
+    color: #112255;
+    background: #ededfd;
+    }
+    h1 {
+      color: #112299;
+    }
+    .button-container {
+      display: flex;
+      justify-content: flex-end; 
+      padding: 10px 15px; 
+      gap: 10px; 
+    }
+    .link-box-button {
+      justify-content: flex-end;
+      padding: 10px 18px;
+      background: #112299;
+      color: #eeddff;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.2s ease;
+      cursor: pointer; 
+    }
+    .link-box-button:hover {
+      background: #666688;
+      padding: 10px 10px;
+    }
+    .link-box-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 10px;
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #818cf8;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.link-box-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 12px 20px rgba(0,0,0,0.15);
+}
+
+.link-box-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.link-box-content {
+  flex-grow: 1;
+}
+
+.link-box-title {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.link-box-description {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.link-box-button {
+  padding: 10px 10px;
+  background: #6366f1;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.link-box-container:hover .link-box-button {
+  opacity: 0.9;
+}
+
+@media (max-width: 520px) {
+  .link-box-container {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="button-container">
+    <button class="link-box-button" onclick="toggleFullscreen()">⛶</button>
+  </div>
+  <h1>Willkommen</h1>
+
+<!-- Design-Container -->
+<div style="
+  max-width: 250px;
+  background: #88bbff;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eef2f6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  text-align: center;
+  margin-top: 5px;
+">
+
+  <!-- Schöner Play-Button -->
+  <button id="playBtn" onclick="playAudio()" style="
+    width: 100%;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: lightblue;
+    border: none;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  "
+  onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(37, 99, 235, 0.4)';"
+  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(37, 99, 235, 0.3)';"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8 5v14l11-7z"/>
+    </svg>
+    Audio abspielen
+  </button>
+
+  <!-- Container für das skalierte iFrame -->
+  <div id="audioContainer"></div>
+</div>
+
+<script>
+function playAudio() {
+  const container = document.getElementById('audioContainer');
+  const btn = document.getElementById('playBtn');
+
+  // Skaliertes iFrame in exakt passendem Ausschnitt
+  container.innerHTML = `
+    <div style="
+      width: 200px; 
+      height: 90px; 
+      overflow: hidden; 
+      border-radius: 8px; 
+      margin: 0 auto;
+      border: 1px solid #a2e8f0;
+      background: #a8aafc;
+    ">
+      <iframe 
+        src="https://drive.google.com/file/d/1Qv2QhgES6O49zLMuP-Doqf5Xv3O0xvPw/preview?autoplay=1" 
+        width="400" 
+        height="180" 
+        frameborder="0" 
+        allow="autoplay"
+        style="transform: scale(0.5); transform-origin: top left; border: none;">
+      </iframe>
+    </div>
+  `;
+
+  btn.style.display = 'none';
+}
+</script>  
+  
+  <script>
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        alert("Fehler beim Aktivieren des Vollbildmodus!");
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+  </script>
+</body>
+</html>
